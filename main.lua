@@ -1,18 +1,36 @@
 local suit = require 'suit'
+local user = require('./src/models/user')
 
-local show_message = false
+local name_input = { text = '' }
+local age_input = { text = '' }
+
+local under_age = false
+
 function love.update(dt)
-	-- Put a button on the screen. If hit, show a message.
-	if suit.Button("Hello, World!", 100,100, 300,30).hit then
-		show_message = true
+	suit.Label('Name: ', { align='left' }, 10, 10, 200, 30)
+	suit.Input(name_input, 10, 40, 200, 30)
+
+	suit.Label('Age: ', { align='left' }, 10, 70, 200, 30)
+	suit.Input(age_input, 10, 100, 200, 30)
+
+	if suit.Button('Send', 10, 150, 200, 30).hit then
+		if tonumber(age_input.text) < 18 then under_age = true
+		else under_age = true end
 	end
 
-	-- if the button was pressed at least one time, but a label below
-	if show_message then
-		suit.Label("How are you today?", 100,150, 300,30)
+	if under_age then
+		suit.Label('Must be over 18 years old!', { align='center' }, 10, 200, 200, 30)
 	end
 end
 
 function love.draw()
 	suit.draw()
+end
+
+function love.textinput(t)
+	suit.textinput(t)
+end
+
+function love.keypressed(key)
+	suit.keypressed(key)
 end
