@@ -1,5 +1,7 @@
-local suit = require 'suit'
-local user = require('./src/models/user')
+local Suit = require './lib/suit'
+local User = require './src/entities/user'
+
+local Saver = require './src/helpers/saver'
 
 local name_input = { text = '' }
 local age_input = { text = '' }
@@ -7,30 +9,36 @@ local age_input = { text = '' }
 local under_age = false
 
 function love.update(dt)
-	suit.Label('Name: ', { align='left' }, 10, 10, 200, 30)
-	suit.Input(name_input, 10, 40, 200, 30)
+	Suit.Label('Name: ', { align='left' }, 10, 10, 200, 30)
+	Suit.Input(name_input, 10, 40, 200, 30)
 
-	suit.Label('Age: ', { align='left' }, 10, 70, 200, 30)
-	suit.Input(age_input, 10, 100, 200, 30)
+	Suit.Label('Age: ', { align='left' }, 10, 70, 200, 30)
+	Suit.Input(age_input, 10, 100, 200, 30)
 
-	if suit.Button('Send', 10, 150, 200, 30).hit then
+	if Suit.Button('Send', 10, 150, 200, 30).hit then
+		Saver.save()
+
 		if tonumber(age_input.text) < 18 then under_age = true
 		else under_age = true end
 	end
 
 	if under_age then
-		suit.Label('Must be over 18 years old!', { align='center' }, 10, 200, 200, 30)
+		Suit.Label('Must be over 18 years old!', { align='center' }, 10, 200, 200, 30)
 	end
 end
 
+function love.load()
+	USER = User('ropoko', 32)
+end
+
 function love.draw()
-	suit.draw()
+	Suit.draw()
 end
 
 function love.textinput(t)
-	suit.textinput(t)
+	Suit.textinput(t)
 end
 
 function love.keypressed(key)
-	suit.keypressed(key)
+	Suit.keypressed(key)
 end
