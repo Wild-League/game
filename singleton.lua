@@ -28,5 +28,6 @@ local b = class.new()
 
 -- a.name = 'asd'
 
-print(a.teste)
-print(b.name)
+print(a.teste) -- nill
+print(a.name) -- ropoko
+print(b.name) -- ropoko
