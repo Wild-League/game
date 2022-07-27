@@ -1,8 +1,6 @@
 local Suit = require './lib/suit'
 local User = require './src/entities/user'
 
-local Saver = require './src/helpers/saver'
-
 local name_input = { text = '' }
 local age_input = { text = '' }
 
@@ -16,7 +14,7 @@ function love.update(dt)
 	Suit.Input(age_input, 10, 100, 200, 30)
 
 	if Suit.Button('Send', 10, 150, 200, 30).hit then
-		Saver.save()
+		-- Saver.save()
 
 		if tonumber(age_input.text) < 18 then under_age = true
 		else under_age = true end
@@ -28,7 +26,10 @@ function love.update(dt)
 end
 
 function love.load()
-	USER = User('ropoko', 32)
+	LOGGED_USER = User('ropoko', 32)
+
+	-- local Saver = require('./src/helpers/saver')
+	-- Saver.save()
 end
 
 function love.draw()

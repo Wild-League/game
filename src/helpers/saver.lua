@@ -1,12 +1,9 @@
 local Saver = {}
 
--- local user = require('../src/entities/user')
-
--- for k, v in ipairs(getmetatable(user).__index) do
--- 	print(k, v)
--- end
+local user = require('../src/entities/user')
 
 function Saver:save(data)
+	print(user)
 	print('saving data...')
 	-- love.filesystem.write('/tmp/card-game/data.txt', data)
 end
