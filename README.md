@@ -6,7 +6,9 @@ It will be a clash royale-like game, because I'm a big fan of this game
 > if you play with mk, consider leaving this page, please.
 
 ## Todo
-- [ x ] persist user data
+- [x] persist user data
 - [ ] finish user interface
+  - [ ] gets nickname and enter game
+- [ ] add splash screen
 - [ ] add cards
   - [ ] animations for each char
