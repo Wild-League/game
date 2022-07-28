@@ -1,26 +1,32 @@
-local User = {}
+local function User(nickname)
+	local obj = {
+		__call = function(self)
+			return self.new()
+		end,
 
-local meta = {
-	__call = function(self, name, age)
-		return self.new(name, age)
-	end,
+		__tostring = function(self)
+			return string.format('nickname: %s', self.nickname)
+		end,
 
-	__index = function(self, key)
-		error(string.format('the key: "%s" is not set in User Entity', key))
-	end,
+		nickname = nickname
+	}
 
-	__tostring = function(self)
-		return string.format('name: %s, age: %d', self.name, self.age)
+	obj.__index = obj
+
+	setmetatable(obj, {})
+
+	function obj.new()
+		if obj._instance then
+			return obj._instance
+		end
+
+		local instance = setmetatable({}, obj)
+
+		obj._instance = instance
+		return obj._instance
 	end
-}
 
-setmetatable(User, meta)
-
-function User.new(name, age)
-	local user = setmetatable({}, meta)
-	user.name = name
-	user.age = age
-	return user
+	return obj
 end
 
 return User
