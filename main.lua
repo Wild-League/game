@@ -5,16 +5,24 @@ local Saver = require('./src/helpers/saver')
 
 local nickname_input = { text = '' }
 
-function love.update(dt)
-	Suit.Label('Nickname: ', { align='left' }, 10, 10, 200, 30)
-	Suit.Input(nickname_input, 10, 40, 200, 30)
+local window = {
+	width = 800,
+	height = 600
+}
 
-	if Suit.Button('Send', 10, 80, 200, 30).hit then
-		Saver.save()
+function love.update(dt)
+	Suit.Label('Nickname: ', { align='left' }, (window.width / 2), ((window.height / 2) - 200), 200, 30)
+	Suit.Input(nickname_input, (window.width / 2), ((window.height / 2) - 120), 200, 30)
+
+	if Suit.Button('Send', (window.width / 2), ((window.height / 2) - 60), 200, 30).hit then
+		print('entering the game .. ')
+		-- Saver.save()
 	end
 end
 
 function love.load()
+	love.window.setMode(window.width, window.height, { resizable = true })
+
 	local data = Saver:retrieveData()
 
 	if data ~= nil then
@@ -24,6 +32,8 @@ end
 
 function love.draw()
 	Suit.draw()
+	-- trying to centralize things correctly
+	-- love.graphics.rectangle("fill", (window.width / 2 - 76), (window.height / 2 + 35), 50, 50)
 end
 
 function love.textinput(t)
