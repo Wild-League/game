@@ -1,11 +1,27 @@
 local Saver = {}
 
-local user = require('../src/entities/user')
+local User = require '../src/entities/user'
+local Lume = require '../../lib/lume'
 
-function Saver:save(data)
-	print(user)
+local path = '/savedata.txt'
+
+function Saver:save(user)
 	print('saving data...')
-	-- love.filesystem.write('/tmp/card-game/data.txt', data)
+
+	local serialized_data = Lume.serialize({ nickname = user.nickname })
+
+	love.filesystem.write(path, serialized_data)
+end
+
+function Saver:retrieveData()
+	print('getting data...')
+
+	if love.filesystem.getInfo(path) then
+		local file = love.filesystem.read(path)
+		return Lume.deserialize(file)
+	end
+
+	return nil
 end
 
 return Saver
