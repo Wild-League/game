@@ -1,4 +1,4 @@
-# card-game
+# Wild League
 
 It will be a clash royale-like game, because I'm a big fan of this game
 (even if they not deserve it)
