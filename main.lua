@@ -12,26 +12,33 @@ WINDOW_SETTINGS = {
 }
 
 function love.update(dt)
-	-- Suit.Label('Nickname: ', { align='left' }, (window.width / 2), ((window.height / 2) - 200), 200, 30)
-	-- Suit.Input(nickname_input, (window.width / 2), ((window.height / 2) - 120), 200, 30)
+	local button_central = Layout:Centralize(WINDOW_SETTINGS.width, WINDOW_SETTINGS.height, 280, 72)
+	local play_button = Suit.ImageButton(BUTTON, { hovered = BUTTON_HOVER }, button_central.width, (button_central.height + 200))
 
-	-- if Suit.Button('Send', (window.width / 2), ((window.height / 2) - 60), 200, 30).hit then
-	-- 	print('entering the game .. ')
-	-- 	-- Saver.save()
-	-- end
-end
+	if play_button.hit then
+		print('entering game...')
 
-function love.load()
-	love.window.setMode(WINDOW_SETTINGS.width, WINDOW_SETTINGS.height, { resizable = true })
+		local data = Saver:retrieveData()
 
-	local data = Saver:retrieveData()
-
-	if data ~= nil then
-		Constants.LOGGED_USER = data
+		if data ~= nil then
+			Constants.LOGGED_USER = data
+		end
 	end
 end
 
+function love.load()
+	-- TODO: move to constants file
+	GAME_TITLE = love.graphics.newImage('assets/game-title.png')
+	BUTTON = love.graphics.newImage('assets/button.png')
+	BUTTON_HOVER = love.graphics.newImage('assets/button-hover.png')
+
+	love.window.setMode(WINDOW_SETTINGS.width, WINDOW_SETTINGS.height, { resizable = true })
+end
+
 function love.draw()
+	local title_central = Layout:Centralize(WINDOW_SETTINGS.width, WINDOW_SETTINGS.height, 659, 213)
+	love.graphics.draw(GAME_TITLE, title_central.width, title_central.height)
+
 	Suit.draw()
 end
 
