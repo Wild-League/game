@@ -33,13 +33,19 @@ function love.load()
 	BUTTON_HOVER = love.graphics.newImage('assets/button-hover.png')
 
 	love.window.setMode(WINDOW_SETTINGS.width, WINDOW_SETTINGS.height, { resizable = true })
+
+	local center  = Layout:Centralize(WINDOW_SETTINGS.width, WINDOW_SETTINGS.height, 50, 50)
+	RECTANGLE = { x = center.width, y = center.height, width = 50, height = 50 }
 end
 
 function love.draw()
-	local title_central = Layout:Centralize(WINDOW_SETTINGS.width, WINDOW_SETTINGS.height, 659, 213)
-	love.graphics.draw(GAME_TITLE, title_central.width, title_central.height)
+	-- local title_central = Layout:Centralize(WINDOW_SETTINGS.width, WINDOW_SETTINGS.height, 659, 213)
+	-- love.graphics.draw(GAME_TITLE, title_central.width, title_central.height)
 
-	Suit.draw()
+
+	love.graphics.rectangle("line", RECTANGLE.x, RECTANGLE.y, RECTANGLE.width, RECTANGLE.height)
+
+	-- Suit.draw()
 end
 
 function love.resize(width, height)
@@ -53,4 +59,30 @@ end
 
 function love.keypressed(key)
 	Suit.keypressed(key)
+end
+
+CAN_MOVE = false
+
+function love.mousepressed(x, y, button)
+	if button == 1 then -- left
+		if (x >= RECTANGLE.x and x <= (RECTANGLE.x + RECTANGLE.width))
+			and (y >= RECTANGLE.y and y <= (RECTANGLE.y + RECTANGLE.height)) then
+				CAN_MOVE = true
+				print('can_move', CAN_MOVE)
+		end
+	end
+end
+
+function love.mousereleased(x, y, button)
+	if button == 1 then -- left
+		CAN_MOVE = false
+		print('cannot move', CAN_MOVE)
+	end
+end
+
+function love.mousemoved(x, y, dx, dy)
+	if CAN_MOVE then
+		RECTANGLE.x = x
+		RECTANGLE.y = y
+	end
 end
