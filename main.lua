@@ -1,19 +1,12 @@
 local Suit = require('./lib/suit')
-local User = require('./src/entities/user')
+-- local User = require('./src/entities/user')
 local Constants = require('./src/constants')
 local Saver = require('./src/helpers/saver')
 local Layout = require('./src/helpers/layout')
 
+local Context = require('./src/context')
+
 local nickname_input = { text = '' }
-
---[[
-	TODO: Add Context manager to have control about the scenes
-	so we can define what should or not appear in the screen.
-]]
-
-GET_DATA = false
-
-INITIAL_PAGE = false
 
 WINDOW_SETTINGS = {
 	width = 800,
@@ -59,10 +52,14 @@ function love.load()
 	BUTTON = love.graphics.newImage('assets/button.png')
 	BUTTON_HOVER = love.graphics.newImage('assets/button-hover.png')
 
+	CONTEXT = Context()
+
 	love.window.setMode(WINDOW_SETTINGS.width, WINDOW_SETTINGS.height, { resizable = true })
 end
 
 function love.draw()
+
+
 	if not GET_DATA then
 		local title_central = Layout:Centralize(WINDOW_SETTINGS.width, WINDOW_SETTINGS.height, 659, 213)
 		love.graphics.draw(GAME_TITLE, title_central.width, title_central.height)
