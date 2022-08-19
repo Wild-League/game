@@ -10,7 +10,7 @@ local In_Game = {
 setmetatable(In_Game, In_Game)
 
 function In_Game:draw()
-	local welcome_center = Layout:Centralize(WINDOW_SETTINGS.width, WINDOW_SETTINGS.height, 100, 50)
+	local welcome_center = Layout:Centralize(100, 50)
 	Suit.Label('This will be the first page of the game', { align='center' }, welcome_center.width, welcome_center.height, 100, 50)
 end
 
