@@ -1,3 +1,0 @@
-local Info = {}
-
-return Info
