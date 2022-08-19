@@ -76,7 +76,7 @@ function love.draw()
 
 	-- love.graphics.rectangle("line", RECTANGLE.x, RECTANGLE.y, RECTANGLE.width, RECTANGLE.height)
 
-	-- Suit.draw()
+	Suit.draw()
 end
 
 -- function love.resize(width, height)
