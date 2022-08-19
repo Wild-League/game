@@ -1,36 +1,31 @@
 local Suit = require('./lib/suit')
--- local User = require('./src/entities/user')
 local Constants = require('./src/constants')
+-- local User = require('./src/entities/user')
 -- local Saver = require('./src/helpers/saver')
-local Layout = require('./src/helpers/layout')
+-- local Layout = require('./src/helpers/layout')
 
 local Context = require('./src/context')
 
-local nickname_input = { text = '' }
-
-WINDOW_SETTINGS = {
-	width = 800,
-	height = 600
-}
+-- local nickname_input = { text = '' }
 
 function love.update()
-	-- CONTEXT:current()
+	CONTEXT:current()
 	-- return
 
-	-- if not GET_DATA and not INITIAL_PAGE then
-	-- 	local button_central = Layout:Centralize(WINDOW_SETTINGS.width, WINDOW_SETTINGS.height, 280, 72)
-	-- 	local play_button = Suit.ImageButton(BUTTON, { hovered = BUTTON_HOVER }, button_central.width, (button_central.height + 200))
 
-	-- 	if play_button.hit then
-	-- 		local data = Saver:retrieveData()
+	-- local button_central = Layout:Centralize(WINDOW_SETTINGS.width, WINDOW_SETTINGS.height, 280, 72)
+	-- local play_button = Suit.ImageButton(BUTTON, { hovered = BUTTON_HOVER }, button_central.width, (button_central.height + 200))
 
-	-- 		if data ~= nil then
-	-- 			Constants.LOGGED_USER = data
-	-- 		else
-	-- 			GET_DATA = true
-	-- 		end
+	-- if play_button.hit then
+	-- 	local data = Saver:retrieveData()
+
+	-- 	if data ~= nil then
+	-- 		Constants.LOGGED_USER = data
+	-- 	else
+	-- 		GET_DATA = true
 	-- 	end
 	-- end
+
 
 	-- if GET_DATA and not INITIAL_PAGE then
 	-- 	Suit.Label('nickname: ', { align='center' }, 10, 0, 200, 30)
@@ -47,6 +42,7 @@ function love.update()
 	-- 	local welcome_center = Layout:Centralize(WINDOW_SETTINGS.width, WINDOW_SETTINGS.height, 100, 50)
 	-- 	Suit.Label('Welcome to Wild League', { align='center' }, welcome_center.width, welcome_center.height, 100, 50)
 	-- end
+	Suit.draw()
 end
 
 function love.load()
@@ -57,13 +53,13 @@ function love.load()
 
 	-- initialize the state manager
 	CONTEXT = Context;
+	-- CONTEXT:current()
 
-	love.window.setMode(WINDOW_SETTINGS.width, WINDOW_SETTINGS.height, { resizable = true })
+	love.window.setMode(Constants.WINDOW_SETTINGS.width, Constants.WINDOW_SETTINGS.height, { resizable = true })
 end
 
 function love.draw()
 	CONTEXT:current()
-
 	-- if not GET_DATA then
 	-- 	local title_central = Layout:Centralize(WINDOW_SETTINGS.width, WINDOW_SETTINGS.height, 659, 213)
 	-- 	love.graphics.draw(GAME_TITLE, title_central.width, title_central.height)
@@ -79,10 +75,10 @@ function love.draw()
 	Suit.draw()
 end
 
--- function love.resize(width, height)
--- 	WINDOW_SETTINGS.width = width
--- 	WINDOW_SETTINGS.height = height
--- end
+function love.resize(width, height)
+	Constants.WINDOW_SETTINGS.width = width
+	Constants.WINDOW_SETTINGS.height = height
+end
 
 -- function love.textinput(t)
 -- 	Suit.textinput(t)

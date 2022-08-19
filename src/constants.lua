@@ -1,5 +1,9 @@
 local Constants = {
-	LOGGED_USER = {}
+	LOGGED_USER = {},
+	WINDOW_SETTINGS = {
+		width = 800,
+		height = 600
+	}
 }
 
 setmetatable(Constants, {
