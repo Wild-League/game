@@ -10,15 +10,8 @@ local Context = {
 
 	set_current = 'initial',
 
-	current = function(self, ctx)
-		if (ctx == nil) then
-			return self.initial()
-		elseif (self.set_current ~= nil) then
-			return self[self.set_current]()
-		else
-			self.set_current = ctx
-			return self[ctx]()
-		end
+	current = function(self)
+		return self[self.set_current]()
 	end,
 
 	change = function(self, ctx)
@@ -29,7 +22,7 @@ local Context = {
 		end
 
 		if ctx == 'initial' or ctx == 'get_info' or ctx == 'in_game' then
-			self:current(ctx)
+			self.set_current = ctx
 		else
 			error('This context does not exist')
 		end

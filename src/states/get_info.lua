@@ -3,7 +3,6 @@ local Layout = require('./src/helpers/layout')
 
 local Get_Info = {
 	__call = function(self)
-		print('chamando todos')
 		self.draw()
 	end
 }
