@@ -4,12 +4,7 @@ local Constants = require('./src/constants')
 local Context = require('./src/context')
 
 function love.load()
-	-- TODO: move to constants file
-	GAME_TITLE = love.graphics.newImage('assets/game-title.png')
-	BUTTON = love.graphics.newImage('assets/button.png')
-	BUTTON_HOVER = love.graphics.newImage('assets/button-hover.png')
-
-	-- initialize the state manager
+	-- initialize the global state manager
 	CONTEXT = Context;
 
 	love.window.setMode(Constants.WINDOW_SETTINGS.width, Constants.WINDOW_SETTINGS.height, { resizable = true })

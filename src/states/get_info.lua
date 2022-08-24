@@ -1,5 +1,4 @@
 local Suit = require('./lib/suit') -- called from main
-local Layout = require('./src/helpers/layout')
 
 local nickname_input = { text = '' }
 
@@ -26,7 +25,9 @@ function Get_Info:draw()
 	local save_nick = Suit.Button('Enter', 10, 80, 200, 30)
 
 	if save_nick.hit then
-		print('entering game...')
+		if (nickname_input.text ~= '') then
+			CONTEXT:change('in_game')
+		end
 	end
 end
 
