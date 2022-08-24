@@ -27,7 +27,6 @@ function Initial:draw()
 			print(CONTEXT:change('get_info'))
 		end
 	end
-
 	-- local welcome_center = Layout:Centralize(WINDOW_SETTINGS.width, WINDOW_SETTINGS.height, 100, 50)
 	-- Suit.Label('Welcome to Wild League', { align='center' }, welcome_center.width, welcome_center.height, 100, 50)
 end

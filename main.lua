@@ -1,17 +1,23 @@
 local Suit = require('./lib/suit')
 local Constants = require('./src/constants')
--- local User = require('./src/entities/user')
--- local Saver = require('./src/helpers/saver')
--- local Layout = require('./src/helpers/layout')
 
 local Context = require('./src/context')
 
--- local nickname_input = { text = '' }
+function love.load()
+	-- TODO: move to constants file
+	GAME_TITLE = love.graphics.newImage('assets/game-title.png')
+	BUTTON = love.graphics.newImage('assets/button.png')
+	BUTTON_HOVER = love.graphics.newImage('assets/button-hover.png')
+
+	-- initialize the state manager
+	CONTEXT = Context;
+
+	love.window.setMode(Constants.WINDOW_SETTINGS.width, Constants.WINDOW_SETTINGS.height, { resizable = true })
+end
 
 function love.update()
 	CONTEXT:current()
 	-- return
-
 
 	-- local button_central = Layout:Centralize(WINDOW_SETTINGS.width, WINDOW_SETTINGS.height, 280, 72)
 	-- local play_button = Suit.ImageButton(BUTTON, { hovered = BUTTON_HOVER }, button_central.width, (button_central.height + 200))
@@ -26,10 +32,9 @@ function love.update()
 	-- 	end
 	-- end
 
-
 	-- if GET_DATA and not INITIAL_PAGE then
-	-- 	Suit.Label('nickname: ', { align='center' }, 10, 0, 200, 30)
-	-- 	Suit.Input(nickname_input, 10, 40, 200, 30)
+		-- Suit.Label('nickname: ', { align='center' }, 10, 0, 200, 30)
+		-- Suit.Input(nickname_input, 10, 40, 200, 30)
 	-- 	local save_nick = Suit.Button('Enter', 10, 80, 200, 30)
 
 	-- 	if save_nick.hit then
@@ -43,19 +48,6 @@ function love.update()
 	-- 	Suit.Label('Welcome to Wild League', { align='center' }, welcome_center.width, welcome_center.height, 100, 50)
 	-- end
 	Suit.draw()
-end
-
-function love.load()
-	-- TODO: move to constants file
-	GAME_TITLE = love.graphics.newImage('assets/game-title.png')
-	BUTTON = love.graphics.newImage('assets/button.png')
-	BUTTON_HOVER = love.graphics.newImage('assets/button-hover.png')
-
-	-- initialize the state manager
-	CONTEXT = Context;
-	-- CONTEXT:current()
-
-	love.window.setMode(Constants.WINDOW_SETTINGS.width, Constants.WINDOW_SETTINGS.height, { resizable = true })
 end
 
 function love.draw()
@@ -79,14 +71,6 @@ function love.resize(width, height)
 	Constants.WINDOW_SETTINGS.width = width
 	Constants.WINDOW_SETTINGS.height = height
 end
-
--- function love.textinput(t)
--- 	Suit.textinput(t)
--- end
-
--- function love.keypressed(key)
--- 	Suit.keypressed(key)
--- end
 
 -- CAN_MOVE = false
 
