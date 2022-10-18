@@ -1,7 +1,8 @@
 local Assets = {
 	GAME_TITLE = love.graphics.newImage('assets/game-title.png'),
 	BUTTON = love.graphics.newImage('assets/button.png'),
-	BUTTON_HOVER = love.graphics.newImage('assets/button-hover.png')
+	BUTTON_HOVER = love.graphics.newImage('assets/button-hover.png'),
+	WALKING = love.graphics.newImage('assets/chars/walking.png')
 }
 
 setmetatable(Assets, {
