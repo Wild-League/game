@@ -1,39 +1,37 @@
-local Suit = require('./lib/suit') -- called from main
 local Layout = require('./src/helpers/layout')
 local anim8 = require('./lib/anim8')
 local Assets = require('./src/assets')
--- local Constants = require('./src/constants')
 
 local DT = 0
+
+local center = Layout:Centralize(34, 36) -- sprite size
+
+local initial = 600
 
 local In_Game = {
 	__call = function(self, dt)
 		DT = dt
-		self.load()
-		self.draw()
-	end
+		self:load()
+		self:draw()
+	end,
+	walk_animation = {}
 }
 
 setmetatable(In_Game, In_Game)
 
 function In_Game:load()
 	WALKING = Assets.WALKING
-end
-
-function In_Game:draw()
-	local center = Layout:Centralize(34, 36) -- sprite size
 
 	local grid = anim8.newGrid(34, 36, WALKING:getWidth(), WALKING:getHeight())
 
-	local walk_animation = anim8.newAnimation(grid('1-3', 1), 1)
+	self.walk_animation = anim8.newAnimation(grid('1-3', 1), 0.1)
+end
 
-	-- for i=1,#walk_animation do
+function In_Game:draw()
+	initial = initial - 0.5
 
-		walk_animation:update(DT)
-		-- walk_animation:gotoFrame(3)
-		walk_animation:draw(WALKING, center.width, center.height)
-
-	-- end
+	self.walk_animation:update(DT)
+	self.walk_animation:draw(WALKING, center.width, initial)
 end
 
 return In_Game

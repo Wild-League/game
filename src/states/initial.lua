@@ -6,8 +6,8 @@ local Assets = require('./src/assets')
 
 local Initial = {
 	__call = function(self)
-		self.load()
-		self.draw()
+		self:load()
+		self:draw()
 	end
 }
 
