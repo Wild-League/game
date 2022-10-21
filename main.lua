@@ -3,8 +3,6 @@ local Constants = require('./src/constants')
 
 local Context = require('./src/context')
 
-local DT = 0
-
 function love.load()
 	-- initialize the global state manager
 	CONTEXT = Context;
@@ -13,8 +11,7 @@ function love.load()
 end
 
 function love.update(dt)
-	DT = dt
-	CONTEXT:current(dt)
+	CONTEXT:current()
 	-- return
 
 	-- local button_central = Layout:Centralize(WINDOW_SETTINGS.width, WINDOW_SETTINGS.height, 280, 72)
@@ -49,7 +46,7 @@ function love.update(dt)
 end
 
 function love.draw()
-	CONTEXT:current(DT)
+	CONTEXT:current()
 	-- if not GET_DATA then
 	-- 	local title_central = Layout:Centralize(WINDOW_SETTINGS.width, WINDOW_SETTINGS.height, 659, 213)
 	-- 	love.graphics.draw(GAME_TITLE, title_central.width, title_central.height)

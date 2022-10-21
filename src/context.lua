@@ -10,8 +10,8 @@ local Context = {
 
 	set_current = 'initial',
 
-	current = function(self, dt)
-		return self[self.set_current](dt)
+	current = function(self)
+		return self[self.set_current]()
 	end,
 
 	change = function(self, ctx)
