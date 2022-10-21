@@ -224,10 +224,8 @@ function Animation:update(dt)
 
   self.timer = self.timer + dt
   local loops = math.floor(self.timer / self.totalDuration)
-	print('loops', loops)
   if loops ~= 0 then
     self.timer = self.timer - self.totalDuration * loops
-		print('timer', self.timer)
     local f = type(self.onLoop) == 'function' and self.onLoop or self[self.onLoop]
     f(self, loops)
   end

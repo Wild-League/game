@@ -8,7 +8,6 @@ end
 
 function love.keypressed(key)
 	Suit.keypressed(key)
-	print('from get_info', key)
 end
 
 local Get_Info = {

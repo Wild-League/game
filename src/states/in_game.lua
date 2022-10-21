@@ -21,12 +21,17 @@ function In_Game:load()
 
 	local grid = anim8.newGrid(34, 36, WALKING:getWidth(), WALKING:getHeight())
 
-	-- TODO: need to fix animation sprite, it's kinda weird
-	self.walk_animation = anim8.newAnimation(grid('1-3', 1), 12)
+	self.walk_animation = anim8.newAnimation(grid('2-3', 1), 12)
+	self.stop_animation = anim8.newAnimation(grid('1-1', 1), 12)
 end
 
 function In_Game:draw()
 	initial = initial - 0.5
+
+	if initial <= 300 then
+		self.stop_animation:draw(WALKING, center.width, 300)
+		return
+	end
 
 	self.walk_animation:update(initial)
 	self.walk_animation:draw(WALKING, center.width, initial)
