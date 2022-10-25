@@ -42,7 +42,7 @@ function In_Game:load()
 
 	love.graphics.draw(tower4, 530, 600)
 
-	WALKING = Assets.WALKING
+	WALKING = Assets.CHAR1.WALKING
 
 	local grid = anim8.newGrid(34, 36, WALKING:getWidth(), WALKING:getHeight())
 
