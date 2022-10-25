@@ -6,7 +6,15 @@ local center = Layout:Centralize(34, 36) -- sprite size
 
 local initial = 600
 
-local BACKGROUND = Assets.WORLD
+local background = Assets.WORLD
+
+local tower = Assets.TOWER
+
+local tower2 = Assets.TOWER
+
+local tower3 = Assets.TOWER
+
+local tower4 = Assets.TOWER
 
 local In_Game = {
 	__call = function(self)
@@ -19,12 +27,20 @@ local In_Game = {
 setmetatable(In_Game, In_Game)
 
 function In_Game:load()
-	for i = 0, Constants.WINDOW_SETTINGS.width / BACKGROUND:getWidth() do
+	for i = 0, Constants.WINDOW_SETTINGS.width / background:getWidth() do
 		love.graphics.setColor(255,255,255)
-		for j = 0, Constants.WINDOW_SETTINGS.height / BACKGROUND:getHeight() do
-			love.graphics.draw(BACKGROUND, i * BACKGROUND:getWidth(), j * BACKGROUND:getHeight())
+		for j = 0, Constants.WINDOW_SETTINGS.height / background:getHeight() do
+			love.graphics.draw(background, i * background:getWidth(), j * background:getHeight())
 		end
 	end
+
+	love.graphics.draw(tower, 100, 170)
+
+	love.graphics.draw(tower2, 530, 170)
+
+	love.graphics.draw(tower3, 100, 600)
+
+	love.graphics.draw(tower4, 530, 600)
 
 	WALKING = Assets.WALKING
 
@@ -37,8 +53,8 @@ end
 function In_Game:draw()
 	initial = initial - 0.5
 
-	if initial <= 300 then
-		self.stop_animation:draw(WALKING, center.width, 300)
+	if initial <= 280 then
+		self.stop_animation:draw(WALKING, center.width, 280)
 		return
 	end
 

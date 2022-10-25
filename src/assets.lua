@@ -3,7 +3,8 @@ local Assets = {
 	BUTTON = love.graphics.newImage('assets/button.png'),
 	BUTTON_HOVER = love.graphics.newImage('assets/button-hover.png'),
 	WALKING = love.graphics.newImage('assets/chars/walking.png'),
-	WORLD = love.graphics.newImage('assets/world.png')
+	WORLD = love.graphics.newImage('assets/world.png'),
+	TOWER = love.graphics.newImage('assets/tower.png')
 }
 
 setmetatable(Assets, {
