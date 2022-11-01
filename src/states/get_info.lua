@@ -1,4 +1,5 @@
 local Suit = require('./lib/suit') -- called from main
+local Saver = require('./src/helpers/saver')
 
 local nickname_input = { text = '' }
 
@@ -26,7 +27,10 @@ function Get_Info:draw()
 
 	if save_nick.hit then
 		if (nickname_input.text ~= '') then
-			CONTEXT:change('in_game')
+			local save = Saver:save({ nickname = nickname_input.text })
+			if save == true then
+				CONTEXT:change('in_game')
+			end
 		end
 	end
 end

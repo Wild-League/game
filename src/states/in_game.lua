@@ -16,6 +16,8 @@ local tower3 = Assets.TOWER
 
 local tower4 = Assets.TOWER
 
+local world_detail = Assets.WORLD_DETAIL
+
 local In_Game = {
 	__call = function(self)
 		self:load()
@@ -27,12 +29,16 @@ local In_Game = {
 setmetatable(In_Game, In_Game)
 
 function In_Game:load()
+	-- draw world background
 	for i = 0, Constants.WINDOW_SETTINGS.width / background:getWidth() do
 		love.graphics.setColor(255,255,255)
 		for j = 0, Constants.WINDOW_SETTINGS.height / background:getHeight() do
 			love.graphics.draw(background, i * background:getWidth(), j * background:getHeight())
 		end
 	end
+
+	-- draw world details
+	love.graphics.draw(world_detail, center.width, center.height)
 
 	love.graphics.draw(tower, 100, 170)
 

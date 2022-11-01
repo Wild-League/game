@@ -25,6 +25,7 @@ function Initial:draw()
 
 		if data ~= nil then
 			Constants.LOGGED_USER = data
+			CONTEXT:change('in_game')
 		else
 			print(CONTEXT:change('get_info'))
 		end
