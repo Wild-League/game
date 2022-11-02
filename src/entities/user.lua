@@ -1,3 +1,10 @@
+local Char1 = require('./src/cards/char1')
+
+local card1 = Char1
+local card2 = Char1
+local card3 = Char1
+local card4 = Char1
+
 local function User(nickname, level)
 	local obj = {
 		__call = function(self)
@@ -10,7 +17,15 @@ local function User(nickname, level)
 
 		nickname = nickname,
 		level = level or 1,
-		decks = {}
+		decks = {
+			deck1 = {
+				card1,
+				card2,
+				card3,
+				card4
+			}
+		},
+		deck_selected = 'deck1'
 	}
 
 	obj.__index = obj

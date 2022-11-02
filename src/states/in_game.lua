@@ -1,72 +1,15 @@
 local Suit = require('./lib/suit')
-local Layout = require('./src/helpers/layout')
-local anim8 = require('./lib/anim8')
+-- local Layout = require('./src/helpers/layout')
+
 local Assets = require('./src/assets')
 local Constants = require('./src/constants')
-local center = Layout:Centralize(34, 36) -- sprite size
 
-local Char1 = require('./src/cards/char1')
+local user = {}
 
-local initial = 600
+local decks = {}
+local deck_selected = ''
 
 local background = Assets.WORLD
-
-local tower = Assets.TOWER
-
-local tower2 = Assets.TOWER
-
-local tower3 = Assets.TOWER
-
-local tower4 = Assets.TOWER
-
--- local world_detail = Assets.WORLD_DETAIL
-
-local deck = {
-	card_1 = {
-		img = Assets.CHAR1.CARD,
-		initial_position = {
-			x = 200,
-			y = 620,
-		},
-		x = 200,
-		y = 620,
-		can_move = false,
-		walk_animation = {}
-	},
-	card_2 = {
-		img = Assets.CHAR1.CARD,
-		initial_position = {
-			x = 300,
-			y = 620,
-		},
-		x = 300,
-		y = 620,
-		can_move = false,
-		walk_animation = {}
-	},
-	card_3 = {
-		img = Assets.CHAR1.CARD,
-		initial_position = {
-			x = 400,
-			y = 620,
-		},
-		x = 400,
-		y = 620,
-		can_move = false,
-		walk_animation = {}
-	},
-	card_4 = {
-		img = Assets.CHAR1.CARD,
-		initial_position = {
-			x = 500,
-			y = 620,
-		},
-		x = 500,
-		y = 620,
-		can_move = false,
-		walk_animation = {}
-	},
-}
 
 local In_Game = {
 	__call = function(self)
@@ -77,37 +20,41 @@ local In_Game = {
 
 setmetatable(In_Game, In_Game)
 
-function love.mousepressed(x, y, button)
-	if button == 1 then -- left
-		for i = 1, 4 do
-			local card = deck['card_'..i]
-			if x >= card.x and x <= (card.x + card.img:getWidth())
-				and y >= card.y and y <= (card.y + card.img:getHeight()) then
-					card.can_move = true
-			end
-		end
-	end
-end
+-- function love.mousepressed(x, y, button)
+-- 	if button == 1 then -- left
+-- 		local deck = decks[deck_selected]
+-- 		if deck ~= nil then
+-- 			print('deck', deck)
+-- 			for i = 1, #deck do
+-- 				local card = deck[i]
+-- 				if x >= card.x and x <= (card.x + card.img:getWidth())
+-- 					and y >= card.y and y <= (card.y + card.img:getHeight()) then
+-- 						card.can_move = true
+-- 				end
+-- 			end
+-- 		end
+-- 	end
+-- end
 
 function love.mousereleased(x, y, button)
 	if button == 1 then
-		for i = 1, 4 do
-			local card = deck['card_'..i]
-			if card.can_move == true then
-				card.can_move = false
-				card.x = card.initial_position.x
-				card.y = card.initial_position.y
-
-				card.walk_animation:update(initial)
-				card.walk_animation:draw(WALKING, initial, center.height)
-				-- self.walk_animation:update(initial)
-				-- self.walk_animation:draw(WALKING, initial, center.height)
+		local deck = decks[deck_selected]
+		if deck ~= nil then
+			for i = 1, #deck do
+				local card = deck[i]
+				if card.can_move == true then
+					card.can_move = false
+					-- card.x = card.initial_position.x
+					-- card.y = card.initial_position.y
+				end
 			end
 		end
 	end
 end
 
 function In_Game:load()
+	user = Constants.LOGGED_USER
+
 	local new_font = love.graphics.newFont(16, 'mono')
 
 	Suit.Label(Constants.LOGGED_USER.nickname, { align='center', font = new_font}, 10, 680, 200, 30)
@@ -121,24 +68,15 @@ function In_Game:load()
 		end
 	end
 
-	love.graphics.draw(tower, 100, 170)
+	decks = user.decks
+	deck_selected = user.deck_selected
 
-	love.graphics.draw(tower2, 530, 170)
+	local deck = decks[deck_selected]
 
-	love.graphics.draw(tower3, 100, 600)
-
-	love.graphics.draw(tower4, 530, 600)
-
-	for i = 1, 4 do
-		local card = deck['card_'..i]
-		love.graphics.draw(card.img, card.x, card.y)
-
-		WALKING = Assets.CHAR1.WALKING
-
-		local grid = anim8.newGrid(34, 36, WALKING:getWidth(), WALKING:getHeight())
-		card.walk_animation = anim8.newAnimation(grid('2-3', 1), 12)
+	for i = 1, #deck do
+		local card = deck[i]
+		love.graphics.draw(card.img, card.x + ((i - 1) * 100), card.y)
 	end
-	-- self.stop_animation = anim8.newAnimation(grid('1-1', 1), 12)
 
 	-- draw separator
 	-- love.graphics.setColor(255, 0, 0)
@@ -148,23 +86,28 @@ end
 function In_Game:draw()
 	local x,y = love.mouse.getPosition()
 
-	for i = 1, 4 do
-		local card = deck['card_'..i]
+	local deck = decks[deck_selected]
+
+	-- TODO: fix move card individually
+	-- all the cards are using the same memory address
+	-- deep copy without the memory address
+	if love.mouse.isDown(1) then
+		for i = 1, #deck do
+			local card = deck[i]
+			if x >= card.x and x <= (card.x + card.img:getWidth())
+				and y >= card.y and y <= (card.y + card.img:getHeight()) then
+					card.can_move = true
+			end
+		end
+	end
+
+	for i = 1, #deck do
+		local card = deck[i]
 		if card.can_move then
 			card.x = x - (card.img:getWidth() / 2)
 			card.y = y - (card.img:getHeight() / 2)
 		end
 	end
-
-	initial = initial - 0.5
-
-	-- if initial <= 280 then
-	-- 	self.stop_animation:draw(WALKING, 200, center.height)
-	-- 	return
-	-- end
-
-	-- self.walk_animation:update(initial)
-	-- self.walk_animation:draw(WALKING, initial, center.height)
 end
 
 return In_Game
