@@ -1,7 +1,7 @@
 local Assets = {
-	GAME_TITLE = love.graphics.newImage('assets/game-title.png'),
-	BUTTON = love.graphics.newImage('assets/button.png'),
-	BUTTON_HOVER = love.graphics.newImage('assets/button-hover.png'),
+	BACKGROUND_INITIAL = love.graphics.newImage('assets/initial-background.png'),
+	BUTTON = love.graphics.newImage('assets/button-play.png'),
+	BUTTON_HOVER = love.graphics.newImage('assets/button-play-hover.png'),
 	WORLD = love.graphics.newImage('assets/world.png'),
 	TOWER = love.graphics.newImage('assets/tower.png'),
 	CHAR1 = {
