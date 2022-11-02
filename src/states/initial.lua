@@ -1,4 +1,4 @@
-local Suit = require('./lib/suit') -- called from main
+local Suit = require('./lib/suit')
 local Layout = require('./src/helpers/layout')
 local Saver = require('./src/helpers/saver')
 local Constants = require('./src/constants')

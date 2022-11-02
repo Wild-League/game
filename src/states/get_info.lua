@@ -1,4 +1,4 @@
-local Suit = require('./lib/suit') -- called from main
+local Suit = require('./lib/suit')
 local Saver = require('./src/helpers/saver')
 
 local nickname_input = { text = '' }
