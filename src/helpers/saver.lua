@@ -14,7 +14,7 @@ function Saver:save(user)
 
 	print('saving data...')
 
-	local serialized_data = Lume.serialize({ nickname = user.nickname })
+	local serialized_data = Lume.serialize({ nickname = user.nickname, level = user.level or 1 })
 
 	local res, message = love.filesystem.write(path, serialized_data)
 

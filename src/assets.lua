@@ -5,7 +5,7 @@ local Assets = {
 	WORLD = love.graphics.newImage('assets/world.png'),
 	TOWER = love.graphics.newImage('assets/tower.png'),
 	CHAR1 = {
-		WALKING = love.graphics.newImage('assets/chars/char1/walking.png'),
+		WALKING = love.graphics.newImage('assets/chars/char1/animations/walking-left.png'),
 		CARD = love.graphics.newImage('assets/chars/char1/card.png')
 	},
 	WORLD_DETAIL = love.graphics.newImage('assets/world-detail.png')

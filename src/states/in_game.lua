@@ -1,8 +1,11 @@
+local Suit = require('./lib/suit')
 local Layout = require('./src/helpers/layout')
 local anim8 = require('./lib/anim8')
 local Assets = require('./src/assets')
 local Constants = require('./src/constants')
 local center = Layout:Centralize(34, 36) -- sprite size
+
+local Char1 = require('./src/cards/char1')
 
 local initial = 600
 
@@ -16,7 +19,7 @@ local tower3 = Assets.TOWER
 
 local tower4 = Assets.TOWER
 
-local world_detail = Assets.WORLD_DETAIL
+-- local world_detail = Assets.WORLD_DETAIL
 
 local deck = {
 	card_1 = {
@@ -97,6 +100,11 @@ function love.mousereleased(x, y, button)
 end
 
 function In_Game:load()
+	local new_font = love.graphics.newFont(16, 'mono')
+
+	Suit.Label(Constants.LOGGED_USER.nickname, { align='center', font = new_font}, 10, 680, 200, 30)
+	Suit.Label('lv. '..Constants.LOGGED_USER.level, { align='center', font = new_font  }, 10, 695, 200, 30)
+
 	-- draw world background
 	for i = 0, Constants.WINDOW_SETTINGS.width / background:getWidth() do
 		love.graphics.setColor(255,255,255)
@@ -104,9 +112,6 @@ function In_Game:load()
 			love.graphics.draw(background, i * background:getWidth(), j * background:getHeight())
 		end
 	end
-
-	-- draw world details
-	love.graphics.draw(world_detail, center.width, center.height)
 
 	love.graphics.draw(tower, 100, 170)
 
@@ -127,6 +132,10 @@ function In_Game:load()
 
 	self.walk_animation = anim8.newAnimation(grid('2-3', 1), 12)
 	self.stop_animation = anim8.newAnimation(grid('1-1', 1), 12)
+
+	-- draw separator
+	love.graphics.setColor(255, 0, 0)
+	love.graphics.line(center.width, center.height, center.width, center.height + 300)
 end
 
 function In_Game:draw()
@@ -143,12 +152,12 @@ function In_Game:draw()
 	-- initial = initial - 0.5
 
 	-- if initial <= 280 then
-	-- 	self.stop_animation:draw(WALKING, center.width, 280)
+	-- 	self.stop_animation:draw(WALKING, 200, center.height)
 	-- 	return
 	-- end
 
 	-- self.walk_animation:update(initial)
-	-- self.walk_animation:draw(WALKING, center.width, initial)
+	-- self.walk_animation:draw(WALKING, initial, center.height)
 end
 
 return In_Game

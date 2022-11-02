@@ -3,6 +3,7 @@ local Layout = require('./src/helpers/layout')
 local Saver = require('./src/helpers/saver')
 local Constants = require('./src/constants')
 local Assets = require('./src/assets')
+local User = require('./src/entities/user')
 
 local Initial = {
 	__call = function(self)
@@ -24,7 +25,7 @@ function Initial:draw()
 		local data = Saver:retrieveData()
 
 		if data ~= nil then
-			Constants.LOGGED_USER = data
+			Constants.LOGGED_USER = User(data.nickname, data.level)
 			CONTEXT:change('in_game')
 		else
 			print(CONTEXT:change('get_info'))

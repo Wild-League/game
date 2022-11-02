@@ -1,14 +1,16 @@
-local function User(nickname)
+local function User(nickname, level)
 	local obj = {
 		__call = function(self)
 			return self.new()
 		end,
 
 		__tostring = function(self)
-			return string.format('nickname: %s', self.nickname)
+			return string.format('nickname: %s, level: %d', self.nickname, self.level)
 		end,
 
-		nickname = nickname
+		nickname = nickname,
+		level = level or 1,
+		decks = {}
 	}
 
 	obj.__index = obj
