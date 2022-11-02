@@ -27,7 +27,7 @@ function Get_Info:draw()
 
 	if save_nick.hit then
 		if (nickname_input.text ~= '') then
-			local save = Saver:save({ nickname = nickname_input.text })
+			local save = Saver:save({ nickname = nickname_input.text, level = 1 })
 			if save == true then
 				CONTEXT:change('in_game')
 			end

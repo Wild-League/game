@@ -30,7 +30,8 @@ local deck = {
 		},
 		x = 200,
 		y = 620,
-		can_move = false
+		can_move = false,
+		walk_animation = {}
 	},
 	card_2 = {
 		img = Assets.CHAR1.CARD,
@@ -40,7 +41,8 @@ local deck = {
 		},
 		x = 300,
 		y = 620,
-		can_move = false
+		can_move = false,
+		walk_animation = {}
 	},
 	card_3 = {
 		img = Assets.CHAR1.CARD,
@@ -50,7 +52,8 @@ local deck = {
 		},
 		x = 400,
 		y = 620,
-		can_move = false
+		can_move = false,
+		walk_animation = {}
 	},
 	card_4 = {
 		img = Assets.CHAR1.CARD,
@@ -60,7 +63,8 @@ local deck = {
 		},
 		x = 500,
 		y = 620,
-		can_move = false
+		can_move = false,
+		walk_animation = {}
 	},
 }
 
@@ -68,8 +72,7 @@ local In_Game = {
 	__call = function(self)
 		self:load()
 		self:draw()
-	end,
-	walk_animation = {}
+	end
 }
 
 setmetatable(In_Game, In_Game)
@@ -94,6 +97,11 @@ function love.mousereleased(x, y, button)
 				card.can_move = false
 				card.x = card.initial_position.x
 				card.y = card.initial_position.y
+
+				card.walk_animation:update(initial)
+				card.walk_animation:draw(WALKING, initial, center.height)
+				-- self.walk_animation:update(initial)
+				-- self.walk_animation:draw(WALKING, initial, center.height)
 			end
 		end
 	end
@@ -124,18 +132,17 @@ function In_Game:load()
 	for i = 1, 4 do
 		local card = deck['card_'..i]
 		love.graphics.draw(card.img, card.x, card.y)
+
+		WALKING = Assets.CHAR1.WALKING
+
+		local grid = anim8.newGrid(34, 36, WALKING:getWidth(), WALKING:getHeight())
+		card.walk_animation = anim8.newAnimation(grid('2-3', 1), 12)
 	end
-
-	WALKING = Assets.CHAR1.WALKING
-
-	local grid = anim8.newGrid(34, 36, WALKING:getWidth(), WALKING:getHeight())
-
-	self.walk_animation = anim8.newAnimation(grid('2-3', 1), 12)
-	self.stop_animation = anim8.newAnimation(grid('1-1', 1), 12)
+	-- self.stop_animation = anim8.newAnimation(grid('1-1', 1), 12)
 
 	-- draw separator
-	love.graphics.setColor(255, 0, 0)
-	love.graphics.line(center.width, center.height, center.width, center.height + 300)
+	-- love.graphics.setColor(255, 0, 0)
+	-- love.graphics.line(center.width, center.height, center.width, center.height + 300)
 end
 
 function In_Game:draw()
@@ -149,7 +156,7 @@ function In_Game:draw()
 		end
 	end
 
-	-- initial = initial - 0.5
+	initial = initial - 0.5
 
 	-- if initial <= 280 then
 	-- 	self.stop_animation:draw(WALKING, 200, center.height)

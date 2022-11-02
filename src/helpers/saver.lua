@@ -1,5 +1,8 @@
 local Saver = {}
-local Lume = require '../../lib/lume'
+local Lume = require('../../lib/lume')
+
+local Constants = require('./src/constants')
+local User = require('./src/entities/user')
 
 -- this is the default path LOVE2D sets
 -- Love2D cannot write on another path, you only can do this using IO lib
@@ -14,7 +17,9 @@ function Saver:save(user)
 
 	print('saving data...')
 
-	local serialized_data = Lume.serialize({ nickname = user.nickname, level = user.level or 1 })
+	local serialized_data = Lume.serialize({ nickname = user.nickname, level = user.level })
+
+	Constants.LOGGED_USER = User(user.nickname, user.level)
 
 	local res, message = love.filesystem.write(path, serialized_data)
 
@@ -31,7 +36,11 @@ function Saver:retrieveData()
 
 	if love.filesystem.getInfo(path) then
 		local file = love.filesystem.read(path)
-		return Lume.deserialize(file)
+		local data = Lume.deserialize(file)
+
+		Constants.LOGGED_USER = User(data.nickname, data.level)
+
+		return Constants.LOGGED_USER
 	else
 		love.filesystem.newFile(path)
 	end
