@@ -1,6 +1,6 @@
 local Suit = require('./lib/suit')
-local Constants = require('./src/constants')
 
+local Constants = require('./src/constants')
 local Context = require('./src/context')
 
 function love.load()
@@ -11,12 +11,11 @@ function love.load()
 end
 
 function love.update(dt)
-	CONTEXT:current()
-	Suit.draw()
+	CONTEXT:update(dt)
 end
 
 function love.draw()
-	CONTEXT:current()
+	CONTEXT:draw()
 	Suit.draw()
 end
 

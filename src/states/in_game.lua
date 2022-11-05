@@ -4,110 +4,81 @@ local Suit = require('./lib/suit')
 local Assets = require('./src/assets')
 local Constants = require('./src/constants')
 
-local user = {}
-
-local decks = {}
-local deck_selected = ''
-
-local background = Assets.WORLD
-
 local In_Game = {
-	__call = function(self)
-		self:load()
-		self:draw()
-	end
+	user = {},
+	decks = {},
+	deck_selected = '',
+	deck = {},
+	background = Assets.WORLD
 }
 
 setmetatable(In_Game, In_Game)
 
--- function love.mousepressed(x, y, button)
--- 	if button == 1 then -- left
--- 		local deck = decks[deck_selected]
--- 		if deck ~= nil then
--- 			print('deck', deck)
--- 			for i = 1, #deck do
--- 				local card = deck[i]
--- 				if x >= card.x and x <= (card.x + card.img:getWidth())
--- 					and y >= card.y and y <= (card.y + card.img:getHeight()) then
--- 						card.can_move = true
--- 				end
--- 			end
--- 		end
--- 	end
--- end
-
 function love.mousereleased(x, y, button)
-	if button == 1 then
-		local deck = decks[deck_selected]
-		if deck ~= nil then
-			for i = 1, #deck do
-				local card = deck[i]
-				if card.can_move == true then
-					card.can_move = false
-					-- card.x = card.initial_position.x
-					-- card.y = card.initial_position.y
-				end
-			end
-		end
-	end
+	-- if button == 1 then
+	-- 	local deck = decks[deck_selected]
+	-- 	if deck ~= nil then
+	-- 		for i = 1, #deck do
+	-- 			local card = deck[i]
+	-- 			if card.can_move == true then
+	-- 				card.can_move = false
+	-- 				card.x = card.initial_position_x
+	-- 				card.y = card.initial_position_y
+	-- 			end
+	-- 		end
+	-- 	end
+	-- end
 end
 
 function In_Game:load()
-	user = Constants.LOGGED_USER
+	In_Game.user = Constants.LOGGED_USER
+	In_Game.decks = In_Game.user.decks
 
-	local new_font = love.graphics.newFont(16, 'mono')
+	In_Game.deck_selected = In_Game.user.deck_selected
 
-	Suit.Label(Constants.LOGGED_USER.nickname, { align='center', font = new_font}, 10, 680, 200, 30)
-	Suit.Label('lv. '..Constants.LOGGED_USER.level, { align='center', font = new_font  }, 10, 695, 200, 30)
+	In_Game.deck = In_Game.decks[In_Game.deck_selected]
+end
 
-	-- draw world background
-	for i = 0, Constants.WINDOW_SETTINGS.width / background:getWidth() do
-		love.graphics.setColor(255,255,255)
-		for j = 0, Constants.WINDOW_SETTINGS.height / background:getHeight() do
-			love.graphics.draw(background, i * background:getWidth(), j * background:getHeight())
-		end
-	end
+function In_Game:update()
+	local new_font = love.graphics.newFont(20, 'mono')
 
-	decks = user.decks
-	deck_selected = user.deck_selected
-
-	local deck = decks[deck_selected]
-
-	for i = 1, #deck do
-		local card = deck[i]
-		love.graphics.draw(card.img, card.x + ((i - 1) * 100), card.y)
-	end
-
-	-- draw separator
-	-- love.graphics.setColor(255, 0, 0)
-	-- love.graphics.line(center.width, center.height, center.width, center.height + 300)
+	Suit.Label(In_Game.user.nickname, { align='center', font = new_font}, 10, 680, 200, 30)
+	Suit.Label('lv. '..In_Game.user.level, { align='center', font = new_font  }, 10, 695, 200, 30)
 end
 
 function In_Game:draw()
+	-- world background
+	for i = 0, Constants.WINDOW_SETTINGS.width / In_Game.background:getWidth() do
+		for j = 0, Constants.WINDOW_SETTINGS.height / In_Game.background:getHeight() do
+			love.graphics.draw(In_Game.background, i * In_Game.background:getWidth(), j * In_Game.background:getHeight())
+		end
+	end
+
+
 	local x,y = love.mouse.getPosition()
 
-	local deck = decks[deck_selected]
+	-- for i = 1, #deck do
+	-- 	local card = deck[i]
+	-- 	love.graphics.draw(card.img, card.initial_position_x, card.initial_position_y)
+	-- end
 
-	-- TODO: fix move card individually
-	-- all the cards are using the same memory address
-	-- deep copy without the memory address
-	if love.mouse.isDown(1) then
-		for i = 1, #deck do
-			local card = deck[i]
-			if x >= card.x and x <= (card.x + card.img:getWidth())
-				and y >= card.y and y <= (card.y + card.img:getHeight()) then
-					card.can_move = true
-			end
-		end
-	end
+	-- if love.mouse.isDown(1) then
+	-- 	for i = 1, #deck do
+	-- 		local card = deck[i]
+	-- 		if x >= card.x and x <= (card.x + card.img:getWidth())
+	-- 			and y >= card.y and y <= (card.y + card.img:getHeight()) then
+	-- 				card.can_move = true
+	-- 		end
+	-- 	end
+	-- end
 
-	for i = 1, #deck do
-		local card = deck[i]
-		if card.can_move then
-			card.x = x - (card.img:getWidth() / 2)
-			card.y = y - (card.img:getHeight() / 2)
-		end
-	end
+	-- for i = 1, #deck do
+	-- 	local card = deck[i]
+	-- 	if card.can_move then
+	-- 		card.x = x - (card.img:getWidth() / 2)
+	-- 		card.y = y - (card.img:getHeight() / 2)
+	-- 	end
+	-- end
 end
 
 return In_Game

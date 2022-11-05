@@ -2,7 +2,7 @@ local BaseCard = {
 	name = '',
 	cooldown = 0,
 	type = '',
-	cost_elixir = 0,
+	cost_elixir = 0, -- TODO: find alternative name for 'elixir'
 	damage = 0,
 	life = 0,
 	hit_speed = 0,
@@ -12,14 +12,16 @@ local BaseCard = {
 
 	-- more code related configs
 	img = '', -- card img
-	initial_position = {
-		x = 0, -- CHECK: I really need this?
-		y = 0, -- the position in the map where the card was dropped
-	},
+
+	-- CHECK: I really need this?
+	-- the position in the map where the card will be dropped
+	initial_position_x = 0,
+	initial_position_y = 0,
+
 	-- the actual card position
-	-- these values represent the first card only
-	x = 120,
-	y = 620,
+	x = 0,
+	y = 0,
+
 	-- CHECK: I really need this?
 	-- the state changes when the card is released (to true)
 	can_move = false,

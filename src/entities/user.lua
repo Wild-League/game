@@ -1,9 +1,12 @@
 local Char1 = require('./src/cards/char1')
+local Char2 = require('./src/cards/char2')
+local Char3 = require('./src/cards/char3')
+local Char4 = require('./src/cards/char4')
 
 local card1 = Char1
-local card2 = Char1
-local card3 = Char1
-local card4 = Char1
+local card2 = Char2
+local card3 = Char3
+local card4 = Char4
 
 local function User(nickname, level)
 	local obj = {

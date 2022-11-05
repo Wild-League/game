@@ -1,25 +1,16 @@
 local Suit = require('./lib/suit')
 local Saver = require('./src/helpers/saver')
 
+
+local Get_Info = {}
+
 local nickname_input = { text = '' }
-
-function love.textinput(t)
-	Suit.textinput(t)
-end
-
-function love.keypressed(key)
-	Suit.keypressed(key)
-end
-
-local Get_Info = {
-	__call = function(self)
-		self:draw()
-	end
-}
 
 setmetatable(Get_Info, Get_Info)
 
-function Get_Info:draw()
+function Get_Info:load() end
+
+function Get_Info:update()
 	Suit.Label('nickname: ', { align='center' }, 10, 0, 200, 30)
 	Suit.Input(nickname_input, 10, 40, 200, 30)
 
@@ -33,6 +24,18 @@ function Get_Info:draw()
 			end
 		end
 	end
+end
+
+function Get_Info:draw() end
+
+-- love functions
+
+function love.textinput(t)
+	Suit.textinput(t)
+end
+
+function love.keypressed(key)
+	Suit.keypressed(key)
 end
 
 return Get_Info

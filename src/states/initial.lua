@@ -8,16 +8,11 @@ local BACKGROUND = Assets.BACKGROUND_INITIAL
 local BUTTON = Assets.BUTTON
 local BUTTON_HOVER = Assets.BUTTON_HOVER
 
-local Initial = {
-	__call = function(self)
-		self:load()
-		self:draw()
-	end
-}
+local Initial = {}
 
-setmetatable(Initial, Initial)
+function Initial:update() end
 
-function Initial:load()
+function Initial:draw()
 	local sx = love.graphics.getWidth() / BACKGROUND:getWidth()
 	local sy = love.graphics.getHeight() / BACKGROUND:getHeight()
 
@@ -26,11 +21,6 @@ function Initial:load()
 			love.graphics.draw(BACKGROUND, i * BACKGROUND:getWidth(), j * BACKGROUND:getHeight(), 0, sx, sy)
 		end
 	end
-end
-
-function Initial:draw()
-	-- local title_central = Layout:Centralize(659, 213)
-	-- love.graphics.draw(GAME_TITLE, title_central.width, title_central.height)
 
 	local button_central = Layout:Centralize(BUTTON:getWidth(), BUTTON:getHeight() - 200)
 	local play_button = Suit.ImageButton(BUTTON, { hovered = BUTTON_HOVER }, button_central.width, button_central.height)
@@ -41,7 +31,7 @@ function Initial:draw()
 		if data ~= nil then
 			CONTEXT:change('in_game')
 		else
-			print(CONTEXT:change('get_info'))
+			CONTEXT:change('get_info')
 		end
 	end
 end

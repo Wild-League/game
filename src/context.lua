@@ -11,8 +11,16 @@ local Context = {
 
 	set_current = 'initial',
 
-	current = function(self)
-		return self.states[self.set_current]()
+	-- current = function(self)
+	-- 	return self.states[self.set_current]()
+	-- end,
+
+	update = function(self, dt)
+		return self.states[self.set_current]:update(dt)
+	end,
+
+	draw = function(self)
+		return self.states[self.set_current]:draw()
 	end,
 
 	change = function(self, ctx)
@@ -26,6 +34,7 @@ local Context = {
 
 		if new_ctx ~= nil then
 			self.set_current = ctx
+			self.states[self.set_current]:load()
 		else
 			error('This context does not exist')
 		end

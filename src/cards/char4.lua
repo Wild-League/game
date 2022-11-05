@@ -3,21 +3,22 @@ local Assets = require('./src/assets')
 
 local anim8 = require('./lib/anim8')
 
-local Char1 = BaseCard.create()
+-- copy of char1 - only for testing
+local Char4 = BaseCard.create()
 
 -- override default config
-Char1.name = 'char1'
-Char1.range = 'melee'
-Char1.img = Assets.CHAR1.CARD
+Char4.name = 'char4'
+Char4.range = 'melee'
+Char4.img = Assets.CHAR1.CARD
 
--- position for card number 1
-Char1.x = 120
-Char1.y = 620
+-- position for card number 4
+Char4.x = 420
+Char4.y = 620
 
-Char1.initial_position_x = 120
-Char1.initial_position_y = 620
+Char4.initial_position_x = 420
+Char4.initial_position_y = 620
 
-Char1.animations = {
+Char4.animations = {
 	walk_animation = function()
 		local walking = Assets.CHAR1.WALKING
 		local grid = anim8.newGrid(34, 36, walking:getWidth(), walking:getHeight())
@@ -25,4 +26,4 @@ Char1.animations = {
 	end
 }
 
-return Char1
+return Char4
