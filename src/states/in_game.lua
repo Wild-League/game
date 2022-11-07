@@ -15,19 +15,19 @@ local In_Game = {
 setmetatable(In_Game, In_Game)
 
 function love.mousereleased(x, y, button)
-	-- if button == 1 then
-	-- 	local deck = decks[deck_selected]
-	-- 	if deck ~= nil then
-	-- 		for i = 1, #deck do
-	-- 			local card = deck[i]
-	-- 			if card.can_move == true then
-	-- 				card.can_move = false
-	-- 				card.x = card.initial_position_x
-	-- 				card.y = card.initial_position_y
-	-- 			end
-	-- 		end
-	-- 	end
-	-- end
+	if button == 1 then
+		local deck = In_Game.decks[In_Game.deck_selected]
+		if deck ~= nil then
+			for i = 1, #deck do
+				local card = deck[i]
+				if card.can_move == true then
+					card.can_move = false
+					card.x = card.initial_position_x
+					card.y = card.initial_position_y
+				end
+			end
+		end
+	end
 end
 
 function In_Game:load()
@@ -37,6 +37,14 @@ function In_Game:load()
 	In_Game.deck_selected = In_Game.user.deck_selected
 
 	In_Game.deck = In_Game.decks[In_Game.deck_selected]
+
+	-- define initial position for all cards
+	for i = 1, #In_Game.deck do
+		local card = In_Game.deck[i]
+
+		card.x = card.initial_position_x
+		card.y = card.initial_position_y
+	end
 end
 
 function In_Game:update()
@@ -54,31 +62,31 @@ function In_Game:draw()
 		end
 	end
 
-
 	local x,y = love.mouse.getPosition()
 
-	-- for i = 1, #deck do
-	-- 	local card = deck[i]
-	-- 	love.graphics.draw(card.img, card.initial_position_x, card.initial_position_y)
-	-- end
+	for i = 1, #In_Game.deck do
+		local card = In_Game.deck[i]
 
-	-- if love.mouse.isDown(1) then
-	-- 	for i = 1, #deck do
-	-- 		local card = deck[i]
-	-- 		if x >= card.x and x <= (card.x + card.img:getWidth())
-	-- 			and y >= card.y and y <= (card.y + card.img:getHeight()) then
-	-- 				card.can_move = true
-	-- 		end
-	-- 	end
-	-- end
+		love.graphics.draw(card.img, card.x, card.y)
+	end
 
-	-- for i = 1, #deck do
-	-- 	local card = deck[i]
-	-- 	if card.can_move then
-	-- 		card.x = x - (card.img:getWidth() / 2)
-	-- 		card.y = y - (card.img:getHeight() / 2)
-	-- 	end
-	-- end
+	if love.mouse.isDown(1) then
+		for i = 1, #In_Game.deck do
+			local card = In_Game.deck[i]
+			if x >= card.x and x <= (card.x + card.img:getWidth())
+				and y >= card.y and y <= (card.y + card.img:getHeight()) then
+					card.can_move = true
+			end
+		end
+	end
+
+	for i = 1, #In_Game.deck do
+		local card = In_Game.deck[i]
+		if card.can_move then
+			card.x = x - (card.img:getWidth() / 2)
+			card.y = y - (card.img:getHeight() / 2)
+		end
+	end
 end
 
 return In_Game
