@@ -11,12 +11,8 @@ Char3.name = 'char3'
 Char3.range = 'melee'
 Char3.img = Assets.CHAR1.CARD
 
--- position for card number 3
-Char3.x = 320
-Char3.y = 620
-
-Char3.initial_position_x = 320
-Char3.initial_position_y = 620
+Char3.x = 0
+Char3.y = 0
 
 Char3.animations = {
 	walk_animation = function()

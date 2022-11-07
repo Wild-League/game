@@ -10,15 +10,17 @@ Char1.name = 'char1'
 Char1.range = 'melee'
 Char1.img = Assets.CHAR1.CARD
 
--- position for card number 1
-Char1.x = 120
-Char1.y = 620
-
-Char1.initial_position_x = 120
-Char1.initial_position_y = 620
+Char1.x = 0
+Char1.y = 0
 
 Char1.animations = {
-	walk_animation = function()
+	initial = function()
+		local walking = Assets.CHAR1.WALKING
+		local grid = anim8.newGrid(34, 36, walking:getWidth(), walking:getHeight())
+		return anim8.newAnimation(grid('1-1'), 12)
+	end,
+
+	walk = function()
 		local walking = Assets.CHAR1.WALKING
 		local grid = anim8.newGrid(34, 36, walking:getWidth(), walking:getHeight())
 		return anim8.newAnimation(grid('2-3', 1), 12)

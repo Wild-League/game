@@ -21,6 +21,24 @@ local function User(nickname, level)
 		nickname = nickname,
 		level = level or 1,
 		decks = {
+			positions = {
+				card1 = {
+					x = 120,
+					y = 620
+				},
+				card2 = {
+					x = 220,
+					y = 620
+				},
+				card3 = {
+					x = 320,
+					y = 620
+				},
+				card4 = {
+					x = 420,
+					y = 620
+				}
+			},
 			deck1 = {
 				card1,
 				card2,

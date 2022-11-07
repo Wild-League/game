@@ -22,8 +22,11 @@ function love.mousereleased(x, y, button)
 				local card = deck[i]
 				if card.can_move == true then
 					card.can_move = false
-					card.x = card.initial_position_x
-					card.y = card.initial_position_y
+
+					local initial_position = In_Game.decks.positions['card'..i]
+
+					card.x = initial_position.x
+					card.y = initial_position.y
 				end
 			end
 		end
@@ -42,8 +45,10 @@ function In_Game:load()
 	for i = 1, #In_Game.deck do
 		local card = In_Game.deck[i]
 
-		card.x = card.initial_position_x
-		card.y = card.initial_position_y
+		local initial_position = In_Game.decks.positions['card'..i]
+
+		card.x = initial_position.x
+		card.y = initial_position.y
 	end
 end
 

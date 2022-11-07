@@ -13,11 +13,6 @@ local BaseCard = {
 	-- more code related configs
 	img = '', -- card img
 
-	-- CHECK: I really need this?
-	-- the position in the map where the card will be dropped
-	initial_position_x = 0,
-	initial_position_y = 0,
-
 	-- the actual card position
 	x = 0,
 	y = 0,
