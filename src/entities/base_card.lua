@@ -17,9 +17,18 @@ local BaseCard = {
 	x = 0,
 	y = 0,
 
+	-- the char position
+	char_x = 0,
+	char_y = 0,
+
 	-- CHECK: I really need this?
-	-- the state changes when the card is released (to true)
+	-- state to move the card - changes on card click
 	can_move = false,
+
+	-- CHECK: I really need this?
+	-- state to the animations hero - changes on card realease
+	spawned = false,
+
 	animations = {}
 }
 

@@ -15,7 +15,13 @@ Char3.x = 0
 Char3.y = 0
 
 Char3.animations = {
-	walk_animation = function()
+	initial = function()
+		local walking = Assets.CHAR1.WALKING
+		local grid = anim8.newGrid(34, 36, walking:getWidth(), walking:getHeight())
+		return anim8.newAnimation(grid('1-1', 1), 12)
+	end,
+
+	walk = function()
 		local walking = Assets.CHAR1.WALKING
 		local grid = anim8.newGrid(34, 36, walking:getWidth(), walking:getHeight())
 		return anim8.newAnimation(grid('2-3', 1), 12)

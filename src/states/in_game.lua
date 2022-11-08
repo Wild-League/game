@@ -9,7 +9,8 @@ local In_Game = {
 	decks = {},
 	deck_selected = '',
 	deck = {},
-	background = Assets.WORLD
+	background = Assets.WORLD,
+	dt = 0
 }
 
 setmetatable(In_Game, In_Game)
@@ -23,10 +24,14 @@ function love.mousereleased(x, y, button)
 				if card.can_move == true then
 					card.can_move = false
 
-					local initial_position = In_Game.decks.positions['card'..i]
+					card.spawned = true
 
+					local initial_position = In_Game.decks.positions['card'..i]
 					card.x = initial_position.x
 					card.y = initial_position.y
+
+					card.char_x = x
+					card.char_y = y
 				end
 			end
 		end
@@ -52,28 +57,14 @@ function In_Game:load()
 	end
 end
 
-function In_Game:update()
+function In_Game:update(dt)
+	In_Game.dt = dt
 	local new_font = love.graphics.newFont(20, 'mono')
 
 	Suit.Label(In_Game.user.nickname, { align='center', font = new_font}, 10, 680, 200, 30)
 	Suit.Label('lv. '..In_Game.user.level, { align='center', font = new_font  }, 10, 695, 200, 30)
-end
-
-function In_Game:draw()
-	-- world background
-	for i = 0, Constants.WINDOW_SETTINGS.width / In_Game.background:getWidth() do
-		for j = 0, Constants.WINDOW_SETTINGS.height / In_Game.background:getHeight() do
-			love.graphics.draw(In_Game.background, i * In_Game.background:getWidth(), j * In_Game.background:getHeight())
-		end
-	end
 
 	local x,y = love.mouse.getPosition()
-
-	for i = 1, #In_Game.deck do
-		local card = In_Game.deck[i]
-
-		love.graphics.draw(card.img, card.x, card.y)
-	end
 
 	if love.mouse.isDown(1) then
 		for i = 1, #In_Game.deck do
@@ -93,5 +84,26 @@ function In_Game:draw()
 		end
 	end
 end
+
+function In_Game:draw()
+	-- world background
+	for i = 0, Constants.WINDOW_SETTINGS.width / In_Game.background:getWidth() do
+		for j = 0, Constants.WINDOW_SETTINGS.height / In_Game.background:getHeight() do
+			love.graphics.draw(In_Game.background, i * In_Game.background:getWidth(), j * In_Game.background:getHeight())
+		end
+	end
+
+	for i = 1, #In_Game.deck do
+		local card = In_Game.deck[i]
+		love.graphics.draw(card.img, card.x, card.y)
+
+		if card.spawned then
+			card.animations.initial():update(In_Game.dt)
+			card.animations.initial():draw(Assets.CHAR1.WALKING, card.char_x, card.char_y)
+		end
+	end
+end
+
+local function change_card_by_char() end
 
 return In_Game
