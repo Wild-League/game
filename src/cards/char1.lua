@@ -10,7 +10,7 @@ Char1.name = 'char1'
 Char1.range = 'melee'
 Char1.img = Assets.CHAR1.CARD
 
-Char1.speed = 0.005
+Char1.speed = 8 / 10
 
 Char1.range = 20
 
@@ -39,19 +39,37 @@ Char1.animations = {
 			walk_animation:update(dt)
 		end,
 		draw = function(x,y, destiny_x, destiny_y)
-			-- TODO: refactor how to "walk"
-			-- as the char gets close to the destiny,
-			-- the speed decrease, because the distance between
-			-- the destiny and the char also decrease
+			-- TODO: need to add 'area_perception' to base_card
+			-- that indicates the range where the hero realizes that there is
+			-- someone around.
+			-- NOTE: this is different from 'range' - this means the area that
+			-- the hero can attack
+
+			-- if (x ~= destiny_x and y ~= destiny_y) then
+			-- 	local follow_x, follow_y = Char1.animations.follow.draw(x, y, destiny_x, destiny_y)
+			-- 	return follow_x, follow_y
+			-- end
+
+			x = x - Char1.speed
+			-- y = y + Char1.speed
+
+			walk_animation:draw(Assets.CHAR1.WALKING, x, y)
+
+			return x, y
+		end
+	},
+	follow = {
+		update = function(dt)
+			initial_animation:update(dt)
+		end,
+		draw = function(x,y, destiny_x, destiny_y)
 			local x_distance = destiny_x - x
 			local y_distance = destiny_y - y
 
 			x = x + (x_distance * Char1.speed)
 			y = y + (y_distance * Char1.speed)
 
-			walk_animation:draw(Assets.CHAR1.WALKING, x, y)
-
-			return x, y
+			return x,y
 		end
 	}
 }
