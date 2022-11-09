@@ -24,19 +24,19 @@ local function User(nickname, level)
 			positions = {
 				card1 = {
 					x = 120,
-					y = 620
+					y = 450
 				},
 				card2 = {
 					x = 220,
-					y = 620
+					y = 450
 				},
 				card3 = {
 					x = 320,
-					y = 620
+					y = 450
 				},
 				card4 = {
 					x = 420,
-					y = 620
+					y = 450
 				}
 			},
 			deck1 = {

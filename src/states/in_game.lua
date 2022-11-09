@@ -1,5 +1,5 @@
 local Suit = require('./lib/suit')
--- local Layout = require('./src/helpers/layout')
+local Layout = require('./src/helpers/layout')
 
 local Assets = require('./src/assets')
 local Constants = require('./src/constants')
@@ -9,8 +9,7 @@ local In_Game = {
 	decks = {},
 	deck_selected = '',
 	deck = {},
-	background = Assets.WORLD,
-	dt = 0
+	background = Assets.WORLD
 }
 
 setmetatable(In_Game, In_Game)
@@ -58,7 +57,6 @@ function In_Game:load()
 end
 
 function In_Game:update(dt)
-	In_Game.dt = dt
 	local new_font = love.graphics.newFont(20, 'mono')
 
 	Suit.Label(In_Game.user.nickname, { align='center', font = new_font}, 10, 680, 200, 30)
@@ -82,6 +80,10 @@ function In_Game:update(dt)
 			card.x = x - (card.img:getWidth() / 2)
 			card.y = y - (card.img:getHeight() / 2)
 		end
+
+		if card.spawned then
+			card.animations.walk.update(dt)
+		end
 	end
 end
 
@@ -98,10 +100,13 @@ function In_Game:draw()
 		love.graphics.draw(card.img, card.x, card.y)
 
 		if card.spawned then
-			card.animations.initial():update(In_Game.dt)
-			card.animations.initial():draw(Assets.CHAR1.WALKING, card.char_x, card.char_y)
+			card.animations.walk.draw(card.char_x, card.char_y)
 		end
 	end
+
+	-- test as a fake char to attacked
+	local center = Layout:Centralize(20, 20)
+	love.graphics.rectangle("fill", center.width, center.height, 20, 20)
 end
 
 local function change_card_by_char() end

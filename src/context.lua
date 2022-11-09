@@ -11,10 +11,6 @@ local Context = {
 
 	current = 'initial',
 
-	-- current = function(self)
-	-- 	return self.states[self.current]()
-	-- end,
-
 	update = function(self, dt)
 		return self.states[self.current]:update(dt)
 	end,

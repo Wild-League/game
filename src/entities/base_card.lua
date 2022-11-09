@@ -6,7 +6,7 @@ local BaseCard = {
 	damage = 0,
 	life = 0,
 	hit_speed = 0,
-	speed_movement = 0,
+	speed = 0,
 	targets = '', -- ground or air or both
 	range = '', -- melee (short, medium, long) or distance (number of frames)
 
