@@ -10,7 +10,9 @@ Char1.name = 'char1'
 Char1.range = 'melee'
 Char1.img = Assets.CHAR1.CARD
 
-Char1.speed = 20
+Char1.speed = 0.005
+
+Char1.range = 20
 
 Char1.x = 0
 Char1.y = 0
@@ -36,8 +38,20 @@ Char1.animations = {
 		update = function(dt)
 			walk_animation:update(dt)
 		end,
-		draw = function(x,y)
+		draw = function(x,y, destiny_x, destiny_y)
+			-- TODO: refactor how to "walk"
+			-- as the char gets close to the destiny,
+			-- the speed decrease, because the distance between
+			-- the destiny and the char also decrease
+			local x_distance = destiny_x - x
+			local y_distance = destiny_y - y
+
+			x = x + (x_distance * Char1.speed)
+			y = y + (y_distance * Char1.speed)
+
 			walk_animation:draw(Assets.CHAR1.WALKING, x, y)
+
+			return x, y
 		end
 	}
 }

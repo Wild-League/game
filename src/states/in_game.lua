@@ -95,18 +95,18 @@ function In_Game:draw()
 		end
 	end
 
+	-- test as a fake char to attacked
+	local center = Layout:Centralize(20, 20)
+	love.graphics.rectangle("fill", center.width, center.height, 20, 20)
+
 	for i = 1, #In_Game.deck do
 		local card = In_Game.deck[i]
 		love.graphics.draw(card.img, card.x, card.y)
 
 		if card.spawned then
-			card.animations.walk.draw(card.char_x, card.char_y)
+			card.char_x, card.char_y = card.animations.walk.draw(card.char_x, card.char_y, center.width, center.height)
 		end
 	end
-
-	-- test as a fake char to attacked
-	local center = Layout:Centralize(20, 20)
-	love.graphics.rectangle("fill", center.width, center.height, 20, 20)
 end
 
 local function change_card_by_char() end

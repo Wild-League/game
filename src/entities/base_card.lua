@@ -8,7 +8,7 @@ local BaseCard = {
 	hit_speed = 0,
 	speed = 0,
 	targets = '', -- ground or air or both
-	range = '', -- melee (short, medium, long) or distance (number of frames)
+	range = '', -- melee (short, medium, long) or distance (in pixels)
 
 	-- more code related configs
 	img = '', -- card img
@@ -27,6 +27,7 @@ local BaseCard = {
 
 	-- CHECK: I really need this?
 	-- state to the animations hero - changes on card realease
+	-- TODO: change name for actions?
 	spawned = false,
 
 	animations = {}
