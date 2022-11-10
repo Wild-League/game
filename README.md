@@ -5,10 +5,15 @@ It will be a clash royale-like game, because I'm a big fan of this game
 
 > if you play with mk, consider leaving this page, please.
 
-## Todo
+# Stay in touch
+On my [Blog](https://www.ropoko.net/tags/wild-league) where I often post devlogs and updates about the game.
+
+Also on [twitter](https://twitter.com/ropoko_) where I post polls about what should be in the game and threads about the current game development.
+
+# Todo
 - [x] persist user data
 - [ ] finish user interface
   - [ ] gets nickname and enter game
 - [x] add splash screen
-- [ ] add cards
-  - [ ] animations for each char
+- [x] add cards
+  - [x] animations for each char
