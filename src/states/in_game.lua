@@ -23,8 +23,8 @@ local ALL_OBJECTS = {
 	test = {
 		x = center.width,
 		y = center.height,
-		width = center.width,
-		height = center.height
+		width = 20,
+		height = 20
 	}
 }
 
@@ -108,7 +108,7 @@ function In_Game:update(dt)
 				-- TOOD: change 20,20 from collision function
 				-- can change by value.width, value.height
 				if Utils.circle_rect_collision(card.char_x, card.char_y,
-						card:perception_range(), value.x,value.y,20,20) then
+						card:perception_range(), value.x, value.y, 20, 20) then
 					card.chars_around.key = value
 					card.current_action = 'follow'
 				end

@@ -13,7 +13,7 @@ Char1.img = Assets.CHAR1.CARD
 
 Char1.speed = 2 / 10
 
-Char1.attack_range = Range:getSize('distance', 20)
+Char1.attack_range = Range:getSize('distance', 40)
 
 Char1.life = 100
 
@@ -87,10 +87,10 @@ Char1.actions = {
 			walk_animation:update(dt)
 		end,
 		draw = function(x,y)
-			-- TODO: need to check collision area (perception and attack_range)
 			if Utils.circle_rect_collision(x, y, Char1.attack_range,
 					nearest_enemy.x, nearest_enemy.y, nearest_enemy.width, nearest_enemy.height) then
 				walk_animation:draw(Assets.CHAR1.WALKING, x, y)
+				print('attack')
 				return x,y
 			end
 

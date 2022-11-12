@@ -10,6 +10,9 @@ function Utils.has_collision(x1, y1, w1, h1, x2, y2, w2, h2)
 end
 
 function Utils.circle_rect_collision(cx, cy, cr, rx, ry, rw, rh)
+	rw = rw or 2
+	rh = rh or 2
+
 	local circle_distance_x = math.abs(cx - rx - rw/2)
 	local circle_distance_y = math.abs(cy - ry - rh/2)
 
