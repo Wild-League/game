@@ -8,7 +8,7 @@ local BaseCard = {
 	hit_speed = 0,
 	speed = 0,
 	targets = '', -- ground or air or both
-	attack_range = '', -- melee (short, medium, long) or distance (in pixels)
+	attack_range = 0, -- melee (short, medium, long) or distance (in pixels)
 
 	-- more code related configs
 	img = '', -- card img

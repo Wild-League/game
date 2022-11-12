@@ -1,7 +1,9 @@
 local BaseCard = require('./src/entities/base_card')
 local Assets = require('./src/assets')
-local Utils = require('./src/helpers/utils')
+-- local Utils = require('./src/helpers/utils')
 local anim8 = require('./lib/anim8')
+
+local Range = require('./src/config/range')
 
 local Char1 = BaseCard.create()
 
@@ -11,7 +13,7 @@ Char1.img = Assets.CHAR1.CARD
 
 Char1.speed = 2 / 10
 
-Char1.attack_range = 40
+Char1.attack_range = Range:getSize('distance', 40)
 
 Char1.life = 100
 
@@ -67,10 +69,13 @@ Char1.actions = {
 	follow = {
 		update = function(dt)
 			local around = Char1.chars_around
+
 			for k,v in pairs(around) do
-				local distance = v.x - Char1.char_x
-				-- print(distance, (nearest_enemy.x or 0) - Char1.char_x)
-				if distance >= ((nearest_enemy.x) - Char1.char_x) then
+				local distance_x = v.x - Char1.char_x
+				local distance_y = v.y - Char1.char_y
+
+				if (distance_x >= (nearest_enemy.x - Char1.char_x))
+					and (distance_y >= (nearest_enemy.y - Char1.char_y)) then
 					nearest_enemy = v
 				end
 			end
