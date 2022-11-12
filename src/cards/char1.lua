@@ -1,55 +1,61 @@
 local BaseCard = require('./src/entities/base_card')
 local Assets = require('./src/assets')
-
+local Utils = require('./src/helpers/utils')
 local anim8 = require('./lib/anim8')
 
 local Char1 = BaseCard.create()
 
 -- override default config
 Char1.name = 'char1'
-Char1.range = 'melee'
 Char1.img = Assets.CHAR1.CARD
 
-Char1.speed = 8 / 10
+Char1.speed = 2 / 10
 
-Char1.range = 20
+Char1.attack_range = 40
+
+Char1.life = 100
 
 Char1.x = 0
 Char1.y = 0
 
+Char1.current_action = 'walk'
+
+-- LOAD
 local walking = Assets.CHAR1.WALKING
 local grid = anim8.newGrid(34, 36, walking:getWidth(), walking:getHeight())
 
 local walk_animation = anim8.newAnimation(grid('2-3', 1), 0.2)
 
-local initial_animation = anim8.newAnimation(grid('1-1', 1), 0.2)
+local nearest_enemy = {
+	x = 0,
+	y = 0
+}
+------
 
-Char1.animations = {
-	initial = {
-		update = function(dt)
-			initial_animation:update(dt)
-		end,
-		draw = function(x,y)
-			initial_animation:draw(Assets.CHAR1.WALKING, x, y)
-		end
-	},
+Char1.animate.update = function(dt)
+	return Char1.actions[Char1.current_action].update(dt)
+end
 
+Char1.animate.draw = function(x, y, ...)
+	-- life bar
+	love.graphics.rectangle("line", x - 10, y - 10, 50, 5)
+	love.graphics.rectangle("fill", x - 10, y - 10, 25, 5)
+
+	-- attack range
+	love.graphics.ellipse("line", x + (Char1.img:getWidth() / 4), y + (Char1.img:getHeight() / 4), Char1.attack_range, Char1.attack_range)
+
+	-- perception range
+	love.graphics.ellipse("line", x + (Char1.img:getWidth() / 4), y + (Char1.img:getHeight() / 4), Char1:perception_range(), Char1:perception_range())
+
+	return Char1.actions[Char1.current_action].draw(x,y)
+end
+
+Char1.actions = {
 	walk = {
 		update = function(dt)
 			walk_animation:update(dt)
 		end,
-		draw = function(x,y, destiny_x, destiny_y)
-			-- TODO: need to add 'area_perception' to base_card
-			-- that indicates the range where the hero realizes that there is
-			-- someone around.
-			-- NOTE: this is different from 'range' - this means the area that
-			-- the hero can attack
-
-			-- if (x ~= destiny_x and y ~= destiny_y) then
-			-- 	local follow_x, follow_y = Char1.animations.follow.draw(x, y, destiny_x, destiny_y)
-			-- 	return follow_x, follow_y
-			-- end
-
+		draw = function(x,y)
 			x = x - Char1.speed
 			-- y = y + Char1.speed
 
@@ -60,14 +66,39 @@ Char1.animations = {
 	},
 	follow = {
 		update = function(dt)
-			initial_animation:update(dt)
-		end,
-		draw = function(x,y, destiny_x, destiny_y)
-			local x_distance = destiny_x - x
-			local y_distance = destiny_y - y
+			local around = Char1.chars_around
+			for k,v in pairs(around) do
+				local distance = v.x - Char1.char_x
+				-- print(distance, (nearest_enemy.x or 0) - Char1.char_x)
+				if distance >= ((nearest_enemy.x) - Char1.char_x) then
+					nearest_enemy = v
+				end
+			end
 
-			x = x + (x_distance * Char1.speed)
-			y = y + (y_distance * Char1.speed)
+			walk_animation:update(dt)
+		end,
+		draw = function(x,y)
+			if (nearest_enemy.x == math.ceil(x) and nearest_enemy.y == math.ceil(y)) then
+				love.graphics.print('it works')
+			end
+
+			if (nearest_enemy.y > y) then
+				y = y + Char1.speed
+			end
+
+			if (nearest_enemy.y < y) then
+				y = y - Char1.speed
+			end
+
+			if (nearest_enemy.x > x) then
+				x = x + Char1.speed
+			end
+
+			if (nearest_enemy.x < x) then
+				x = x - Char1.speed
+			end
+
+			walk_animation:draw(Assets.CHAR1.WALKING, x, y)
 
 			return x,y
 		end

@@ -8,7 +8,7 @@ local BaseCard = {
 	hit_speed = 0,
 	speed = 0,
 	targets = '', -- ground or air or both
-	range = '', -- melee (short, medium, long) or distance (in pixels)
+	attack_range = '', -- melee (short, medium, long) or distance (in pixels)
 
 	-- more code related configs
 	img = '', -- card img
@@ -27,11 +27,25 @@ local BaseCard = {
 
 	-- CHECK: I really need this?
 	-- state to the animations hero - changes on card realease
-	-- TODO: change name for actions?
 	spawned = false,
 
-	animations = {}
+	-- all possible char animations / actions
+	actions = {},
+
+	-- "status" - the current char action
+	current_action = '',
+
+	-- implementation of the default functions of anim8
+	animate = {},
+
+	-- list of all anothers cards that is in perception_range
+	-- get the one nearest
+	chars_around = {}
 }
+
+function BaseCard:perception_range()
+	return self.attack_range * 2
+end
 
 local MetaBaseCard = { __index = BaseCard }
 

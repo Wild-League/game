@@ -4,12 +4,26 @@ local Layout = require('./src/helpers/layout')
 local Assets = require('./src/assets')
 local Constants = require('./src/constants')
 
+local Utils = require('./src/helpers/utils')
+
 local In_Game = {
 	user = {},
 	decks = {},
 	deck_selected = '',
 	deck = {},
 	background = Assets.WORLD
+}
+
+-- have all the objects in the game
+-- so we can compare collisions easily
+-- (I couln't find another way)
+local center = Layout:Centralize(20, 20)
+
+local ALL_OBJECTS = {
+	test = {
+		x = center.width,
+		y = center.height
+	}
 }
 
 setmetatable(In_Game, In_Game)
@@ -82,7 +96,21 @@ function In_Game:update(dt)
 		end
 
 		if card.spawned then
-			card.animations.walk.update(dt)
+			if ALL_OBJECTS[card.name] == nil then
+				ALL_OBJECTS[card.name] = card
+			end
+
+			card.animate.update(dt)
+
+			for key, value in pairs(ALL_OBJECTS) do
+				-- TOOD: change 20,20 from collision function
+				-- can change by value.width, value.height
+				if Utils.circle_rect_collision(card.char_x, card.char_y,
+						card:perception_range(), value.x,value.y,20,20) then
+					card.chars_around.key = value
+					card.current_action = 'follow'
+				end
+			end
 		end
 	end
 end
@@ -95,8 +123,7 @@ function In_Game:draw()
 		end
 	end
 
-	-- test as a fake char to attacked
-	local center = Layout:Centralize(20, 20)
+	-- TEST: fake char to be attacked
 	love.graphics.rectangle("fill", center.width, center.height, 20, 20)
 
 	for i = 1, #In_Game.deck do
@@ -104,7 +131,7 @@ function In_Game:draw()
 		love.graphics.draw(card.img, card.x, card.y)
 
 		if card.spawned then
-			card.char_x, card.char_y = card.animations.walk.draw(card.char_x, card.char_y, center.width, center.height)
+			card.char_x, card.char_y = card.animate.draw(card.char_x, card.char_y)
 		end
 	end
 end
