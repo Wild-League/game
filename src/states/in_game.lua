@@ -14,11 +14,14 @@ local In_Game = {
 	background = Assets.WORLD
 }
 
+local center = Layout:Centralize(20, 20)
+
+-- store the current selected card
+local CARD_SELECTED = nil
+
 -- have all the objects in the game
 -- so we can compare collisions easily
 -- (I couln't find another way)
-local center = Layout:Centralize(20, 20)
-
 local ALL_OBJECTS = {
 	test = {
 		x = center.width,
@@ -38,6 +41,8 @@ function love.mousereleased(x, y, button)
 				local card = deck[i]
 				if card.can_move == true then
 					card.can_move = false
+
+					CARD_SELECTED = nil
 
 					card.spawned = true
 
@@ -80,12 +85,13 @@ function In_Game:update(dt)
 
 	local x,y = love.mouse.getPosition()
 
-	if love.mouse.isDown(1) then
+	if love.mouse.isDown(1) and CARD_SELECTED == nil then
 		for i = 1, #In_Game.deck do
 			local card = In_Game.deck[i]
 			if x >= card.x and x <= (card.x + card.img:getWidth())
 				and y >= card.y and y <= (card.y + card.img:getHeight()) then
 					card.can_move = true
+					CARD_SELECTED = card
 			end
 		end
 	end
@@ -105,10 +111,8 @@ function In_Game:update(dt)
 			card.animate.update(dt)
 
 			for key, value in pairs(ALL_OBJECTS) do
-				-- TOOD: change 20,20 from collision function
-				-- can change by value.width, value.height
 				if Utils.circle_rect_collision(card.char_x, card.char_y,
-						card:perception_range(), value.x, value.y, 20, 20) then
+						card:perception_range(), value.x, value.y, value.width, value.height) then
 					card.chars_around.key = value
 					card.current_action = 'follow'
 				end
