@@ -22,7 +22,9 @@ local center = Layout:Centralize(20, 20)
 local ALL_OBJECTS = {
 	test = {
 		x = center.width,
-		y = center.height
+		y = center.height,
+		width = center.width,
+		height = center.height
 	}
 }
 

@@ -1,6 +1,6 @@
 local BaseCard = require('./src/entities/base_card')
 local Assets = require('./src/assets')
--- local Utils = require('./src/helpers/utils')
+local Utils = require('./src/helpers/utils')
 local anim8 = require('./lib/anim8')
 
 local Range = require('./src/config/range')
@@ -13,7 +13,7 @@ Char1.img = Assets.CHAR1.CARD
 
 Char1.speed = 2 / 10
 
-Char1.attack_range = Range:getSize('distance', 40)
+Char1.attack_range = Range:getSize('distance', 20)
 
 Char1.life = 100
 
@@ -24,9 +24,14 @@ Char1.current_action = 'walk'
 
 -- LOAD
 local walking = Assets.CHAR1.WALKING
-local grid = anim8.newGrid(34, 36, walking:getWidth(), walking:getHeight())
+local grid_walking = anim8.newGrid(34, 36, walking:getWidth(), walking:getHeight())
 
-local walk_animation = anim8.newAnimation(grid('2-3', 1), 0.2)
+local walk_animation = anim8.newAnimation(grid_walking('2-3', 1), 0.2)
+
+local attack = Assets.CHAR1.ATTACK
+local grid_attack = anim8.newGrid(34, 36, attack:getWidth(), attack:getHeight())
+
+local attack_animation = anim8.newAnimation(grid_attack('1-6', 1), 0.5)
 
 local nearest_enemy = {
 	x = 0,
@@ -69,7 +74,6 @@ Char1.actions = {
 	follow = {
 		update = function(dt)
 			local around = Char1.chars_around
-
 			for k,v in pairs(around) do
 				local distance_x = v.x - Char1.char_x
 				local distance_y = v.y - Char1.char_y
@@ -83,8 +87,11 @@ Char1.actions = {
 			walk_animation:update(dt)
 		end,
 		draw = function(x,y)
-			if (nearest_enemy.x == math.ceil(x) and nearest_enemy.y == math.ceil(y)) then
-				love.graphics.print('it works')
+			-- TODO: need to check collision area (perception and attack_range)
+			if Utils.circle_rect_collision(x, y, Char1.attack_range,
+					nearest_enemy.x, nearest_enemy.y, nearest_enemy.width, nearest_enemy.height) then
+				walk_animation:draw(Assets.CHAR1.WALKING, x, y)
+				return x,y
 			end
 
 			if (nearest_enemy.y > y) then
@@ -104,8 +111,13 @@ Char1.actions = {
 			end
 
 			walk_animation:draw(Assets.CHAR1.WALKING, x, y)
-
 			return x,y
+		end
+	},
+	attack = {
+		update = function(dt)
+		end,
+		draw = function(x,y)
 		end
 	}
 }
