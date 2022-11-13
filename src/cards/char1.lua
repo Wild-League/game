@@ -11,9 +11,9 @@ local Char1 = BaseCard.create()
 Char1.name = 'char1'
 Char1.img = Assets.CHAR1.CARD
 
-Char1.speed = 2 / 10
+Char1.speed = 6 / 10
 
-Char1.attack_range = Range:getSize('distance', 40)
+Char1.attack_range = Range:getSize('distance', 80)
 
 Char1.life = 100
 
@@ -29,7 +29,7 @@ local grid_walking = anim8.newGrid(34, 36, walking:getWidth(), walking:getHeight
 local walk_animation = anim8.newAnimation(grid_walking('2-3', 1), 0.2)
 
 local attack = Assets.CHAR1.ATTACK
-local grid_attack = anim8.newGrid(34, 36, attack:getWidth(), attack:getHeight())
+local grid_attack = anim8.newGrid(36, 36, attack:getWidth(), attack:getHeight())
 
 local attack_animation = anim8.newAnimation(grid_attack('1-6', 1), 0.5)
 
@@ -66,7 +66,7 @@ Char1.actions = {
 			x = x - Char1.speed
 			-- y = y + Char1.speed
 
-			walk_animation:draw(Assets.CHAR1.WALKING, x, y)
+			walk_animation:draw(walking, x, y)
 
 			return x, y
 		end
@@ -87,10 +87,9 @@ Char1.actions = {
 			walk_animation:update(dt)
 		end,
 		draw = function(x,y)
-			if Utils.circle_rect_collision(x, y, Char1.attack_range,
-					nearest_enemy.x, nearest_enemy.y, nearest_enemy.width, nearest_enemy.height) then
-				walk_animation:draw(Assets.CHAR1.WALKING, x, y)
-				print('attack')
+			if Utils.circle_rect_collision(x + (Char1.img:getWidth() / 4), y + (Char1.img:getHeight() / 4), Char1.attack_range,
+				nearest_enemy.x, nearest_enemy.y, nearest_enemy.width, nearest_enemy.height) then
+				Char1.current_action = 'attack'
 				return x,y
 			end
 
@@ -110,14 +109,17 @@ Char1.actions = {
 				x = x - Char1.speed
 			end
 
-			walk_animation:draw(Assets.CHAR1.WALKING, x, y)
+			walk_animation:draw(walking, x, y)
 			return x,y
 		end
 	},
 	attack = {
 		update = function(dt)
+			attack_animation:update(dt)
 		end,
 		draw = function(x,y)
+			attack_animation:draw(attack,x,y)
+			return x,y
 		end
 	}
 }

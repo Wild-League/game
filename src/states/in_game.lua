@@ -46,6 +46,8 @@ function love.mousereleased(x, y, button)
 
 					card.spawned = true
 
+					card.current_action = 'walk'
+
 					local initial_position = In_Game.decks.positions['card'..i]
 					card.x = initial_position.x
 					card.y = initial_position.y
@@ -111,8 +113,10 @@ function In_Game:update(dt)
 			card.animate.update(dt)
 
 			for key, value in pairs(ALL_OBJECTS) do
-				if Utils.circle_rect_collision(card.char_x, card.char_y,
-						card:perception_range(), value.x, value.y, value.width, value.height) then
+				if Utils.circle_rect_collision(card.char_x + (card.img:getWidth() / 4), card.char_y + (card.img:getHeight() / 4),
+						card:perception_range(), value.x, value.y, value.width, value.height)
+						and not Utils.circle_rect_collision(card.char_x, card.char_y, card.attack_range,
+						value.x, value.y, value.width, value.height) then
 					card.chars_around.key = value
 					card.current_action = 'follow'
 				end
@@ -135,7 +139,6 @@ function In_Game:draw()
 	for i = 1, #In_Game.deck do
 		local card = In_Game.deck[i]
 		love.graphics.draw(card.img, card.x, card.y)
-
 		if card.spawned then
 			card.char_x, card.char_y = card.animate.draw(card.char_x, card.char_y)
 		end
