@@ -55,10 +55,9 @@ Char1.animate.update = function(dt)
 end
 
 Char1.animate.draw = function(x, y, ...)
-	-- life bar
-	love.graphics.rectangle("line", x - 10, y - 10, 50, 5)
-	love.graphics.rectangle("fill", x - 10, y - 10, 25, 5)
+	Char1.lifebar(x,y)
 
+	love.graphics.setColor(255,255,255)
 	-- attack range
 	love.graphics.ellipse("line", x + (Char1.img:getWidth() / 4), y + (Char1.img:getHeight() / 4), Char1.attack_range, Char1.attack_range)
 
@@ -160,6 +159,12 @@ function Char1.get_nearest_enemy(around)
 			return v
 		end
 	end
+end
+
+function Char1.lifebar(x, y)
+	love.graphics.setColor(255/255,29/255,29/255)
+	love.graphics.rectangle("line", x - 10, y - 10, 50, 5)
+	love.graphics.rectangle("fill", x - 10, y - 10, 25, 5)
 end
 
 return Char1
