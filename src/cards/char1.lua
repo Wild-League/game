@@ -15,6 +15,8 @@ Char1.speed = 6 / 10
 
 Char1.attack_range = Range:getSize('distance', 80)
 
+Char1.attack_speed = 1.2
+
 Char1.life = 100
 
 Char1.x = 0
@@ -31,12 +33,21 @@ local walk_animation = anim8.newAnimation(grid_walking('2-3', 1), 0.2)
 local attack = Assets.CHAR1.ATTACK
 local grid_attack = anim8.newGrid(36, 36, attack:getWidth(), attack:getHeight())
 
+-- TODO: should split all frame so we can take control of the animation
+-- individually, but we can leave like it is by now
 local attack_animation = anim8.newAnimation(grid_attack('1-6', 1), 0.5)
 
 local nearest_enemy = {
 	x = 0,
 	y = 0
 }
+
+local shoot = {
+	x = Char1.char_x,
+	y = Char1.char_y
+}
+
+local shoot_animation = Assets.CHAR1.SHOOT
 ------
 
 Char1.animate.update = function(dt)
@@ -109,6 +120,9 @@ Char1.actions = {
 				x = x - Char1.speed
 			end
 
+			shoot.x = Char1.char_x
+			shoot.y = Char1.char_y
+
 			walk_animation:draw(walking, x, y)
 			return x,y
 		end
@@ -118,6 +132,29 @@ Char1.actions = {
 			attack_animation:update(dt)
 		end,
 		draw = function(x,y)
+			if (nearest_enemy.y > shoot.y) then
+        shoot.y = shoot.y + Char1.attack_speed
+			end
+
+			if (nearest_enemy.y < shoot.y) then
+					shoot.y = shoot.y - Char1.attack_speed
+			end
+
+			if (nearest_enemy.x > shoot.x) then
+					shoot.x = shoot.x + Char1.attack_speed
+			end
+
+			if (nearest_enemy.x < shoot.x) then
+					shoot.x = shoot.x - Char1.attack_speed
+			end
+
+			love.graphics.draw(shoot_animation, shoot.x, shoot.y)
+
+			if math.ceil(shoot.x) == nearest_enemy.x and math.ceil(shoot.y) == nearest_enemy.y then
+        shoot.x = Char1.char_x
+        shoot.y = Char1.char_y
+    end
+
 			attack_animation:draw(attack,x,y)
 			return x,y
 		end
