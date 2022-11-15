@@ -2,7 +2,7 @@ local Constants = require('./src/constants')
 
 local Layout = {}
 
-function Layout:Centralize(obj_width, obj_height)
+function Layout:Center(obj_width, obj_height)
 	local width = Constants.WINDOW_SETTINGS.width
 	local height = Constants.WINDOW_SETTINGS.height
 

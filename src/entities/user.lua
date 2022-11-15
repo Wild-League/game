@@ -1,12 +1,4 @@
-local Char1 = require('./src/cards/char1')
--- local Char2 = require('./src/cards/char2')
--- local Char3 = require('./src/cards/char3')
--- local Char4 = require('./src/cards/char4')
-
-local card1 = Char1
--- local card2 = Char2
--- local card3 = Char3
--- local card4 = Char4
+local Deck = require('./src/entities/deck')
 
 local function User(nickname, level)
 	local obj = {
@@ -21,31 +13,7 @@ local function User(nickname, level)
 		nickname = nickname,
 		level = level or 1,
 
-		-- TODO: change positions using Layout:Centralize
-		-- function
-		decks = {
-			positions = {
-				card1 = {
-					x = 120,
-					y = 450
-				},
-				card2 = {
-					x = 220,
-					y = 450
-				},
-				card3 = {
-					x = 320,
-					y = 450
-				},
-				card4 = {
-					x = 420,
-					y = 450
-				}
-			},
-			deck1 = {
-				card1
-			}
-		},
+		decks = Deck,
 		deck_selected = 'deck1'
 	}
 

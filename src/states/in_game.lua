@@ -14,7 +14,7 @@ local In_Game = {
 	background = Assets.WORLD
 }
 
-local center = Layout:Centralize(20, 20)
+local center = Layout:Center(20, 20)
 
 -- store the current selected card
 local CARD_SELECTED = nil
@@ -132,9 +132,11 @@ end
 
 function In_Game:draw()
 	-- world background
+	local sx = love.graphics.getWidth() / In_Game.background:getWidth()
+	local sy = love.graphics.getHeight() / In_Game.background:getHeight()
 	for i = 0, Constants.WINDOW_SETTINGS.width / In_Game.background:getWidth() do
 		for j = 0, Constants.WINDOW_SETTINGS.height / In_Game.background:getHeight() do
-			love.graphics.draw(In_Game.background, i * In_Game.background:getWidth(), j * In_Game.background:getHeight())
+			love.graphics.draw(In_Game.background, i * In_Game.background:getWidth(), j * In_Game.background:getHeight(), 0, sx, sy)
 		end
 	end
 

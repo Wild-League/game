@@ -22,7 +22,7 @@ function Initial:draw()
 		end
 	end
 
-	local button_central = Layout:Centralize(BUTTON:getWidth(), BUTTON:getHeight() - 200)
+	local button_central = Layout:Center(BUTTON:getWidth(), BUTTON:getHeight() - 200)
 	local play_button = Suit.ImageButton(BUTTON, { hovered = BUTTON_HOVER }, button_central.width, button_central.height)
 
 	if play_button.hit then

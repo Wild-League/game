@@ -19,6 +19,8 @@ function love.draw()
 	Suit.draw()
 end
 
+-- TODO: on resize everywhere using the window_settings
+-- should update
 function love.resize(width, height)
 	Constants.WINDOW_SETTINGS.width = width
 	Constants.WINDOW_SETTINGS.height = height

@@ -88,12 +88,6 @@ Char1.actions = {
 			walk_animation:update(dt)
 		end,
 		draw = function(x,y)
-			-- if Utils.circle_rect_collision(x + (Char1.img:getWidth() / 4), y + (Char1.img:getHeight() / 4), Char1.attack_range,
-			-- 	nearest_enemy.x, nearest_enemy.y, nearest_enemy.width, nearest_enemy.height) then
-			-- 	Char1.current_action = 'attack'
-			-- 	return x,y
-			-- end
-
 			if (nearest_enemy.y > y) then
 				y = y + Char1.speed
 			end
@@ -107,9 +101,6 @@ Char1.actions = {
 				x = x - Char1.speed
 			end
 
-			shoot.x = Char1.char_x
-			shoot.y = Char1.char_y
-
 			walk_animation:draw(walking, x, y)
 			return x,y
 		end
@@ -119,9 +110,9 @@ Char1.actions = {
 			attack_animation:update(dt)
 		end,
 		draw = function(x,y)
-			-- if nearest_enemy.width == nil then
-			-- 	nearest_enemy = Char1.chars_around[1]
-			-- end
+			if nearest_enemy.width == nil then
+				nearest_enemy = Char1.get_nearest_enemy(Char1.chars_around)
+			end
 
 			if (nearest_enemy.y > shoot.y) then
 				shoot.y = shoot.y + Char1.attack_speed
@@ -150,6 +141,9 @@ Char1.actions = {
 }
 
 function Char1.get_nearest_enemy(around)
+	shoot.x = Char1.char_x
+	shoot.y = Char1.char_y
+
 	for k,v in pairs(around) do
 		local distance_x = v.x - Char1.char_x
 		local distance_y = v.y - Char1.char_y
