@@ -84,38 +84,26 @@ Char1.actions = {
 	},
 	follow = {
 		update = function(dt)
-			local around = Char1.chars_around
-			for k,v in pairs(around) do
-				local distance_x = v.x - Char1.char_x
-				local distance_y = v.y - Char1.char_y
-
-				if (distance_x >= (nearest_enemy.x - Char1.char_x))
-					and (distance_y >= (nearest_enemy.y - Char1.char_y)) then
-					nearest_enemy = v
-				end
-			end
+			nearest_enemy = Char1.get_nearest_enemy(Char1.chars_around)
 
 			walk_animation:update(dt)
 		end,
 		draw = function(x,y)
-			if Utils.circle_rect_collision(x + (Char1.img:getWidth() / 4), y + (Char1.img:getHeight() / 4), Char1.attack_range,
-				nearest_enemy.x, nearest_enemy.y, nearest_enemy.width, nearest_enemy.height) then
-				Char1.current_action = 'attack'
-				return x,y
-			end
+			-- if Utils.circle_rect_collision(x + (Char1.img:getWidth() / 4), y + (Char1.img:getHeight() / 4), Char1.attack_range,
+			-- 	nearest_enemy.x, nearest_enemy.y, nearest_enemy.width, nearest_enemy.height) then
+			-- 	Char1.current_action = 'attack'
+			-- 	return x,y
+			-- end
 
 			if (nearest_enemy.y > y) then
 				y = y + Char1.speed
 			end
-
 			if (nearest_enemy.y < y) then
 				y = y - Char1.speed
 			end
-
 			if (nearest_enemy.x > x) then
 				x = x + Char1.speed
 			end
-
 			if (nearest_enemy.x < x) then
 				x = x - Char1.speed
 			end
@@ -132,20 +120,21 @@ Char1.actions = {
 			attack_animation:update(dt)
 		end,
 		draw = function(x,y)
+			-- if nearest_enemy.width == nil then
+			-- 	nearest_enemy = Char1.chars_around[1]
+			-- end
+
 			if (nearest_enemy.y > shoot.y) then
-        shoot.y = shoot.y + Char1.attack_speed
+				shoot.y = shoot.y + Char1.attack_speed
 			end
-
 			if (nearest_enemy.y < shoot.y) then
-					shoot.y = shoot.y - Char1.attack_speed
+				shoot.y = shoot.y - Char1.attack_speed
 			end
-
 			if (nearest_enemy.x > shoot.x) then
-					shoot.x = shoot.x + Char1.attack_speed
+				shoot.x = shoot.x + Char1.attack_speed
 			end
-
 			if (nearest_enemy.x < shoot.x) then
-					shoot.x = shoot.x - Char1.attack_speed
+				shoot.x = shoot.x - Char1.attack_speed
 			end
 
 			love.graphics.draw(shoot_animation, shoot.x, shoot.y)
@@ -153,12 +142,24 @@ Char1.actions = {
 			if math.ceil(shoot.x) == nearest_enemy.x and math.ceil(shoot.y) == nearest_enemy.y then
         shoot.x = Char1.char_x
         shoot.y = Char1.char_y
-    end
+    	end
 
 			attack_animation:draw(attack,x,y)
 			return x,y
 		end
 	}
 }
+
+function Char1.get_nearest_enemy(around)
+	for k,v in pairs(around) do
+		local distance_x = v.x - Char1.char_x
+		local distance_y = v.y - Char1.char_y
+
+		if (distance_x >= (nearest_enemy.x - Char1.char_x))
+			and (distance_y >= (nearest_enemy.y - Char1.char_y)) then
+			return v
+		end
+	end
+end
 
 return Char1

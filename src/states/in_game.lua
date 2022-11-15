@@ -113,10 +113,15 @@ function In_Game:update(dt)
 			card.animate.update(dt)
 
 			for key, value in pairs(ALL_OBJECTS) do
+				if Utils.circle_rect_collision(card.char_x + (card.img:getWidth() / 4), card.char_y + (card.img:getHeight() / 4), card.attack_range,
+				value.x, value.y, value.width, value.height) then
+					card.chars_around.key = value
+					card.current_action = 'attack'
+					return
+				end
+
 				if Utils.circle_rect_collision(card.char_x + (card.img:getWidth() / 4), card.char_y + (card.img:getHeight() / 4),
-						card:perception_range(), value.x, value.y, value.width, value.height)
-						and not Utils.circle_rect_collision(card.char_x, card.char_y, card.attack_range,
-						value.x, value.y, value.width, value.height) then
+						card:perception_range(), value.x, value.y, value.width, value.height) then
 					card.chars_around.key = value
 					card.current_action = 'follow'
 				end
