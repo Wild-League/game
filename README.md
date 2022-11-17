@@ -1,7 +1,6 @@
 # Wild League
 
-It will be a clash royale-like game, because I'm a big fan of this game
-(even if they not deserve it)
+A free-to-play real-time strategy game using card mechanics and tower defense
 
 > if you play with mk, consider leaving this page, please.
 
