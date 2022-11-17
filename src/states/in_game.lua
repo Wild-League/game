@@ -5,6 +5,7 @@ local Assets = require('./src/assets')
 local Constants = require('./src/constants')
 
 local Utils = require('./src/helpers/utils')
+local Map = require('./src/domain/map')
 
 local In_Game = {
 	user = {},
@@ -139,6 +140,9 @@ function In_Game:draw()
 			love.graphics.draw(In_Game.background, i * In_Game.background:getWidth(), j * In_Game.background:getHeight(), 0, sx, sy)
 		end
 	end
+
+	-- divisor game
+	Map:sides()
 
 	-- TEST: fake char to be attacked
 	love.graphics.rectangle("fill", center.width, center.height, 20, 20)
