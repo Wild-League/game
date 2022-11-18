@@ -3,24 +3,38 @@ local Layout = require('./src/helpers/layout')
 
 local Map = {
 	-- indicates the max value in x to each side
-	left_side = 0,
-	right_side = 0
+	left_side = {
+		w = 0,
+		h = 0
+	},
+	right_side = {
+		w = 0,
+		h = 0
+	}
 }
 
 function Map:sides()
 	local center = Layout:Center(2, 2)
 
-	Map.left_side = center.width
-	Map.right_side = center.width * 2
+	Map.left_side.w = center.width
+	Map.right_side.w = center.width * 2
 
-	-- draw divisor
-	-- love.graphics.line(center.width, center.height - 100, center.width, center.height + 100)
+	Map.left_side.h = center.height * 2
+	Map.right_side.h = center.height * 2
+end
 
-	-- left side
+function Map:block_left_side()
+	Map:sides()
+
 	love.graphics.setColor(1,0,0, 0.5)
-	love.graphics.rectangle('fill', 0, 0, Map.left_side, center.height * 2)
+	love.graphics.rectangle('fill', 0, 0, Map.left_side.w, Map.left_side.h)
 
 	love.graphics.setColor(1,1,1)
 end
+
+-- function Map:left_side()
+-- 	local left = Map.left_side
+-- 	return left.w, left.h
+-- end
 
 return Map

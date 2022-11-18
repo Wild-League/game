@@ -18,6 +18,7 @@ local In_Game = {
 local center = Layout:Center(20, 20)
 
 -- store the current selected card
+-- used to block selecting more than one card at time
 local CARD_SELECTED = nil
 
 -- have all the objects in the game
@@ -49,12 +50,12 @@ function love.mousereleased(x, y, button)
 
 					card.current_action = 'walk'
 
+					card.char_x = card.x
+					card.char_y = card.y
+
 					local initial_position = In_Game.decks.positions['card'..i]
 					card.x = initial_position.x
 					card.y = initial_position.y
-
-					card.char_x = x
-					card.char_y = y
 				end
 			end
 		end
@@ -141,11 +142,22 @@ function In_Game:draw()
 		end
 	end
 
-	-- divisor game
-	Map:sides()
-
 	-- TEST: fake char to be attacked
+	-- should remove after tests
 	love.graphics.rectangle("fill", center.width, center.height, 20, 20)
+
+	-- when card is selected
+	if love.mouse.isDown(1) and CARD_SELECTED ~= nil then
+		Map:block_left_side()
+
+		for i = 1, #In_Game.deck do
+			local card = In_Game.deck[i]
+			-- <= because it's from right -> left
+			if card.x <= Map.left_side.w then
+				card.x = Map.left_side.w
+			end
+		end
+	end
 
 	for i = 1, #In_Game.deck do
 		local card = In_Game.deck[i]
