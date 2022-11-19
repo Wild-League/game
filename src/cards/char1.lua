@@ -13,6 +13,8 @@ Char1.img = Assets.CHAR1.CARD
 
 Char1.speed = 6 / 10
 
+Char1.cooldown = 10
+
 Char1.attack_range = Range:getSize('distance', 80)
 
 Char1.attack_speed = 1.2

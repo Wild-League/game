@@ -1,6 +1,6 @@
 local BaseCard = {
 	name = '',
-	cooldown = 0,
+	cooldown = 0, -- time in seconds
 	type = '',
 	cost_elixir = 0, -- TODO: find alternative name for 'elixir'
 	damage = 0,
