@@ -7,6 +7,10 @@ local Constants = require('./src/constants')
 local Utils = require('./src/helpers/utils')
 local Map = require('./src/domain/map')
 
+local Deck = require('./src/entities/deck')
+
+local timer = 0
+
 local In_Game = {
 	user = {},
 	decks = {},
@@ -16,6 +20,8 @@ local In_Game = {
 }
 
 local center = Layout:Center(20, 20)
+
+local new_font = love.graphics.newFont(20, 'mono')
 
 -- store the current selected card
 -- used to block selecting more than one card at time
@@ -82,7 +88,7 @@ function In_Game:load()
 end
 
 function In_Game:update(dt)
-	local new_font = love.graphics.newFont(20, 'mono')
+	In_Game:timer(dt)
 
 	Suit.Label(In_Game.user.nickname, { align='center', font = new_font}, 10, 680, 200, 30)
 	Suit.Label('lv. '..In_Game.user.level, { align='center', font = new_font  }, 10, 695, 200, 30)
@@ -92,6 +98,13 @@ function In_Game:update(dt)
 	if love.mouse.isDown(1) and CARD_SELECTED == nil then
 		for i = 1, #In_Game.deck do
 			local card = In_Game.deck[i]
+			local deck_card_position = Deck.positions['card'..i]
+
+			if x >= deck_card_position.x and x <= (deck_card_position.x + card.img:getWidth())
+					and y >= deck_card_position.y and y <= (deck_card_position.y + card.img:getHeight()) then
+				print('asd')
+			end
+
 			if x >= card.x and x <= (card.x + card.img:getWidth())
 				and y >= card.y and y <= (card.y + card.img:getHeight()) then
 					card.can_move = true
@@ -152,6 +165,10 @@ function In_Game:draw()
 
 		for i = 1, #In_Game.deck do
 			local card = In_Game.deck[i]
+
+			-- TEST
+			love.graphics.rectangle("line", Deck.positions.card1.x, Deck.positions.card1.y, card.img:getWidth(), card.img:getHeight())
+
 			-- <= because it's from right -> left
 			if card.x <= Map.left_side.w then
 				card.x = Map.left_side.w
@@ -166,6 +183,26 @@ function In_Game:draw()
 			card.char_x, card.char_y = card.animate.draw(card.char_x, card.char_y)
 		end
 	end
+end
+
+function In_Game:timer(dt)
+	timer = timer + dt
+
+	local seconds = tostring(math.floor(timer % 60))
+	local minutes = tostring(math.floor(timer / 60))
+
+	if tonumber(seconds) <= 9 then
+		seconds = '0'..seconds
+	end
+	if tonumber(minutes) <= 9 then
+		minutes = '0'..minutes
+	end
+
+	local time = minutes..':'..seconds
+
+	local new_center = Layout:Center(100, 200)
+
+	Suit.Label(time, { align='center', font = new_font}, new_center.width, 10, 100, 200)
 end
 
 local function change_card_by_char() end
