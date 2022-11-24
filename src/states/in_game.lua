@@ -80,6 +80,12 @@ function In_Game:update(dt)
 					else
 						CARD_SELECTED = card
 					end
+			else
+				card.char_x = x
+				card.char_y = y
+
+				card.spawned = true
+				CARD_SELECTED = nil
 			end
 		end
 	end
