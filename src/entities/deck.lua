@@ -10,7 +10,7 @@ local card2 = Char2
 local card3 = Char3
 local card4 = Char4
 
-local center = Layout:Center(card1.img:getWidth(),card1.img:getHeight())
+local center = Layout:Center(card1.card_img:getWidth(),card1.card_img:getHeight())
 
 local Deck = {
 	positions = {

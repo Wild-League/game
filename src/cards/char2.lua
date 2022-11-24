@@ -9,7 +9,7 @@ local Char2 = BaseCard.create()
 -- override default config
 Char2.name = 'char2'
 Char2.range = 'melee'
-Char2.img = Assets.CHAR1.CARD
+Char2.card_img = Assets.CHAR1.CARD
 
 Char2.x = 0
 Char2.y = 0

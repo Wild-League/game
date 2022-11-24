@@ -9,7 +9,9 @@ local Char1 = BaseCard.create()
 
 -- override default config
 Char1.name = 'char1'
-Char1.img = Assets.CHAR1.CARD
+Char1.card_img = Assets.CHAR1.CARD
+
+Char1.img = Assets.CHAR1.INITIAL
 
 Char1.speed = 6 / 10
 

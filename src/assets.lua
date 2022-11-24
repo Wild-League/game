@@ -8,7 +8,8 @@ local Assets = {
 		WALKING = love.graphics.newImage('assets/chars/char1/animations/walking-left.png'),
 		CARD = love.graphics.newImage('assets/chars/char1/card.png'),
 		ATTACK = love.graphics.newImage('assets/chars/char1/animations/attack.png'),
-		SHOOT = love.graphics.newImage('assets/chars/char1/animations/shoot.png')
+		SHOOT = love.graphics.newImage('assets/chars/char1/animations/shoot.png'),
+		INITIAL = love.graphics.newImage('assets/chars/char1/initial.png')
 	},
 	WORLD_DETAIL = love.graphics.newImage('assets/world-detail.png')
 }

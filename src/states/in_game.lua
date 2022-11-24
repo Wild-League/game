@@ -41,33 +41,6 @@ local ALL_OBJECTS = {
 
 setmetatable(In_Game, In_Game)
 
-function love.mousereleased(x, y, button)
-	if button == 1 then
-		local deck = In_Game.decks[In_Game.deck_selected]
-		if deck ~= nil then
-			for i = 1, #deck do
-				local card = deck[i]
-				if card.can_move == true then
-					card.can_move = false
-
-					CARD_SELECTED = nil
-
-					card.spawned = true
-
-					card.current_action = 'walk'
-
-					card.char_x = card.x
-					card.char_y = card.y
-
-					local initial_position = In_Game.decks.positions['card'..i]
-					card.x = initial_position.x
-					card.y = initial_position.y
-				end
-			end
-		end
-	end
-end
-
 function In_Game:load()
 	In_Game.user = Constants.LOGGED_USER
 	In_Game.decks = In_Game.user.decks
@@ -95,31 +68,29 @@ function In_Game:update(dt)
 
 	local x,y = love.mouse.getPosition()
 
-	if love.mouse.isDown(1) and CARD_SELECTED == nil then
+	-- TODO: change for love function
+	-- problem: double click
+	if love.mouse.isDown(1) then
 		for i = 1, #In_Game.deck do
 			local card = In_Game.deck[i]
-			local deck_card_position = Deck.positions['card'..i]
-
-			if x >= deck_card_position.x and x <= (deck_card_position.x + card.img:getWidth())
-					and y >= deck_card_position.y and y <= (deck_card_position.y + card.img:getHeight()) then
-				print('asd')
-			end
-
-			if x >= card.x and x <= (card.x + card.img:getWidth())
-				and y >= card.y and y <= (card.y + card.img:getHeight()) then
-					card.can_move = true
-					CARD_SELECTED = card
+			if x >= card.x and x <= (card.x + card.card_img:getWidth())
+				and y >= card.y and y <= (card.y + card.card_img:getHeight()) then
+					if CARD_SELECTED ~= nil then
+						CARD_SELECTED = nil
+					else
+						CARD_SELECTED = card
+					end
 			end
 		end
 	end
 
+	if CARD_SELECTED ~= nil then
+		CARD_SELECTED.char_x = x
+		CARD_SELECTED.char_y = y
+	end
+
 	for i = 1, #In_Game.deck do
 		local card = In_Game.deck[i]
-		if card.can_move then
-			card.x = x - (card.img:getWidth() / 2)
-			card.y = y - (card.img:getHeight() / 2)
-		end
-
 		if card.spawned then
 			if ALL_OBJECTS[card.name] == nil then
 				ALL_OBJECTS[card.name] = card
@@ -128,14 +99,14 @@ function In_Game:update(dt)
 			card.animate.update(dt)
 
 			for key, value in pairs(ALL_OBJECTS) do
-				if Utils.circle_rect_collision(card.char_x + (card.img:getWidth() / 4), card.char_y + (card.img:getHeight() / 4), card.attack_range,
+				if Utils.circle_rect_collision(card.char_x + (card.card_img:getWidth() / 4), card.char_y + (card.card_img:getHeight() / 4), card.attack_range,
 				value.x, value.y, value.width, value.height) then
 					card.chars_around.key = value
 					card.current_action = 'attack'
 					return
 				end
 
-				if Utils.circle_rect_collision(card.char_x + (card.img:getWidth() / 4), card.char_y + (card.img:getHeight() / 4),
+				if Utils.circle_rect_collision(card.char_x + (card.card_img:getWidth() / 4), card.char_y + (card.card_img:getHeight() / 4),
 						card:perception_range(), value.x, value.y, value.width, value.height) then
 					card.chars_around.key = value
 					card.current_action = 'follow'
@@ -160,25 +131,30 @@ function In_Game:draw()
 	love.graphics.rectangle("fill", center.width, center.height, 20, 20)
 
 	-- when card is selected
-	if love.mouse.isDown(1) and CARD_SELECTED ~= nil then
+	if CARD_SELECTED ~= nil then
 		Map:block_left_side()
-
 		for i = 1, #In_Game.deck do
 			local card = In_Game.deck[i]
 
-			-- TEST
-			love.graphics.rectangle("line", Deck.positions.card1.x, Deck.positions.card1.y, card.img:getWidth(), card.img:getHeight())
+			if card.selected then
+				-- TEST: represent selected card
+				love.graphics.rectangle("line", Deck.positions['card'..i].x, Deck.positions['card'..i].y, card.card_img:getWidth(), card.card_img:getHeight())
+			end
 
 			-- <= because it's from right -> left
 			if card.x <= Map.left_side.w then
 				card.x = Map.left_side.w
 			end
+
+			love.graphics.setColor(0.2,0.2,0.7,0.5)
+			love.graphics.draw(CARD_SELECTED.img, CARD_SELECTED.char_x, CARD_SELECTED.char_y)
+			love.graphics.setColor(1,1,1)
 		end
 	end
 
 	for i = 1, #In_Game.deck do
 		local card = In_Game.deck[i]
-		love.graphics.draw(card.img, card.x, card.y)
+		love.graphics.draw(card.card_img, card.x, card.y)
 		if card.spawned then
 			card.char_x, card.char_y = card.animate.draw(card.char_x, card.char_y)
 		end
@@ -204,7 +180,5 @@ function In_Game:timer(dt)
 
 	Suit.Label(time, { align='center', font = new_font}, new_center.width, 10, 100, 200)
 end
-
-local function change_card_by_char() end
 
 return In_Game

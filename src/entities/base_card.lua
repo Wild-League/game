@@ -11,7 +11,10 @@ local BaseCard = {
 	attack_range = 0, -- melee (short, medium, long) or distance (in pixels)
 
 	-- more code related configs
-	img = '', -- card img
+	card_img = '',
+
+	-- char initial img
+	img = '',
 
 	-- the actual card position
 	x = 0,
@@ -21,9 +24,8 @@ local BaseCard = {
 	char_x = 0,
 	char_y = 0,
 
-	-- CHECK: I really need this?
-	-- state to move the card - changes on card click
-	can_move = false,
+	-- card state - changes on click
+	selected = false,
 
 	-- CHECK: I really need this?
 	-- state to the animations hero - changes on card realease
