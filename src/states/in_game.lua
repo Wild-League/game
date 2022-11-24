@@ -41,6 +41,40 @@ local ALL_OBJECTS = {
 
 setmetatable(In_Game, In_Game)
 
+function love.mousepressed(x,y,button)
+	if button == 1 then
+		for i = 1, #In_Game.deck do
+			local card = In_Game.deck[i]
+			if x >= card.x and x <= (card.x + card.card_img:getWidth())
+				and y >= card.y and y <= (card.y + card.card_img:getHeight()) then
+					if CARD_SELECTED == nil then
+						CARD_SELECTED = card
+						break
+					else
+						CARD_SELECTED = nil
+						break
+					end
+			else
+				if CARD_SELECTED ~= nil then
+					card.char_x = x
+					card.char_y = y
+
+					card.spawned = true
+
+					CARD_SELECTED = nil
+					card.selected = false
+
+					break
+
+				else
+					-- TODO: how to add timer for this message?
+					Suit.Label('no card selected!', { align='center', font = new_font}, 100, 25, 100, 200)
+				end
+			end
+		end
+	end
+end
+
 function In_Game:load()
 	In_Game.user = Constants.LOGGED_USER
 	In_Game.decks = In_Game.user.decks
@@ -70,25 +104,9 @@ function In_Game:update(dt)
 
 	-- TODO: change for love function
 	-- problem: double click
-	if love.mouse.isDown(1) then
-		for i = 1, #In_Game.deck do
-			local card = In_Game.deck[i]
-			if x >= card.x and x <= (card.x + card.card_img:getWidth())
-				and y >= card.y and y <= (card.y + card.card_img:getHeight()) then
-					if CARD_SELECTED ~= nil then
-						CARD_SELECTED = nil
-					else
-						CARD_SELECTED = card
-					end
-			else
-				card.char_x = x
-				card.char_y = y
+	-- if love.mouse.isDown(1) then
 
-				card.spawned = true
-				CARD_SELECTED = nil
-			end
-		end
-	end
+	-- end
 
 	if CARD_SELECTED ~= nil then
 		CARD_SELECTED.char_x = x

@@ -1,8 +1,8 @@
 local Constants = {
 	LOGGED_USER = {},
 	WINDOW_SETTINGS = {
-		width = 1200,
-		height = 720
+		width = 1024,
+		height = 768
 	}
 }
 
