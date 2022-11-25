@@ -1,32 +1,25 @@
-local BaseCard = require('./src/entities/base_card')
 local Assets = require('./src/assets')
-local Utils = require('./src/helpers/utils')
 local anim8 = require('./lib/anim8')
 
 local Range = require('./src/config/range')
 
-local Char1 = BaseCard.create()
-
--- override default config
-Char1.name = 'char1'
-Char1.card_img = Assets.CHAR1.CARD
-
-Char1.img = Assets.CHAR1.INITIAL
-
-Char1.speed = 6 / 10
-
-Char1.cooldown = 10
-
-Char1.attack_range = Range:getSize('distance', 80)
-
-Char1.attack_speed = 1.2
-
-Char1.life = 100
-
-Char1.x = 0
-Char1.y = 0
-
-Char1.current_action = 'walk'
+local Char1 = {
+	name = 'char1',
+	card_img = Assets.CHAR1.CARD,
+	img = Assets.CHAR1.INITIAL,
+	speed = 6/10,
+	cooldown = 10,
+	attack_range = Range:getSize('distance', 20),
+	attack_speed = 1.2,
+	life = 100,
+	x = 0,
+	y = 0,
+	current_action = 'walk',
+	-- ---------
+	animate = {},
+	actions = {},
+	chars_around = {}
+}
 
 -- LOAD
 local walking = Assets.CHAR1.WALKING
@@ -40,6 +33,10 @@ local grid_attack = anim8.newGrid(36, 36, attack:getWidth(), attack:getHeight())
 -- TODO: should split all frame so we can take control of the animation
 -- individually, but we can leave like it is by now
 local attack_animation = anim8.newAnimation(grid_attack('1-6', 1), 0.5)
+
+function Char1:perception_range()
+	return self.attack_range * 2
+end
 
 local nearest_enemy = {
 	x = 0,

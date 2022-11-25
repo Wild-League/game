@@ -1,44 +1,164 @@
-local BaseCard = require('./src/entities/base_card')
 local Assets = require('./src/assets')
-
 local anim8 = require('./lib/anim8')
 
--- copy of char1 - only for testing
-local Char3 = BaseCard.create()
+local Range = require('./src/config/range')
 
--- override default config
-Char3.name = 'char3'
-Char3.range = 'melee'
-Char3.card_img = Assets.CHAR1.CARD
+local Char3 = {
+	name = 'char3',
+	card_img = Assets.CHAR3.CARD,
+	img = Assets.CHAR3.INITIAL,
+	speed = 6 / 10,
+	cooldown = 10,
+	attack_range = Range:getSize('distance', 80),
+	attack_speed = 1.2,
+	life = 100,
+	x = 0,
+	y = 0,
+	current_action = 'walk',
+	animate = {},
+	actions = {},
+	chars_around = {}
+}
 
-Char3.x = 0
-Char3.y = 0
+-- LOAD
+local walking = Assets.CHAR3.WALKING
+local grid_walking = anim8.newGrid(34, 36, walking:getWidth(), walking:getHeight())
 
-local walking = Assets.CHAR1.WALKING
-local grid = anim8.newGrid(34, 36, walking:getWidth(), walking:getHeight())
+local walk_animation = anim8.newAnimation(grid_walking('2-3', 1), 0.2)
 
-local walk_animation = anim8.newAnimation(grid('2-3', 1), 0.2)
+local attack = Assets.CHAR3.ATTACK
+local grid_attack = anim8.newGrid(36, 36, attack:getWidth(), attack:getHeight())
 
-local initial_animation = anim8.newAnimation(grid('1-1', 1), 0.2)
+-- TODO: should split all frame so we can take control of the animation
+-- individually, but we can leave like it is by now
+local attack_animation = anim8.newAnimation(grid_attack('1-6', 1), 0.5)
 
-Char3.animations = {
-	initial = {
-		update = function(dt)
-			initial_animation:update(dt)
-		end,
-		draw = function(x,y)
-			initial_animation:draw(Assets.CHAR1.WALKING, x, y)
-		end
-	},
+function Char3:perception_range()
+	return self.attack_range * 2
+end
 
+local nearest_enemy = {
+	x = 0,
+	y = 0
+}
+
+local shoot = {
+	x = Char3.char_x,
+	y = Char3.char_y
+}
+
+local shoot_animation = Assets.CHAR3.SHOOT
+------
+
+Char3.animate.update = function(dt)
+	return Char3.actions[Char3.current_action].update(dt)
+end
+
+Char3.animate.draw = function(x, y, ...)
+	Char3.lifebar(x,y)
+
+	love.graphics.setColor(255,255,255)
+	-- attack range
+	love.graphics.ellipse("line", x + (Char3.img:getWidth() / 4), y + (Char3.img:getHeight() / 4), Char3.attack_range, Char3.attack_range)
+
+	-- perception range
+	love.graphics.ellipse("line", x + (Char3.img:getWidth() / 4), y + (Char3.img:getHeight() / 4), Char3:perception_range(), Char3:perception_range())
+
+	return Char3.actions[Char3.current_action].draw(x,y)
+end
+
+Char3.actions = {
 	walk = {
 		update = function(dt)
 			walk_animation:update(dt)
 		end,
 		draw = function(x,y)
-			walk_animation:draw(Assets.CHAR1.WALKING, x, y)
+			x = x - Char3.speed
+			-- y = y + Char3.speed
+
+			walk_animation:draw(walking, x, y)
+
+			return x, y
+		end
+	},
+	follow = {
+		update = function(dt)
+			nearest_enemy = Char3.get_nearest_enemy(Char3.chars_around)
+
+			walk_animation:update(dt)
+		end,
+		draw = function(x,y)
+			if (nearest_enemy.y > y) then
+				y = y + Char3.speed
+			end
+			if (nearest_enemy.y < y) then
+				y = y - Char3.speed
+			end
+			if (nearest_enemy.x > x) then
+				x = x + Char3.speed
+			end
+			if (nearest_enemy.x < x) then
+				x = x - Char3.speed
+			end
+
+			walk_animation:draw(walking, x, y)
+			return x,y
+		end
+	},
+	attack = {
+		update = function(dt)
+			attack_animation:update(dt)
+		end,
+		draw = function(x,y)
+			if nearest_enemy.width == nil then
+				nearest_enemy = Char3.get_nearest_enemy(Char3.chars_around)
+			end
+
+			if (nearest_enemy.y > shoot.y) then
+				shoot.y = shoot.y + Char3.attack_speed
+			end
+			if (nearest_enemy.y < shoot.y) then
+				shoot.y = shoot.y - Char3.attack_speed
+			end
+			if (nearest_enemy.x > shoot.x) then
+				shoot.x = shoot.x + Char3.attack_speed
+			end
+			if (nearest_enemy.x < shoot.x) then
+				shoot.x = shoot.x - Char3.attack_speed
+			end
+
+			love.graphics.draw(shoot_animation, shoot.x, shoot.y)
+
+			if math.ceil(shoot.x) == nearest_enemy.x and math.ceil(shoot.y) == nearest_enemy.y then
+        shoot.x = Char3.char_x
+        shoot.y = Char3.char_y
+    	end
+
+			attack_animation:draw(attack,x,y)
+			return x,y
 		end
 	}
 }
+
+function Char3.get_nearest_enemy(around)
+	shoot.x = Char3.char_x
+	shoot.y = Char3.char_y
+
+	for k,v in pairs(around) do
+		local distance_x = v.x - Char3.char_x
+		local distance_y = v.y - Char3.char_y
+
+		if (distance_x >= (nearest_enemy.x - Char3.char_x))
+			and (distance_y >= (nearest_enemy.y - Char3.char_y)) then
+			return v
+		end
+	end
+end
+
+function Char3.lifebar(x, y)
+	love.graphics.setColor(255/255,29/255,29/255)
+	love.graphics.rectangle("line", x - 10, y - 10, 50, 5)
+	love.graphics.rectangle("fill", x - 10, y - 10, 25, 5)
+end
 
 return Char3

@@ -7,8 +7,6 @@ local Constants = require('./src/constants')
 local Utils = require('./src/helpers/utils')
 local Map = require('./src/domain/map')
 
-local Deck = require('./src/entities/deck')
-
 local timer = 0
 
 local In_Game = {
@@ -16,7 +14,8 @@ local In_Game = {
 	decks = {},
 	deck_selected = '',
 	deck = {},
-	background = Assets.WORLD
+	background = Assets.WORLD,
+	spawned = {}
 }
 
 local center = Layout:Center(20, 20)
@@ -47,32 +46,31 @@ function love.mousepressed(x,y,button)
 			local card = In_Game.deck[i]
 			if x >= card.x and x <= (card.x + card.card_img:getWidth())
 				and y >= card.y and y <= (card.y + card.card_img:getHeight()) then
-					if CARD_SELECTED == nil then
-						CARD_SELECTED = card
-						break
-					else
+					if CARD_SELECTED == card then
 						CARD_SELECTED = nil
-						break
+					else
+						CARD_SELECTED = card
+						card.selected = true
 					end
-			else
-				if CARD_SELECTED ~= nil then
 
+					break
+			else
+				if CARD_SELECTED ~= nil and card.selected then
 					card.char_x = x
 					card.char_y = y
 					if CARD_SELECTED.char_x <= Map.left_side.w then
 						CARD_SELECTED.char_x = Map.left_side.w
 					end
 
-					card.spawned = true
+					table.insert(In_Game.spawned, card)
 
 					CARD_SELECTED = nil
 					card.selected = false
 
 					break
-
 				else
 					-- TODO: how to add timer for this message?
-					Suit.Label('no card selected!', { align='center', font = new_font}, 100, 25, 100, 200)
+					Suit.Label('no card selected!', {align='center',font=new_font},100,25,100,200)
 				end
 			end
 		end
@@ -91,48 +89,46 @@ function In_Game:load()
 	for i = 1, #In_Game.deck do
 		local card = In_Game.deck[i]
 
-		local initial_position = In_Game.decks.positions['card'..i]
+		local pos = In_Game.decks.positions['card'..i]
 
-		card.x = initial_position.x
-		card.y = initial_position.y
+		card.x = pos.x
+		card.y = pos.y
 	end
 end
 
 function In_Game:update(dt)
 	In_Game:timer(dt)
 
-	Suit.Label(In_Game.user.nickname, { align='center', font = new_font}, 10, 680, 200, 30)
-	Suit.Label('lv. '..In_Game.user.level, { align='center', font = new_font  }, 10, 695, 200, 30)
-
-	local x,y = love.mouse.getPosition()
+	-- TODO: implement function to show player details
+	-- nickname, level
+	-- Suit.Label(In_Game.user.nickname, { align='center', font = new_font}, 10, 680, 200, 30)
+	-- Suit.Label('lv. '..In_Game.user.level, { align='center', font = new_font  }, 10, 695, 200, 30)
 
 	if CARD_SELECTED ~= nil then
+		local x,y = love.mouse.getPosition()
 		CARD_SELECTED.char_x = x
 		CARD_SELECTED.char_y = y
 	end
 
-	for i = 1, #In_Game.deck do
-		local card = In_Game.deck[i]
-		if card.spawned then
-			if ALL_OBJECTS[card.name] == nil then
-				ALL_OBJECTS[card.name] = card
+	for _,card in pairs(In_Game.spawned) do
+		if ALL_OBJECTS[card.name] == nil then
+			ALL_OBJECTS[card.name] = card
+		end
+
+		card.animate.update(dt)
+
+		for _,value in pairs(ALL_OBJECTS) do
+			if Utils.circle_rect_collision(card.char_x + (card.img:getWidth() / 4), card.char_y + (card.img:getHeight() / 4), card.attack_range,
+			value.x, value.y, value.width, value.height) then
+				card.chars_around.key = value
+				card.current_action = 'attack'
+				break
 			end
 
-			card.animate.update(dt)
-
-			for key, value in pairs(ALL_OBJECTS) do
-				if Utils.circle_rect_collision(card.char_x + (card.card_img:getWidth() / 4), card.char_y + (card.card_img:getHeight() / 4), card.attack_range,
-				value.x, value.y, value.width, value.height) then
-					card.chars_around.key = value
-					card.current_action = 'attack'
-					return
-				end
-
-				if Utils.circle_rect_collision(card.char_x + (card.card_img:getWidth() / 4), card.char_y + (card.card_img:getHeight() / 4),
-						card:perception_range(), value.x, value.y, value.width, value.height) then
-					card.chars_around.key = value
-					card.current_action = 'follow'
-				end
+			if Utils.circle_rect_collision(card.char_x + (card.img:getWidth() / 4), card.char_y + (card.img:getHeight() / 4),
+					card:perception_range(), value.x, value.y, value.width, value.height) then
+				card.chars_around.key = value
+				card.current_action = 'follow'
 			end
 		end
 	end
@@ -155,31 +151,26 @@ function In_Game:draw()
 	-- when card is selected
 	if CARD_SELECTED ~= nil then
 		Map:block_left_side()
-		for i = 1, #In_Game.deck do
-			local card = In_Game.deck[i]
-
-			-- if card.selected then
-			-- 	-- TEST: represent selected card
-			-- 	love.graphics.rectangle("line", Deck.positions['card'..i].x, Deck.positions['card'..i].y, card.card_img:getWidth(), card.card_img:getHeight())
-			-- end
-
-			-- <= because it's from right -> left
-			if CARD_SELECTED.char_x <= Map.left_side.w then
-				CARD_SELECTED.char_x = Map.left_side.w
-			end
-
-			love.graphics.setColor(0.2,0.2,0.7,0.5)
-			love.graphics.draw(CARD_SELECTED.img, CARD_SELECTED.char_x, CARD_SELECTED.char_y)
-			love.graphics.setColor(1,1,1)
+		-- <= because it's from right -> left
+		if CARD_SELECTED.char_x <= Map.left_side.w then
+			CARD_SELECTED.char_x = Map.left_side.w
 		end
+
+		-- represents the char preview
+		love.graphics.setColor(0.2,0.2,0.7,0.5)
+		love.graphics.draw(CARD_SELECTED.img, CARD_SELECTED.char_x, CARD_SELECTED.char_y)
+		love.graphics.setColor(1,1,1)
 	end
 
+	-- draw deck
 	for i = 1, #In_Game.deck do
 		local card = In_Game.deck[i]
 		love.graphics.draw(card.card_img, card.x, card.y)
-		if card.spawned then
-			card.char_x, card.char_y = card.animate.draw(card.char_x, card.char_y)
-		end
+	end
+
+	-- draw spawned cards
+	for _,card in pairs(In_Game.spawned) do
+		card.char_x, card.char_y = card.animate.draw(card.char_x, card.char_y)
 	end
 end
 

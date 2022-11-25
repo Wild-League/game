@@ -11,6 +11,27 @@ local Assets = {
 		SHOOT = love.graphics.newImage('assets/chars/char1/animations/shoot.png'),
 		INITIAL = love.graphics.newImage('assets/chars/char1/initial.png')
 	},
+	CHAR2 = {
+		WALKING = love.graphics.newImage('assets/chars/char1/animations/walking-left.png'),
+		CARD = love.graphics.newImage('assets/chars/char1/card.png'),
+		ATTACK = love.graphics.newImage('assets/chars/char1/animations/attack.png'),
+		SHOOT = love.graphics.newImage('assets/chars/char1/animations/shoot.png'),
+		INITIAL = love.graphics.newImage('assets/chars/char1/initial.png')
+	},
+	CHAR3 = {
+		WALKING = love.graphics.newImage('assets/chars/char1/animations/walking-left.png'),
+		CARD = love.graphics.newImage('assets/chars/char1/card.png'),
+		ATTACK = love.graphics.newImage('assets/chars/char1/animations/attack.png'),
+		SHOOT = love.graphics.newImage('assets/chars/char1/animations/shoot.png'),
+		INITIAL = love.graphics.newImage('assets/chars/char1/initial.png')
+	},
+	CHAR4 = {
+		WALKING = love.graphics.newImage('assets/chars/char1/animations/walking-left.png'),
+		CARD = love.graphics.newImage('assets/chars/char1/card.png'),
+		ATTACK = love.graphics.newImage('assets/chars/char1/animations/attack.png'),
+		SHOOT = love.graphics.newImage('assets/chars/char1/animations/shoot.png'),
+		INITIAL = love.graphics.newImage('assets/chars/char1/initial.png')
+	},
 	WORLD_DETAIL = love.graphics.newImage('assets/world-detail.png')
 }
 
