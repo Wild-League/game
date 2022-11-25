@@ -6,6 +6,7 @@ local Range = require('./src/config/range')
 local Char2 = {
 	name = 'char2',
 	card_img = Assets.CHAR2.CARD,
+	is_card_loading = false,
 	img = Assets.CHAR2.INITIAL,
 	speed = 6 / 10,
 	cooldown = 10,

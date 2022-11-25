@@ -62,6 +62,8 @@ function love.mousepressed(x,y,button)
 						CARD_SELECTED.char_x = Map.left_side.w
 					end
 
+					card.is_card_loading = true
+
 					-- insert a copy, so we can insert the same card
 					-- more than once.
 					-- TIP: you can check the behavior by passing only 'card'.
@@ -69,6 +71,8 @@ function love.mousepressed(x,y,button)
 
 					CARD_SELECTED = nil
 					card.selected = false
+
+					card.current_cooldown = card.cooldown
 
 					break
 				else
@@ -101,6 +105,8 @@ end
 
 function In_Game:update(dt)
 	In_Game:timer(dt)
+
+	In_Game:check_cooldown(dt)
 
 	-- TODO: implement function to show player details
 	-- nickname, level
@@ -169,6 +175,10 @@ function In_Game:draw()
 	for i = 1, #In_Game.deck do
 		local card = In_Game.deck[i]
 		love.graphics.draw(card.card_img, card.x, card.y)
+
+		if card.is_card_loading then
+			love.graphics.print(card.current_cooldown, card.x + 12, card.y + 25, 0, 1.2)
+		end
 	end
 
 	-- draw spawned cards
@@ -195,6 +205,27 @@ function In_Game:timer(dt)
 	local new_center = Layout:Center(100, 200)
 
 	Suit.Label(time, { align='center', font = new_font}, new_center.width, 10, 100, 200)
+end
+
+-- used for check cooldown timer each second
+local countdown_timer = 1
+
+function In_Game:check_cooldown(dt)
+	countdown_timer = countdown_timer - dt
+
+	if countdown_timer <= 0 then
+		countdown_timer = countdown_timer + 1
+
+		for i = 1, #In_Game.deck do
+			local card = In_Game.deck[i]
+			if card.is_card_loading then
+				card.current_cooldown = card.current_cooldown - 1
+				if card.current_cooldown <= 0 then
+					card.is_card_loading = false
+				end
+			end
+		end
+	end
 end
 
 return In_Game

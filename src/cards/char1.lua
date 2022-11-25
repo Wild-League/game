@@ -1,14 +1,18 @@
 local Assets = require('./src/assets')
 local anim8 = require('./lib/anim8')
 
+-- local Deck = require('./src/entities/deck')
+
 local Range = require('./src/config/range')
 
 local Char1 = {
 	name = 'char1',
 	card_img = Assets.CHAR1.CARD,
+	is_card_loading = false,
 	img = Assets.CHAR1.INITIAL,
 	speed = 6/10,
 	cooldown = 10,
+	current_cooldown = 0,
 	attack_range = Range:getSize('distance', 20),
 	attack_speed = 1.2,
 	life = 100,
@@ -160,6 +164,10 @@ function Char1.lifebar(x, y)
 	love.graphics.setColor(255/255,29/255,29/255)
 	love.graphics.rectangle("line", x - 10, y - 10, 50, 5)
 	love.graphics.rectangle("fill", x - 10, y - 10, 25, 5)
+end
+
+function Char1.loading(x,y)
+	love.graphics.print('loading',x,y)
 end
 
 return Char1
