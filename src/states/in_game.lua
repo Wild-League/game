@@ -56,8 +56,12 @@ function love.mousepressed(x,y,button)
 					end
 			else
 				if CARD_SELECTED ~= nil then
+
 					card.char_x = x
 					card.char_y = y
+					if CARD_SELECTED.char_x <= Map.left_side.w then
+						CARD_SELECTED.char_x = Map.left_side.w
+					end
 
 					card.spawned = true
 
@@ -101,12 +105,6 @@ function In_Game:update(dt)
 	Suit.Label('lv. '..In_Game.user.level, { align='center', font = new_font  }, 10, 695, 200, 30)
 
 	local x,y = love.mouse.getPosition()
-
-	-- TODO: change for love function
-	-- problem: double click
-	-- if love.mouse.isDown(1) then
-
-	-- end
 
 	if CARD_SELECTED ~= nil then
 		CARD_SELECTED.char_x = x
@@ -160,14 +158,14 @@ function In_Game:draw()
 		for i = 1, #In_Game.deck do
 			local card = In_Game.deck[i]
 
-			if card.selected then
-				-- TEST: represent selected card
-				love.graphics.rectangle("line", Deck.positions['card'..i].x, Deck.positions['card'..i].y, card.card_img:getWidth(), card.card_img:getHeight())
-			end
+			-- if card.selected then
+			-- 	-- TEST: represent selected card
+			-- 	love.graphics.rectangle("line", Deck.positions['card'..i].x, Deck.positions['card'..i].y, card.card_img:getWidth(), card.card_img:getHeight())
+			-- end
 
 			-- <= because it's from right -> left
-			if card.x <= Map.left_side.w then
-				card.x = Map.left_side.w
+			if CARD_SELECTED.char_x <= Map.left_side.w then
+				CARD_SELECTED.char_x = Map.left_side.w
 			end
 
 			love.graphics.setColor(0.2,0.2,0.7,0.5)

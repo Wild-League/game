@@ -16,7 +16,7 @@ local BaseCard = {
 	-- char initial img
 	img = '',
 
-	-- the actual card position
+	-- the card position
 	x = 0,
 	y = 0,
 
