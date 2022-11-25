@@ -46,11 +46,14 @@ function love.mousepressed(x,y,button)
 			local card = In_Game.deck[i]
 			if x >= card.x and x <= (card.x + card.card_img:getWidth())
 				and y >= card.y and y <= (card.y + card.card_img:getHeight()) then
-					if CARD_SELECTED == card then
-						CARD_SELECTED = nil
-					else
-						CARD_SELECTED = card
-						card.selected = true
+
+					if not card.is_card_loading then
+						if CARD_SELECTED == card then
+							CARD_SELECTED = nil
+						else
+							CARD_SELECTED = card
+							card.selected = true
+						end
 					end
 
 					break
