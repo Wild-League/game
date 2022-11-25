@@ -163,6 +163,9 @@ function In_Game:draw()
 	-- when card is selected
 	if CARD_SELECTED ~= nil then
 		Map:block_left_side()
+
+		In_Game:preview_char(CARD_SELECTED, CARD_SELECTED.char_x, CARD_SELECTED.char_y)
+
 		-- <= because it's from right -> left
 		if CARD_SELECTED.char_x <= Map.left_side.w then
 			CARD_SELECTED.char_x = Map.left_side.w
@@ -229,6 +232,13 @@ function In_Game:check_cooldown(dt)
 			end
 		end
 	end
+end
+
+function In_Game:preview_char(card,x,y)
+	-- attack range
+	love.graphics.ellipse("line", x + (card.img:getWidth() / 4), y + (card.img:getHeight() / 4), card.attack_range, card.attack_range)
+	-- perception range
+	love.graphics.ellipse("line", x + (card.img:getWidth() / 4), y + (card.img:getHeight() / 4), card:perception_range(), card:perception_range())
 end
 
 return In_Game

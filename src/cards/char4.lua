@@ -58,14 +58,6 @@ end
 
 Char4.animate.draw = function(x, y, ...)
 	Char4.lifebar(x,y)
-
-	love.graphics.setColor(255,255,255)
-	-- attack range
-	love.graphics.ellipse("line", x + (Char4.img:getWidth() / 4), y + (Char4.img:getHeight() / 4), Char4.attack_range, Char4.attack_range)
-
-	-- perception range
-	love.graphics.ellipse("line", x + (Char4.img:getWidth() / 4), y + (Char4.img:getHeight() / 4), Char4:perception_range(), Char4:perception_range())
-
 	return Char4.actions[Char4.current_action].draw(x,y)
 end
 
@@ -158,16 +150,10 @@ function Char4.get_nearest_enemy(around)
 end
 
 function Char4.lifebar(x, y)
-
-	-- for k,v in pairs(BaseCard) do
-	-- 	print(k)
-	-- end
-
-	-- print('--------------------------------------------------------------------')
-
 	love.graphics.setColor(255/255,29/255,29/255)
 	love.graphics.rectangle("line", x - 10, y - 10, 50, 5)
-	love.graphics.rectangle("fill", x - 10, y - 10, 25, 5)
+	love.graphics.rectangle("fill", x - 10, y - 10, 50, 5)
+	love.graphics.setColor(255,255,255)
 end
 
 return Char4

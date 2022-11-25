@@ -61,14 +61,6 @@ end
 
 Char1.animate.draw = function(x, y, ...)
 	Char1.lifebar(x,y)
-
-	love.graphics.setColor(255,255,255)
-	-- attack range
-	love.graphics.ellipse("line", x + (Char1.img:getWidth() / 4), y + (Char1.img:getHeight() / 4), Char1.attack_range, Char1.attack_range)
-
-	-- perception range
-	love.graphics.ellipse("line", x + (Char1.img:getWidth() / 4), y + (Char1.img:getHeight() / 4), Char1:perception_range(), Char1:perception_range())
-
 	return Char1.actions[Char1.current_action].draw(x,y)
 end
 
@@ -163,11 +155,8 @@ end
 function Char1.lifebar(x, y)
 	love.graphics.setColor(255/255,29/255,29/255)
 	love.graphics.rectangle("line", x - 10, y - 10, 50, 5)
-	love.graphics.rectangle("fill", x - 10, y - 10, 25, 5)
-end
-
-function Char1.loading(x,y)
-	love.graphics.print('loading',x,y)
+	love.graphics.rectangle("fill", x - 10, y - 10, 50, 5)
+	love.graphics.setColor(255,255,255)
 end
 
 return Char1
