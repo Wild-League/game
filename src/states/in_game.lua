@@ -62,7 +62,10 @@ function love.mousepressed(x,y,button)
 						CARD_SELECTED.char_x = Map.left_side.w
 					end
 
-					table.insert(In_Game.spawned, card)
+					-- insert a copy, so we can insert the same card
+					-- more than once.
+					-- TIP: you can check the behavior by passing only 'card'.
+					table.insert(In_Game.spawned, Utils.copy_table(card))
 
 					CARD_SELECTED = nil
 					card.selected = false

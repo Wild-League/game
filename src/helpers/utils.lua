@@ -28,4 +28,19 @@ function Utils.circle_rect_collision(cx, cy, cr, rx, ry, rw, rh)
 	return corner_distance_sq <= math.pow(cr, 2)
 end
 
+function Utils.copy_table(tb)
+	local copy = {}
+
+	for k,v in pairs(tb) do
+		copy[k] = v
+		if type(v) == 'table' then
+			for k2,v2 in pairs(v) do
+				copy[k][k2] = v2
+			end
+		end
+	end
+
+	return copy
+end
+
 return Utils
