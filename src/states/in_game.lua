@@ -48,19 +48,13 @@ function love.mousepressed(x,y,button)
 	if button == 1 then
 		for i = 1, #In_Game.deck do
 			local card = In_Game.deck[i]
-			-- print(x, card.x, (card.x + card.card_img:getWidth()))
 			if x >= card.x and x <= (card.x + card.card_img:getWidth())
 				and y >= card.y and y <= (card.y + card.card_img:getHeight()) then
+					In_Game:unselect_all_cards()
 					if not card.is_card_loading then
-						if CARD_SELECTED == card then
-							CARD_SELECTED = nil
-						else
-							CARD_SELECTED = card
-							card.selected = true
-						end
+						CARD_SELECTED = card
+						card.selected = true
 					end
-
-					break
 			else
 				if CARD_SELECTED ~= nil and card.selected then
 					card.char_x = x
@@ -71,8 +65,7 @@ function love.mousepressed(x,y,button)
 
 					card.is_card_loading = true
 
-					-- insert a copy, so we can insert the same card
-					-- more than once.
+					-- insert a copy, so we can insert the same card more than once.
 					-- TIP: you can check the behavior by passing only 'card'.
 					table.insert(In_Game.spawned, Utils.copy_table(card))
 
@@ -245,7 +238,7 @@ function In_Game:check_cooldown(dt)
 end
 
 local countdown_message = 5
-
+-- TODO: create class for messages like this
 function In_Game:message_timer(dt)
 	countdown_message = countdown_message - dt
 
@@ -269,6 +262,14 @@ function In_Game:highlight_selected_card(card)
 	love.graphics.setColor(1,1,0)
 	love.graphics.rectangle("fill", card.x - 2, card.y - 2, card.card_img:getWidth() + 4, card.card_img:getHeight() + 4)
 	love.graphics.setColor(1,1,1)
+end
+
+function In_Game:unselect_all_cards()
+	CARD_SELECTED = nil
+	for i = 1, #In_Game.deck do
+		local card = In_Game.deck[i]
+		card.selected = false
+	end
 end
 
 return In_Game
