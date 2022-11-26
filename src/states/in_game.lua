@@ -18,6 +18,10 @@ local In_Game = {
 	spawned = {}
 }
 
+-- used for message_timer
+local should_message = false
+local message = ''
+
 local center = Layout:Center(20, 20)
 
 local new_font = love.graphics.newFont(20, 'mono')
@@ -44,9 +48,9 @@ function love.mousepressed(x,y,button)
 	if button == 1 then
 		for i = 1, #In_Game.deck do
 			local card = In_Game.deck[i]
+			-- print(x, card.x, (card.x + card.card_img:getWidth()))
 			if x >= card.x and x <= (card.x + card.card_img:getWidth())
 				and y >= card.y and y <= (card.y + card.card_img:getHeight()) then
-
 					if not card.is_card_loading then
 						if CARD_SELECTED == card then
 							CARD_SELECTED = nil
@@ -79,8 +83,8 @@ function love.mousepressed(x,y,button)
 
 					break
 				else
-					-- TODO: how to add timer for this message?
-					Suit.Label('no card selected!', {align='center',font=new_font},100,25,100,200)
+					should_message = true
+					message = 'no card selected!'
 				end
 			end
 		end
@@ -110,6 +114,8 @@ function In_Game:update(dt)
 	In_Game:timer(dt)
 
 	In_Game:check_cooldown(dt)
+
+	In_Game:message_timer(dt)
 
 	-- TODO: implement function to show player details
 	-- nickname, level
@@ -180,6 +186,10 @@ function In_Game:draw()
 	-- draw deck
 	for i = 1, #In_Game.deck do
 		local card = In_Game.deck[i]
+		if card.selected then
+			In_Game:highlight_selected_card(card)
+		end
+
 		love.graphics.draw(card.card_img, card.x, card.y)
 
 		if card.is_card_loading then
@@ -234,11 +244,31 @@ function In_Game:check_cooldown(dt)
 	end
 end
 
+local countdown_message = 5
+
+function In_Game:message_timer(dt)
+	countdown_message = countdown_message - dt
+
+	if should_message then
+		Suit.Label(message, {align='center',font=new_font},100,25,100,200)
+		if countdown_message <= 0 then
+			countdown_message = countdown_message + 5
+			should_message = false
+		end
+	end
+end
+
 function In_Game:preview_char(card,x,y)
 	-- attack range
 	love.graphics.ellipse("line", x + (card.img:getWidth() / 4), y + (card.img:getHeight() / 4), card.attack_range, card.attack_range)
 	-- perception range
 	love.graphics.ellipse("line", x + (card.img:getWidth() / 4), y + (card.img:getHeight() / 4), card:perception_range(), card:perception_range())
+end
+
+function In_Game:highlight_selected_card(card)
+	love.graphics.setColor(1,1,0)
+	love.graphics.rectangle("fill", card.x - 2, card.y - 2, card.card_img:getWidth() + 4, card.card_img:getHeight() + 4)
+	love.graphics.setColor(1,1,1)
 end
 
 return In_Game
