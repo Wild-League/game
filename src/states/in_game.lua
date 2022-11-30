@@ -46,14 +46,21 @@ setmetatable(In_Game, In_Game)
 
 function love.mousepressed(x,y,button)
 	if button == 1 then
-		for i = 1, #In_Game.deck do
-			local card = In_Game.deck[i]
+		if In_Game:has_selected_card() then
+			local card = In_Game:get_selected_card()
+		end
+
+		for _,card in pairs(In_Game.deck) do
 			if x >= card.x and x <= (card.x + card.card_img:getWidth())
 				and y >= card.y and y <= (card.y + card.card_img:getHeight()) then
-					In_Game:unselect_all_cards()
 					if not card.is_card_loading then
-						CARD_SELECTED = card
-						card.selected = true
+						if card.selected then
+							CARD_SELECTED = nil
+							card.selected = false
+						else
+							CARD_SELECTED = card
+							card.selected = true
+						end
 					end
 			else
 				if CARD_SELECTED ~= nil and card.selected then
@@ -73,12 +80,12 @@ function love.mousepressed(x,y,button)
 					card.selected = false
 
 					card.current_cooldown = card.cooldown
-
-					break
 				else
 					should_message = true
 					message = 'no card selected!'
 				end
+
+				break
 			end
 		end
 	end
@@ -264,11 +271,20 @@ function In_Game:highlight_selected_card(card)
 	love.graphics.setColor(1,1,1)
 end
 
-function In_Game:unselect_all_cards()
-	CARD_SELECTED = nil
+function In_Game:has_selected_card()
+	local card1, card2, card3, card4 = unpack(In_Game.deck)
+
+	return (
+		card1.selected and card2.selected and card3.selected and card4.selected
+	)
+end
+
+function In_Game:get_selected_card()
 	for i = 1, #In_Game.deck do
 		local card = In_Game.deck[i]
-		card.selected = false
+		if card.selected then
+			return card
+		end
 	end
 end
 
