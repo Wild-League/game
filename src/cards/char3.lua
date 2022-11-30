@@ -18,7 +18,8 @@ local Char3 = {
 	current_action = 'walk',
 	animate = {},
 	actions = {},
-	chars_around = {}
+	chars_around = {},
+	selected = false
 }
 
 -- LOAD
@@ -57,6 +58,7 @@ end
 
 Char3.animate.draw = function(x, y, ...)
 	Char3.lifebar(x,y)
+	Char3.show_name(x,y)
 	return Char3.actions[Char3.current_action].draw(x,y)
 end
 
@@ -153,6 +155,10 @@ function Char3.lifebar(x, y)
 	love.graphics.rectangle("line", x - 10, y - 10, 50, 5)
 	love.graphics.rectangle("fill", x - 10, y - 10, 50, 5)
 	love.graphics.setColor(255,255,255)
+end
+
+function Char3.show_name(x, y)
+	love.graphics.print(Char3.name, x, y)
 end
 
 return Char3

@@ -18,7 +18,8 @@ local Char2 = {
 	current_action = 'walk',
 	animate = {},
 	actions = {},
-	chars_around = {}
+	chars_around = {},
+	selected = false
 }
 
 function Char2:perception_range()
@@ -57,6 +58,7 @@ end
 
 Char2.animate.draw = function(x, y, ...)
 	Char2.lifebar(x,y)
+	Char2.show_name(x,y)
 	return Char2.actions[Char2.current_action].draw(x,y)
 end
 
@@ -153,6 +155,10 @@ function Char2.lifebar(x, y)
 	love.graphics.rectangle("line", x - 10, y - 10, 50, 5)
 	love.graphics.rectangle("fill", x - 10, y - 10, 50, 5)
 	love.graphics.setColor(255,255,255)
+end
+
+function Char2.show_name(x, y)
+	love.graphics.print(Char2.name, x, y)
 end
 
 return Char2

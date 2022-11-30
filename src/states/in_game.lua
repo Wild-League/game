@@ -46,46 +46,46 @@ setmetatable(In_Game, In_Game)
 
 function love.mousepressed(x,y,button)
 	if button == 1 then
-		if In_Game:has_selected_card() then
-			local card = In_Game:get_selected_card()
-		end
-
 		for _,card in pairs(In_Game.deck) do
 			if x >= card.x and x <= (card.x + card.card_img:getWidth())
 				and y >= card.y and y <= (card.y + card.card_img:getHeight()) then
-					if not card.is_card_loading then
-						if card.selected then
-							CARD_SELECTED = nil
-							card.selected = false
-						else
-							CARD_SELECTED = card
-							card.selected = true
-						end
+				if not card.is_card_loading then
+					if card.selected then
+						CARD_SELECTED = nil
+						card.selected = false
+					else
+						In_Game:unselect_all_cards()
+						CARD_SELECTED = card
+						card.selected = true
 					end
-			else
-				if CARD_SELECTED ~= nil and card.selected then
-					card.char_x = x
-					card.char_y = y
-					if CARD_SELECTED.char_x <= Map.left_side.w then
-						CARD_SELECTED.char_x = Map.left_side.w
-					end
-
-					card.is_card_loading = true
-
-					-- insert a copy, so we can insert the same card more than once.
-					-- TIP: you can check the behavior by passing only 'card'.
-					table.insert(In_Game.spawned, Utils.copy_table(card))
-
-					CARD_SELECTED = nil
-					card.selected = false
-
-					card.current_cooldown = card.cooldown
-				else
-					should_message = true
-					message = 'no card selected!'
+					break
 				end
+			-- TODO: spawn card
+			-- else
+			-- 	if card.selected then
+			-- 		card.char_x = x
+			-- 		card.char_y = y
 
-				break
+			-- 		if CARD_SELECTED.char_x <= Map.left_side.w then
+			-- 			CARD_SELECTED.char_x = Map.left_side.w
+			-- 		end
+
+			-- 		card.is_card_loading = true
+
+			-- 		-- insert a copy, so we can insert the same card more than once.
+			-- 		-- TIP: you can check the behavior by passing only 'card'.
+			-- 		table.insert(In_Game.spawned, Utils.copy_table(card))
+
+			-- 		CARD_SELECTED = nil
+			-- 		card.selected = false
+
+			-- 		card.current_cooldown = card.cooldown
+
+			-- 		break
+			-- 	else
+			-- 		should_message = true
+			-- 		message = 'no card selected!'
+			-- 	end
 			end
 		end
 	end
@@ -169,8 +169,6 @@ function In_Game:draw()
 	-- when card is selected
 	if CARD_SELECTED ~= nil then
 		Map:block_left_side()
-
-		In_Game:preview_char(CARD_SELECTED, CARD_SELECTED.char_x, CARD_SELECTED.char_y)
 
 		-- <= because it's from right -> left
 		if CARD_SELECTED.char_x <= Map.left_side.w then
@@ -273,20 +271,10 @@ function In_Game:highlight_selected_card(card)
 	love.graphics.setColor(1,1,1)
 end
 
-function In_Game:has_selected_card()
-	local card1, card2, card3, card4 = unpack(In_Game.deck)
-
-	return (
-		card1.selected and card2.selected and card3.selected and card4.selected
-	)
-end
-
-function In_Game:get_selected_card()
+function In_Game:unselect_all_cards()
 	for i = 1, #In_Game.deck do
 		local card = In_Game.deck[i]
-		if card.selected then
-			return card
-		end
+		card.selected = false
 	end
 end
 

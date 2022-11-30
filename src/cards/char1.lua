@@ -1,8 +1,6 @@
 local Assets = require('./src/assets')
 local anim8 = require('./lib/anim8')
 
--- local Deck = require('./src/entities/deck')
-
 local Range = require('./src/config/range')
 
 local Char1 = {
@@ -22,7 +20,8 @@ local Char1 = {
 	-- ---------
 	animate = {},
 	actions = {},
-	chars_around = {}
+	chars_around = {},
+	selected = false
 }
 
 -- LOAD
@@ -61,6 +60,7 @@ end
 
 Char1.animate.draw = function(x, y, ...)
 	Char1.lifebar(x,y)
+	Char1.show_name(x,y)
 	return Char1.actions[Char1.current_action].draw(x,y)
 end
 
@@ -157,6 +157,10 @@ function Char1.lifebar(x, y)
 	love.graphics.rectangle("line", x - 10, y - 10, 50, 5)
 	love.graphics.rectangle("fill", x - 10, y - 10, 50, 5)
 	love.graphics.setColor(255,255,255)
+end
+
+function Char1.show_name(x, y)
+	love.graphics.print(Char1.name, x, y)
 end
 
 return Char1
