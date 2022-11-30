@@ -177,6 +177,8 @@ function In_Game:draw()
 			CARD_SELECTED.char_x = Map.left_side.w
 		end
 
+		In_Game:preview_char(CARD_SELECTED, CARD_SELECTED.char_x, CARD_SELECTED.char_y)
+
 		-- represents the char preview
 		love.graphics.setColor(0.2,0.2,0.7,0.5)
 		love.graphics.draw(CARD_SELECTED.img, CARD_SELECTED.char_x, CARD_SELECTED.char_y)
