@@ -28,6 +28,7 @@ local new_font = love.graphics.newFont(20, 'mono')
 
 -- store the current selected card
 -- used to block selecting more than one card at time
+-- also used to show the preview char
 local CARD_SELECTED = nil
 
 -- have all the objects in the game
@@ -47,6 +48,7 @@ setmetatable(In_Game, In_Game)
 function love.mousepressed(x,y,button)
 	if button == 1 then
 		for _,card in pairs(In_Game.deck) do
+			-- click on card?
 			if x >= card.x and x <= (card.x + card.card_img:getWidth())
 				and y >= card.y and y <= (card.y + card.card_img:getHeight()) then
 				if not card.is_card_loading then
@@ -60,32 +62,34 @@ function love.mousepressed(x,y,button)
 					end
 					break
 				end
-			-- TODO: spawn card
-			-- else
-			-- 	if card.selected then
-			-- 		card.char_x = x
-			-- 		card.char_y = y
+			else
+				-- this is the selected card?
+				if card.selected then
+					-- click on map?
+					if not (x >= card.x and x <= (card.x + card.card_img:getWidth()))
+						and not (y >= card.y and y <= (card.y + card.card_img:getHeight())) then
 
-			-- 		if CARD_SELECTED.char_x <= Map.left_side.w then
-			-- 			CARD_SELECTED.char_x = Map.left_side.w
-			-- 		end
+						card.char_x = x
+						card.char_y = y
 
-			-- 		card.is_card_loading = true
+						if CARD_SELECTED.char_x <= Map.left_side.w then
+							CARD_SELECTED.char_x = Map.left_side.w
+						end
 
-			-- 		-- insert a copy, so we can insert the same card more than once.
-			-- 		-- TIP: you can check the behavior by passing only 'card'.
-			-- 		table.insert(In_Game.spawned, Utils.copy_table(card))
+						card.is_card_loading = true
 
-			-- 		CARD_SELECTED = nil
-			-- 		card.selected = false
+						-- insert a copy, so we can insert the same card more than once.
+						-- TIP: you can check the behavior by passing only 'card'.
+						table.insert(In_Game.spawned, Utils.copy_table(card))
 
-			-- 		card.current_cooldown = card.cooldown
+						CARD_SELECTED = nil
+						card.selected = false
 
-			-- 		break
-			-- 	else
-			-- 		should_message = true
-			-- 		message = 'no card selected!'
-			-- 	end
+						card.current_cooldown = card.cooldown
+
+						break
+					end
+				end
 			end
 		end
 	end
@@ -176,11 +180,6 @@ function In_Game:draw()
 		end
 
 		In_Game:preview_char(CARD_SELECTED, CARD_SELECTED.char_x, CARD_SELECTED.char_y)
-
-		-- represents the char preview
-		love.graphics.setColor(0.2,0.2,0.7,0.5)
-		love.graphics.draw(CARD_SELECTED.img, CARD_SELECTED.char_x, CARD_SELECTED.char_y)
-		love.graphics.setColor(1,1,1)
 	end
 
 	-- draw deck
@@ -263,6 +262,11 @@ function In_Game:preview_char(card,x,y)
 	love.graphics.ellipse("line", x + (card.img:getWidth() / 4), y + (card.img:getHeight() / 4), card.attack_range, card.attack_range)
 	-- perception range
 	love.graphics.ellipse("line", x + (card.img:getWidth() / 4), y + (card.img:getHeight() / 4), card:perception_range(), card:perception_range())
+
+	-- represents the char preview
+	love.graphics.setColor(0.2,0.2,0.7,0.5)
+	love.graphics.draw(CARD_SELECTED.img, CARD_SELECTED.char_x, CARD_SELECTED.char_y)
+	love.graphics.setColor(1,1,1)
 end
 
 function In_Game:highlight_selected_card(card)
@@ -271,11 +275,32 @@ function In_Game:highlight_selected_card(card)
 	love.graphics.setColor(1,1,1)
 end
 
+-- function In_Game:has_selected_card()
+-- 	local card1, card2, card3, card4 = unpack(In_Game.deck)
+
+-- 	return (
+-- 		card1.selected and card2.selected and card3.selected and card4.selected
+-- 	)
+-- end
+
 function In_Game:unselect_all_cards()
 	for i = 1, #In_Game.deck do
 		local card = In_Game.deck[i]
 		card.selected = false
 	end
+end
+
+-- check if the mouse clicked in one of the cards
+-- based on range, return the card clicked
+function In_Game:card_click(x,y)
+	for _,card in pairs(In_Game.deck) do
+		if x >= card.x and x <= (card.x + card.card_img:getWidth())
+			and y >= card.y and y <= (card.y + card.card_img:getHeight()) then
+			return card
+		end
+	end
+
+	return nil
 end
 
 return In_Game
