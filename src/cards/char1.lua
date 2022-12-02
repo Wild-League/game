@@ -62,6 +62,8 @@ end
 Char1.animate.draw = function(x, y, ...)
 	Char1.lifebar(x,y)
 	Char1.show_name(x,y)
+	-- Char1.current_action always will be walk even for the copies
+	-- that's why the actions aren't changing
 	return Char1.actions[Char1.current_action].draw(x,y)
 end
 

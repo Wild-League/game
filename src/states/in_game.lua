@@ -206,6 +206,8 @@ function In_Game:draw()
 
 	-- draw spawned cards
 	for _,card in pairs(In_Game.spawned) do
+		-- TODO: char not changing status
+		-- see char1.lua line 65
 		card.char_x, card.char_y = card.animate.draw(card.char_x, card.char_y)
 	end
 end
