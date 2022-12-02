@@ -33,10 +33,12 @@ function Utils.copy_table(tb)
 
 	for k,v in pairs(tb) do
 		copy[k] = v
+
 		if type(v) == 'table' then
-			for k2,v2 in pairs(v) do
-				copy[k][k2] = v2
-			end
+			Utils.copy_table(v)
+			-- for k2,v2 in pairs(v) do
+			-- 	copy[k][k2] = v2
+			-- end
 		end
 	end
 

@@ -19,7 +19,8 @@ local Char2 = {
 	animate = {},
 	actions = {},
 	chars_around = {},
-	selected = false
+	selected = false,
+	preview_card = false
 }
 
 function Char2:perception_range()

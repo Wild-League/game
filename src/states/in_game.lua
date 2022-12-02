@@ -7,6 +7,8 @@ local Constants = require('./src/constants')
 local Utils = require('./src/helpers/utils')
 local Map = require('./src/domain/map')
 
+local Deck = require('./src/entities/deck')
+
 local timer = 0
 
 local In_Game = {
@@ -82,6 +84,8 @@ function love.mousepressed(x,y,button)
 						-- TIP: you can check the behavior by passing only 'card'.
 						table.insert(In_Game.spawned, Utils.copy_table(card))
 
+						-- table.insert(In_Game.spawned, card)
+
 						CARD_SELECTED = nil
 						card.selected = false
 
@@ -96,6 +100,8 @@ function love.mousepressed(x,y,button)
 end
 
 function In_Game:load()
+	Deck()
+
 	In_Game.user = Constants.LOGGED_USER
 	In_Game.decks = In_Game.user.decks
 
@@ -103,15 +109,7 @@ function In_Game:load()
 
 	In_Game.deck = In_Game.decks[In_Game.deck_selected]
 
-	-- define initial position for all cards
-	for i = 1, #In_Game.deck do
-		local card = In_Game.deck[i]
-
-		local pos = In_Game.decks.positions['card'..i]
-
-		card.x = pos.x
-		card.y = pos.y
-	end
+	Deck:define_positions()
 end
 
 function In_Game:update(dt)
@@ -137,6 +135,8 @@ function In_Game:update(dt)
 			ALL_OBJECTS[card.name] = card
 		end
 
+		-- print(card.animate.update)
+
 		card.animate.update(dt)
 
 		for _,value in pairs(ALL_OBJECTS) do
@@ -146,6 +146,8 @@ function In_Game:update(dt)
 				card.current_action = 'attack'
 				break
 			end
+
+			-- print(card.current_action)
 
 			if Utils.circle_rect_collision(card.char_x + (card.img:getWidth() / 4), card.char_y + (card.img:getHeight() / 4),
 					card:perception_range(), value.x, value.y, value.width, value.height) then
@@ -183,7 +185,8 @@ function In_Game:draw()
 	end
 
 	-- draw deck
-	for i = 1, #In_Game.deck do
+	-- TODO: remove magic number (4)
+	for i = 1, 4 do
 		local card = In_Game.deck[i]
 		if card.selected then
 			In_Game:highlight_selected_card(card)
@@ -194,6 +197,11 @@ function In_Game:draw()
 		if card.is_card_loading then
 			love.graphics.print(card.current_cooldown, card.x + 12, card.y + 25, 0, 1.2)
 		end
+	end
+
+	-- draw the preview card
+	if #Deck.queue_next_cards > 0 then
+		love.graphics.draw(Deck.queue_next_cards[1].card_img, Deck.queue_next_cards[1].x, Deck.queue_next_cards[1].y, 0, 0.65, 0.65)
 	end
 
 	-- draw spawned cards

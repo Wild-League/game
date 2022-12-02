@@ -19,7 +19,8 @@ local Char3 = {
 	animate = {},
 	actions = {},
 	chars_around = {},
-	selected = false
+	selected = false,
+	preview_card = false
 }
 
 -- LOAD
