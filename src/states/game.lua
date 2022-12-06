@@ -178,8 +178,8 @@ function In_Game:draw()
 		In_Game:preview_char(CARD_SELECTED, CARD_SELECTED.char_x, CARD_SELECTED.char_y)
 	end
 
-	-- draw deck
 	-- TODO: remove magic number (4)
+	-- draw deck
 	for i = 1, 4 do
 		local card = In_Game.deck[i]
 		if card.selected then

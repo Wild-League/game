@@ -1,6 +1,6 @@
 local Initial = require('src/states/initial')
-local Get_Info = require('src/states/get_info')
-local In_Game = require('src/states/in_game')
+local Get_Info = require('src.states.auth')
+local In_Game = require('src.states.game')
 
 local Context = {
 	states = {
