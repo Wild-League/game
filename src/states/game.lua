@@ -11,7 +11,7 @@ local Deck = require('./src/entities/deck')
 
 local timer = 0
 
-local In_Game = {
+local Game = {
 	user = {},
 	decks = {},
 	deck_selected = '',
@@ -45,11 +45,11 @@ local ALL_OBJECTS = {
 	}
 }
 
-setmetatable(In_Game, In_Game)
+setmetatable(Game, Game)
 
 function love.mousepressed(x,y,button)
 	if button == 1 then
-		for _,card in pairs(In_Game.deck) do
+		for _,card in pairs(Game.deck) do
 			-- click on card?
 			if x >= card.x and x <= (card.x + card.card_img:getWidth())
 				and y >= card.y and y <= (card.y + card.card_img:getHeight()) then
@@ -58,7 +58,7 @@ function love.mousepressed(x,y,button)
 						CARD_SELECTED = nil
 						card.selected = false
 					else
-						In_Game:unselect_all_cards()
+						Game:unselect_all_cards()
 						CARD_SELECTED = card
 						card.selected = true
 					end
@@ -82,7 +82,7 @@ function love.mousepressed(x,y,button)
 
 						-- insert a copy, so we can insert the same card more than once.
 						-- TIP: you can check the behavior by passing only 'card'.
-						table.insert(In_Game.spawned, Utils.copy_table(card))
+						table.insert(Game.spawned, Utils.copy_table(card))
 
 						CARD_SELECTED = nil
 						card.selected = false
@@ -97,30 +97,30 @@ function love.mousepressed(x,y,button)
 	end
 end
 
-function In_Game:load()
+function Game:load()
 	Deck()
 
-	In_Game.user = Constants.LOGGED_USER
-	In_Game.decks = In_Game.user.decks
+	Game.user = Constants.LOGGED_USER
+	Game.decks = Game.user.decks
 
-	In_Game.deck_selected = In_Game.user.deck_selected
+	Game.deck_selected = Game.user.deck_selected
 
-	In_Game.deck = In_Game.decks[In_Game.deck_selected]
+	Game.deck = Game.decks[Game.deck_selected]
 
 	Deck:define_positions()
 end
 
-function In_Game:update(dt)
-	In_Game:timer(dt)
+function Game:update(dt)
+	Game:timer(dt)
 
-	In_Game:check_cooldown(dt)
+	Game:check_cooldown(dt)
 
-	In_Game:message_timer(dt)
+	Game:message_timer(dt)
 
 	-- TODO: implement function to show player details
 	-- nickname, level
-	-- Suit.Label(In_Game.user.nickname, { align='center', font = new_font}, 10, 680, 200, 30)
-	-- Suit.Label('lv. '..In_Game.user.level, { align='center', font = new_font  }, 10, 695, 200, 30)
+	-- Suit.Label(Game.user.nickname, { align='center', font = new_font}, 10, 680, 200, 30)
+	-- Suit.Label('lv. '..Game.user.level, { align='center', font = new_font  }, 10, 695, 200, 30)
 
 	if CARD_SELECTED ~= nil then
 		local x,y = love.mouse.getPosition()
@@ -128,7 +128,7 @@ function In_Game:update(dt)
 		CARD_SELECTED.char_y = y
 	end
 
-	for _,card in pairs(In_Game.spawned) do
+	for _,card in pairs(Game.spawned) do
 		if ALL_OBJECTS[card.name] == nil then
 			ALL_OBJECTS[card.name] = card
 		end
@@ -152,13 +152,13 @@ function In_Game:update(dt)
 	end
 end
 
-function In_Game:draw()
+function Game:draw()
 	-- world background
-	local sx = love.graphics.getWidth() / In_Game.background:getWidth()
-	local sy = love.graphics.getHeight() / In_Game.background:getHeight()
-	for i = 0, Constants.WINDOW_SETTINGS.width / In_Game.background:getWidth() do
-		for j = 0, Constants.WINDOW_SETTINGS.height / In_Game.background:getHeight() do
-			love.graphics.draw(In_Game.background, i * In_Game.background:getWidth(), j * In_Game.background:getHeight(), 0, sx, sy)
+	local sx = love.graphics.getWidth() / Game.background:getWidth()
+	local sy = love.graphics.getHeight() / Game.background:getHeight()
+	for i = 0, Constants.WINDOW_SETTINGS.width / Game.background:getWidth() do
+		for j = 0, Constants.WINDOW_SETTINGS.height / Game.background:getHeight() do
+			love.graphics.draw(Game.background, i * Game.background:getWidth(), j * Game.background:getHeight(), 0, sx, sy)
 		end
 	end
 
@@ -175,15 +175,15 @@ function In_Game:draw()
 			CARD_SELECTED.char_x = Map.left_side.w
 		end
 
-		In_Game:preview_char(CARD_SELECTED, CARD_SELECTED.char_x, CARD_SELECTED.char_y)
+		Game:preview_char(CARD_SELECTED, CARD_SELECTED.char_x, CARD_SELECTED.char_y)
 	end
 
 	-- TODO: remove magic number (4)
 	-- draw deck
 	for i = 1, 4 do
-		local card = In_Game.deck[i]
+		local card = Game.deck[i]
 		if card.selected then
-			In_Game:highlight_selected_card(card)
+			Game:highlight_selected_card(card)
 		end
 
 		love.graphics.draw(card.card_img, card.x, card.y)
@@ -199,14 +199,14 @@ function In_Game:draw()
 	end
 
 	-- draw spawned cards
-	for _,card in pairs(In_Game.spawned) do
+	for _,card in pairs(Game.spawned) do
 		-- TODO: char not changing status
 		-- see char1.lua line 65
 		card.char_x, card.char_y = card.animate.draw(card, card.char_x, card.char_y)
 	end
 end
 
-function In_Game:timer(dt)
+function Game:timer(dt)
 	timer = timer + dt
 
 	local seconds = tostring(math.floor(timer % 60))
@@ -229,14 +229,14 @@ end
 -- used for check cooldown timer each second
 local countdown_timer = 1
 
-function In_Game:check_cooldown(dt)
+function Game:check_cooldown(dt)
 	countdown_timer = countdown_timer - dt
 
 	if countdown_timer <= 0 then
 		countdown_timer = countdown_timer + 1
 
-		for i = 1, #In_Game.deck do
-			local card = In_Game.deck[i]
+		for i = 1, #Game.deck do
+			local card = Game.deck[i]
 			if card.is_card_loading then
 				card.current_cooldown = card.current_cooldown - 1
 				if card.current_cooldown <= 0 then
@@ -249,7 +249,7 @@ end
 
 local countdown_message = 5
 -- TODO: create class for messages like this
-function In_Game:message_timer(dt)
+function Game:message_timer(dt)
 	countdown_message = countdown_message - dt
 
 	if should_message then
@@ -261,7 +261,7 @@ function In_Game:message_timer(dt)
 	end
 end
 
-function In_Game:preview_char(card,x,y)
+function Game:preview_char(card,x,y)
 	-- attack range
 	love.graphics.ellipse("line", x + (card.img:getWidth() / 4), y + (card.img:getHeight() / 4), card.attack_range, card.attack_range)
 	-- perception range
@@ -273,31 +273,31 @@ function In_Game:preview_char(card,x,y)
 	love.graphics.setColor(1,1,1)
 end
 
-function In_Game:highlight_selected_card(card)
+function Game:highlight_selected_card(card)
 	love.graphics.setColor(1,1,0)
 	love.graphics.rectangle("fill", card.x - 2, card.y - 2, card.card_img:getWidth() + 4, card.card_img:getHeight() + 4)
 	love.graphics.setColor(1,1,1)
 end
 
--- function In_Game:has_selected_card()
--- 	local card1, card2, card3, card4 = unpack(In_Game.deck)
+-- function Game:has_selected_card()
+-- 	local card1, card2, card3, card4 = unpack(Game.deck)
 
 -- 	return (
 -- 		card1.selected and card2.selected and card3.selected and card4.selected
 -- 	)
 -- end
 
-function In_Game:unselect_all_cards()
-	for i = 1, #In_Game.deck do
-		local card = In_Game.deck[i]
+function Game:unselect_all_cards()
+	for i = 1, #Game.deck do
+		local card = Game.deck[i]
 		card.selected = false
 	end
 end
 
 -- check if the mouse clicked in one of the cards
 -- based on range, return the card clicked
-function In_Game:card_click(x,y)
-	for _,card in pairs(In_Game.deck) do
+function Game:card_click(x,y)
+	for _,card in pairs(Game.deck) do
 		if x >= card.x and x <= (card.x + card.card_img:getWidth())
 			and y >= card.y and y <= (card.y + card.card_img:getHeight()) then
 			return card
@@ -307,4 +307,4 @@ function In_Game:card_click(x,y)
 	return nil
 end
 
-return In_Game
+return Game

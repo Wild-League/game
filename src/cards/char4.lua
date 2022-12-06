@@ -5,9 +5,9 @@ local Range = require('./src/config/range')
 
 local Char4 = {
 	name = 'char4',
-	card_img = Assets.CHAR4.CARD,
+	card_img = Assets.CHAR1.CARD,
 	is_card_loading = false,
-	img = Assets.CHAR4.INITIAL,
+	img = Assets.CHAR1.INITIAL,
 	speed = 2,
 	cooldown = 10,
 	attack_range = Range:getSize('distance', 80),
@@ -25,12 +25,12 @@ local Char4 = {
 }
 
 -- LOAD
-local walking = Assets.CHAR4.WALKING
+local walking = Assets.CHAR1.WALKING
 local grid_walking = anim8.newGrid(34, 36, walking:getWidth(), walking:getHeight())
 
 local walk_animation = anim8.newAnimation(grid_walking('2-3', 1), 0.2)
 
-local attack = Assets.CHAR4.ATTACK
+local attack = Assets.CHAR1.ATTACK
 local grid_attack = anim8.newGrid(36, 36, attack:getWidth(), attack:getHeight())
 
 -- TODO: should split all frame so we can take control of the animation
@@ -51,7 +51,7 @@ local shoot = {
 	y = Char4.char_y
 }
 
-local shoot_animation = Assets.CHAR4.SHOOT
+local shoot_animation = Assets.CHAR1.SHOOT
 ------
 
 Char4.animate.update = function(dt)

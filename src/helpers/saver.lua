@@ -5,7 +5,7 @@ local Constants = require('./src/constants')
 local User = require('./src/entities/user')
 
 -- this is the default path LOVE2D sets
--- Love2D cannot write on another path, you only can do this using IO lib
+-- Love2D cannot write on another path, we only can do this using IO lib
 -- ~/.local/share/love/wild-league/savedata.txt
 
 local path = 'savedata.txt'
@@ -15,6 +15,7 @@ function Saver:save(user)
 		error('user should have a nickname prop')
 	end
 
+	-- TODO: added log file
 	print('saving data...')
 
 	local serialized_data = Lume.serialize({ nickname = user.nickname, level = user.level })
@@ -32,6 +33,7 @@ function Saver:save(user)
 end
 
 function Saver:retrieveData()
+	-- TODO: added log file
 	print('getting data... ')
 
 	if love.filesystem.getInfo(path) then

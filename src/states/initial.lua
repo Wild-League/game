@@ -29,9 +29,9 @@ function Initial:draw()
 		local data = Saver:retrieveData()
 
 		if data ~= nil then
-			CONTEXT:change('in_game')
+			CONTEXT:change('game')
 		else
-			CONTEXT:change('get_info')
+			CONTEXT:change('auth')
 		end
 	end
 end

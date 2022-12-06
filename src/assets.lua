@@ -11,46 +11,11 @@ local Assets = {
 		SHOOT = love.graphics.newImage('assets/chars/char1/animations/shoot.png'),
 		INITIAL = love.graphics.newImage('assets/chars/char1/initial.png')
 	},
-	CHAR2 = {
-		WALKING = love.graphics.newImage('assets/chars/char1/animations/walking-left.png'),
-		CARD = love.graphics.newImage('assets/chars/char1/card.png'),
-		ATTACK = love.graphics.newImage('assets/chars/char1/animations/attack.png'),
-		SHOOT = love.graphics.newImage('assets/chars/char1/animations/shoot.png'),
-		INITIAL = love.graphics.newImage('assets/chars/char1/initial.png')
-	},
-	CHAR3 = {
-		WALKING = love.graphics.newImage('assets/chars/char1/animations/walking-left.png'),
-		CARD = love.graphics.newImage('assets/chars/char1/card.png'),
-		ATTACK = love.graphics.newImage('assets/chars/char1/animations/attack.png'),
-		SHOOT = love.graphics.newImage('assets/chars/char1/animations/shoot.png'),
-		INITIAL = love.graphics.newImage('assets/chars/char1/initial.png')
-	},
-	CHAR4 = {
-		WALKING = love.graphics.newImage('assets/chars/char1/animations/walking-left.png'),
-		CARD = love.graphics.newImage('assets/chars/char1/card.png'),
-		ATTACK = love.graphics.newImage('assets/chars/char1/animations/attack.png'),
-		SHOOT = love.graphics.newImage('assets/chars/char1/animations/shoot.png'),
-		INITIAL = love.graphics.newImage('assets/chars/char1/initial.png')
-	},
-	CHAR5 = {
-		WALKING = love.graphics.newImage('assets/chars/char1/animations/walking-left.png'),
-		CARD = love.graphics.newImage('assets/chars/char1/card.png'),
-		ATTACK = love.graphics.newImage('assets/chars/char1/animations/attack.png'),
-		SHOOT = love.graphics.newImage('assets/chars/char1/animations/shoot.png'),
-		INITIAL = love.graphics.newImage('assets/chars/char1/initial.png')
-	},
-	CHAR6 = {
-		WALKING = love.graphics.newImage('assets/chars/char1/animations/walking-left.png'),
-		CARD = love.graphics.newImage('assets/chars/char1/card.png'),
-		ATTACK = love.graphics.newImage('assets/chars/char1/animations/attack.png'),
-		SHOOT = love.graphics.newImage('assets/chars/char1/animations/shoot.png'),
-		INITIAL = love.graphics.newImage('assets/chars/char1/initial.png')
-	},
 	WORLD_DETAIL = love.graphics.newImage('assets/world-detail.png')
 }
 
 setmetatable(Assets, {
-	__index = function(self, key)
+	__index = function(key)
 		error(string.format('the assets: "%s" is not set in assets', key))
 	end
 })

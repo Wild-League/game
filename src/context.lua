@@ -1,12 +1,12 @@
 local Initial = require('src/states/initial')
-local Get_Info = require('src.states.auth')
-local In_Game = require('src.states.game')
+local Auth = require('src/states/auth')
+local Game = require('src/states/game')
 
 local Context = {
 	states = {
 		initial = Initial,
-		get_info = Get_Info,
-		in_game = In_Game
+		auth = Auth,
+		game = Game
 	},
 
 	current = 'initial',
@@ -20,6 +20,7 @@ local Context = {
 	end,
 
 	change = function(self, ctx)
+		-- TODO: added log file
 		print('changing state for: ', ctx)
 
 		if ctx == nil then

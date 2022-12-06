@@ -32,9 +32,4 @@ function Map:block_left_side()
 	love.graphics.setColor(1,1,1)
 end
 
--- function Map:left_side()
--- 	local left = Map.left_side
--- 	return left.w, left.h
--- end
-
 return Map

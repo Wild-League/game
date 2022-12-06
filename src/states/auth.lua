@@ -1,16 +1,15 @@
 local Suit = require('./lib/suit')
 local Saver = require('./src/helpers/saver')
 
-
-local Get_Info = {}
+local Auth = {}
 
 local nickname_input = { text = '' }
 
-setmetatable(Get_Info, Get_Info)
+setmetatable(Auth, Auth)
 
-function Get_Info:load() end
+function Auth:load() end
 
-function Get_Info:update()
+function Auth:update()
 	Suit.Label('nickname: ', { align='center' }, 10, 0, 200, 30)
 	Suit.Input(nickname_input, 10, 40, 200, 30)
 
@@ -20,13 +19,13 @@ function Get_Info:update()
 		if (nickname_input.text ~= '') then
 			local save = Saver:save({ nickname = nickname_input.text, level = 1 })
 			if save == true then
-				CONTEXT:change('in_game')
+				CONTEXT:change('game')
 			end
 		end
 	end
 end
 
-function Get_Info:draw() end
+function Auth:draw() end
 
 -- love functions
 
@@ -38,4 +37,4 @@ function love.keypressed(key)
 	Suit.keypressed(key)
 end
 
-return Get_Info
+return Auth
