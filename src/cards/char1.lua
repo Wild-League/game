@@ -48,23 +48,22 @@ local nearest_enemy = {
 }
 
 local shoot = {
-	x = Char1.char_x,
-	y = Char1.char_y
+	x = 0,
+	y = 0
 }
 
 local shoot_animation = Assets.CHAR1.SHOOT
 ------
 
-Char1.animate.update = function(dt)
-	return Char1.actions[Char1.current_action].update(dt)
+Char1.animate.update = function(self, dt)
+	return self.actions[self.current_action].update(dt)
 end
 
-Char1.animate.draw = function(x, y, ...)
-	Char1.lifebar(x,y)
-	Char1.show_name(x,y)
-	-- Char1.current_action always will be walk even for the copies
-	-- that's why the actions aren't changing
-	return Char1.actions[Char1.current_action].draw(x,y)
+Char1.animate.draw = function(self, x, y, ...)
+	self.lifebar(x,y)
+	self.show_name(x,y)
+
+	return self.actions[self.current_action].draw(x,y)
 end
 
 Char1.actions = {
@@ -140,11 +139,14 @@ Char1.actions = {
 	}
 }
 
+-- TODO: move all function below to a base file
+-- to be used in all cards
+
 function Char1.get_nearest_enemy(around)
 	shoot.x = Char1.char_x
 	shoot.y = Char1.char_y
 
-	for k,v in pairs(around) do
+	for _,v in pairs(around) do
 		local distance_x = v.x - Char1.char_x
 		local distance_y = v.y - Char1.char_y
 
@@ -163,7 +165,7 @@ function Char1.lifebar(x, y)
 end
 
 function Char1.show_name(x, y)
-	love.graphics.print(Char1.name, x, y)
+	love.graphics.print(Char1.name, x, y + 30)
 end
 
 return Char1

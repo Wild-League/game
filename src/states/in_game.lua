@@ -84,8 +84,6 @@ function love.mousepressed(x,y,button)
 						-- TIP: you can check the behavior by passing only 'card'.
 						table.insert(In_Game.spawned, Utils.copy_table(card))
 
-						-- table.insert(In_Game.spawned, card)
-
 						CARD_SELECTED = nil
 						card.selected = false
 
@@ -135,9 +133,7 @@ function In_Game:update(dt)
 			ALL_OBJECTS[card.name] = card
 		end
 
-		-- print(card.animate.update)
-
-		card.animate.update(dt)
+		card.animate.update(card, dt)
 
 		for _,value in pairs(ALL_OBJECTS) do
 			if Utils.circle_rect_collision(card.char_x + (card.img:getWidth() / 4), card.char_y + (card.img:getHeight() / 4), card.attack_range,
@@ -146,8 +142,6 @@ function In_Game:update(dt)
 				card.current_action = 'attack'
 				break
 			end
-
-			-- print(card.current_action)
 
 			if Utils.circle_rect_collision(card.char_x + (card.img:getWidth() / 4), card.char_y + (card.img:getHeight() / 4),
 					card:perception_range(), value.x, value.y, value.width, value.height) then
@@ -208,7 +202,7 @@ function In_Game:draw()
 	for _,card in pairs(In_Game.spawned) do
 		-- TODO: char not changing status
 		-- see char1.lua line 65
-		card.char_x, card.char_y = card.animate.draw(card.char_x, card.char_y)
+		card.char_x, card.char_y = card.animate.draw(card, card.char_x, card.char_y)
 	end
 end
 

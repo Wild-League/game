@@ -1,6 +1,6 @@
--- if arg[2] == "debug" then
--- 	require("lldebugger").start()
--- end
+if arg[2] == "debug" then
+	require("lldebugger").start()
+end
 
 local Suit = require('./lib/suit')
 
