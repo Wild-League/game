@@ -46,21 +46,21 @@ local nearest_enemy = {
 }
 
 local shoot = {
-	x = Char3.char_x,
-	y = Char3.char_y
+	x = 0,
+	y = 0
 }
 
 local shoot_animation = Assets.CHAR1.SHOOT
 ------
 
-Char3.animate.update = function(dt)
+Char3.animate.update = function(self,dt)
 	return Char3.actions[Char3.current_action].update(dt)
 end
 
-Char3.animate.draw = function(x, y, ...)
-	Char3.lifebar(x,y)
-	Char3.show_name(x,y)
-	return Char3.actions[Char3.current_action].draw(x,y)
+Char3.animate.draw = function(self, x, y, ...)
+	self.lifebar(x,y)
+	self.show_name(x,y)
+	return self.actions[self.current_action].draw(x,y)
 end
 
 Char3.actions = {
