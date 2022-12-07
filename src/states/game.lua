@@ -89,6 +89,9 @@ function love.mousepressed(x,y,button)
 
 						card.current_cooldown = card.cooldown
 
+						-- Game.deck = Deck:rotate_deck(card)
+						Deck:rotate_deck(card)
+
 						break
 					end
 				end
@@ -98,14 +101,14 @@ function love.mousepressed(x,y,button)
 end
 
 function Game:load()
+	-- setup the deck
 	Deck()
 
 	Game.user = Constants.LOGGED_USER
-	Game.decks = Game.user.decks
 
 	Game.deck_selected = Game.user.deck_selected
 
-	Game.deck = Game.decks[Game.deck_selected]
+	Game.deck = Deck[Game.deck_selected]
 
 	Deck:define_positions()
 end
@@ -178,15 +181,17 @@ function Game:draw()
 		Game:preview_char(CARD_SELECTED, CARD_SELECTED.char_x, CARD_SELECTED.char_y)
 	end
 
-	-- TODO: remove magic number (4)
 	-- draw deck
-	for i = 1, 4 do
+	for i = 1, Deck.num_cards do
 		local card = Game.deck[i]
 		if card.selected then
 			Game:highlight_selected_card(card)
 		end
 
 		love.graphics.draw(card.card_img, card.x, card.y)
+
+		-- TEST
+		love.graphics.print(card.name, card.x, card.y - 30)
 
 		if card.is_card_loading then
 			love.graphics.print(card.current_cooldown, card.x + 12, card.y + 25, 0, 1.2)
@@ -196,12 +201,12 @@ function Game:draw()
 	-- draw the preview card
 	if #Deck.queue_next_cards > 0 then
 		love.graphics.draw(Deck.queue_next_cards[1].card_img, Deck.queue_next_cards[1].x, Deck.queue_next_cards[1].y, 0, 0.65, 0.65)
+		-- TEST
+		love.graphics.print(Deck.queue_next_cards[1].name, Deck.queue_next_cards[1].x, Deck.queue_next_cards[1].y - 30)
 	end
 
 	-- draw spawned cards
 	for _,card in pairs(Game.spawned) do
-		-- TODO: char not changing status
-		-- see char1.lua line 65
 		card.char_x, card.char_y = card.animate.draw(card, card.char_x, card.char_y)
 	end
 end

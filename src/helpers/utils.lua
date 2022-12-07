@@ -42,4 +42,16 @@ function Utils.copy_table(tb)
 	return copy
 end
 
+function Utils.list_to_obj(list)
+	local set = {}
+  for _,l in pairs(list) do set[l.name] = l end
+  return set
+end
+
+function Utils.obj_to_list(obj)
+	local list = {}
+	for k,v in ipairs(obj) do list[k] = v end
+	return list
+end
+
 return Utils

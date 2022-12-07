@@ -9,6 +9,8 @@ local Layout = require('./src/helpers/layout')
 
 local Constants = require('./src/constants')
 
+local Utils = require('./src/helpers/utils')
+
 local card1 = Char1
 local card2 = Char2
 local card3 = Char3
@@ -21,15 +23,21 @@ local default_height_card = center.height + 300
 
 local Deck = {
 	__call = function(self)
-		-- TODO: remove magic number (4)
+		-- TODO: randomize cards
 		local user = Constants.LOGGED_USER
-
-		if #self[user.deck_selected] > 4 then
-			for i = 5, #self[user.deck_selected] do
+		if #self[user.deck_selected] > self.num_cards then
+			-- self:set_queue_next_cards(self[user.deck_selected])
+			for i = self.num_cards + 1, #self[user.deck_selected] do
 				table.insert(self.queue_next_cards, self[user.deck_selected][i])
 			end
+
+			self.queue_next_cards[1].preview_card = true
 		end
 	end,
+
+	-- the default number of cards
+	-- selectable to play
+	num_cards = 4,
 
 	queue_next_cards = {},
 	positions = {
@@ -60,8 +68,8 @@ local Deck = {
 		card2,
 		card3,
 		card4,
-		card5,
-		card6
+		card5
+		-- card6
 	}
 }
 
@@ -90,6 +98,44 @@ function Deck:define_positions()
 
 		self.queue_next_cards[1].preview_card = true
 	end
+end
+
+-- add the just spawned card to the end of the queue_next_cards
+-- and the first one in the queue to the deck
+function Deck:rotate_deck(card)
+	self.queue_next_cards[1].preview_card = false
+	local new_card = self.queue_next_cards[1]
+
+	local user = Constants.LOGGED_USER
+
+	local new_deck = Deck[user.deck_selected]
+
+	for i = 1, #new_deck - 1 do
+		local curr_card = new_deck[i]
+		local next_card = new_deck[i + 1]
+
+		if curr_card.name == card.name then
+			new_deck[i] = new_card
+		end
+
+		if next_card.name == new_card.name then
+			new_deck[i + 1] = card
+		end
+	end
+
+	Deck:set_queue_next_cards(new_deck)
+end
+
+function Deck:set_queue_next_cards(deck)
+	if #deck == 0 then return end
+
+	self.queue_next_cards = {}
+
+	for i = self.num_cards + 1, #deck do
+		table.insert(self.queue_next_cards, deck[i])
+	end
+
+	self.queue_next_cards[1].preview_card = true
 end
 
 setmetatable(Deck, Deck)
