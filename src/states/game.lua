@@ -47,59 +47,6 @@ local ALL_OBJECTS = {
 
 setmetatable(Game, Game)
 
-function love.mousepressed(x,y,button)
-	if button == 1 then
-		for _,card in pairs(Game.deck) do
-			-- click on card?
-			if x >= card.x and x <= (card.x + card.card_img:getWidth())
-				and y >= card.y and y <= (card.y + card.card_img:getHeight()) then
-				if not card.is_card_loading then
-					if card.selected then
-						CARD_SELECTED = nil
-						card.selected = false
-					else
-						Game:unselect_all_cards()
-						CARD_SELECTED = card
-						card.selected = true
-					end
-					break
-				end
-			else
-				-- this is the selected card?
-				if card.selected then
-					-- click on map?
-					if not (x >= card.x and x <= (card.x + card.card_img:getWidth()))
-						and not (y >= card.y and y <= (card.y + card.card_img:getHeight())) then
-
-						card.char_x = x
-						card.char_y = y
-
-						if CARD_SELECTED.char_x <= Map.left_side.w then
-							CARD_SELECTED.char_x = Map.left_side.w
-						end
-
-						card.is_card_loading = true
-
-						-- insert a copy, so we can insert the same card more than once.
-						-- TIP: you can check the behavior by passing only 'card'.
-						table.insert(Game.spawned, Utils.copy_table(card))
-
-						CARD_SELECTED = nil
-						card.selected = false
-
-						card.current_cooldown = card.cooldown
-
-						-- Game.deck = Deck:rotate_deck(card)
-						Deck:rotate_deck(card)
-
-						break
-					end
-				end
-			end
-		end
-	end
-end
-
 function Game:load()
 	-- setup the deck
 	Deck()
@@ -110,7 +57,7 @@ function Game:load()
 
 	Game.deck = Deck[Game.deck_selected]
 
-	Deck:define_positions()
+	Deck:define_positions(Game.deck)
 end
 
 function Game:update(dt)
@@ -184,24 +131,26 @@ function Game:draw()
 	-- draw deck
 	for i = 1, Deck.num_cards do
 		local card = Game.deck[i]
+
 		if card.selected then
 			Game:highlight_selected_card(card)
 		end
 
 		love.graphics.draw(card.card_img, card.x, card.y)
 
-		-- TEST
+		-- TEST: show card names to see the rotation
 		love.graphics.print(card.name, card.x, card.y - 30)
 
 		if card.is_card_loading then
-			love.graphics.print(card.current_cooldown, card.x + 12, card.y + 25, 0, 1.2)
+			love.graphics.print(tostring(card.current_cooldown), card.x + 12, card.y + 25, 0, 1.2)
 		end
 	end
 
 	-- draw the preview card
 	if #Deck.queue_next_cards > 0 then
 		love.graphics.draw(Deck.queue_next_cards[1].card_img, Deck.queue_next_cards[1].x, Deck.queue_next_cards[1].y, 0, 0.65, 0.65)
-		-- TEST
+
+		-- TEST: show card names to see the rotation
 		love.graphics.print(Deck.queue_next_cards[1].name, Deck.queue_next_cards[1].x, Deck.queue_next_cards[1].y - 30)
 	end
 
@@ -284,14 +233,6 @@ function Game:highlight_selected_card(card)
 	love.graphics.setColor(1,1,1)
 end
 
--- function Game:has_selected_card()
--- 	local card1, card2, card3, card4 = unpack(Game.deck)
-
--- 	return (
--- 		card1.selected and card2.selected and card3.selected and card4.selected
--- 	)
--- end
-
 function Game:unselect_all_cards()
 	for i = 1, #Game.deck do
 		local card = Game.deck[i]
@@ -299,17 +240,59 @@ function Game:unselect_all_cards()
 	end
 end
 
--- check if the mouse clicked in one of the cards
--- based on range, return the card clicked
-function Game:card_click(x,y)
-	for _,card in pairs(Game.deck) do
-		if x >= card.x and x <= (card.x + card.card_img:getWidth())
-			and y >= card.y and y <= (card.y + card.card_img:getHeight()) then
-			return card
+
+-- love functions
+
+function love.mousepressed(x,y,button)
+	if button == 1 then
+		for _,card in pairs(Game.deck) do
+			-- click on card?
+			if x >= card.x and x <= (card.x + card.card_img:getWidth())
+				and y >= card.y and y <= (card.y + card.card_img:getHeight()) then
+				if not card.is_card_loading then
+					if card.selected then
+						CARD_SELECTED = nil
+						card.selected = false
+					else
+						Game:unselect_all_cards()
+						CARD_SELECTED = card
+						card.selected = true
+					end
+					break
+				end
+			else
+				-- this is the selected card?
+				if card.selected then
+					-- click on map?
+					if not (x >= card.x and x <= (card.x + card.card_img:getWidth()))
+						and not (y >= card.y and y <= (card.y + card.card_img:getHeight())) then
+
+						card.char_x = x
+						card.char_y = y
+
+						if CARD_SELECTED.char_x <= Map.left_side.w then
+							CARD_SELECTED.char_x = Map.left_side.w
+						end
+
+						card.is_card_loading = true
+
+						-- insert a copy, so we can insert the same card more than once.
+						-- TIP: you can check the behavior by passing only 'card'.
+						table.insert(Game.spawned, Utils.copy_table(card))
+
+						CARD_SELECTED = nil
+						card.selected = false
+
+						card.current_cooldown = card.cooldown
+
+						Game.deck = Deck:rotate_deck(card)
+
+						break
+					end
+				end
+			end
 		end
 	end
-
-	return nil
 end
 
 return Game

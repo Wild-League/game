@@ -22,19 +22,6 @@ local center = Layout:Center(card1.card_img:getWidth(),card1.card_img:getHeight(
 local default_height_card = center.height + 300
 
 local Deck = {
-	__call = function(self)
-		-- TODO: randomize cards
-		local user = Constants.LOGGED_USER
-		if #self[user.deck_selected] > self.num_cards then
-			-- self:set_queue_next_cards(self[user.deck_selected])
-			for i = self.num_cards + 1, #self[user.deck_selected] do
-				table.insert(self.queue_next_cards, self[user.deck_selected][i])
-			end
-
-			self.queue_next_cards[1].preview_card = true
-		end
-	end,
-
 	-- the default number of cards
 	-- selectable to play
 	num_cards = 4,
@@ -73,11 +60,7 @@ local Deck = {
 	}
 }
 
-function Deck:define_positions()
-	local user = Constants.LOGGED_USER
-
-	local deck = self[user.deck_selected]
-
+function Deck:define_positions(deck)
 	for i = 1, #deck do
 		local card = deck[i]
 
@@ -124,6 +107,9 @@ function Deck:rotate_deck(card)
 	end
 
 	Deck:set_queue_next_cards(new_deck)
+	Deck:define_positions(new_deck)
+
+	return new_deck
 end
 
 function Deck:set_queue_next_cards(deck)
@@ -138,6 +124,21 @@ function Deck:set_queue_next_cards(deck)
 	self.queue_next_cards[1].preview_card = true
 end
 
-setmetatable(Deck, Deck)
+local DeckMetatable = {
+	__call = function(self)
+		-- TODO: randomize cards
+		local user = Constants.LOGGED_USER
+		if #self[user.deck_selected] > self.num_cards then
+			-- self:set_queue_next_cards(self[user.deck_selected])
+			for i = self.num_cards + 1, #self[user.deck_selected] do
+				table.insert(self.queue_next_cards, self[user.deck_selected][i])
+			end
+
+			self.queue_next_cards[1].preview_card = true
+		end
+	end
+}
+
+setmetatable(Deck, DeckMetatable)
 
 return Deck
