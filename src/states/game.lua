@@ -128,23 +128,7 @@ function Game:draw()
 		Game:preview_char(CARD_SELECTED, CARD_SELECTED.char_x, CARD_SELECTED.char_y)
 	end
 
-	-- draw deck
-	for i = 1, Deck.num_cards do
-		local card = Game.deck[i]
-
-		if card.selected then
-			Game:highlight_selected_card(card)
-		end
-
-		love.graphics.draw(card.card_img, card.x, card.y)
-
-		-- TEST: show card names to see the rotation
-		love.graphics.print(card.name, card.x, card.y - 30)
-
-		if card.is_card_loading then
-			love.graphics.print(tostring(card.current_cooldown), card.x + 12, card.y + 25, 0, 1.2)
-		end
-	end
+	Deck:draw()
 
 	-- draw the preview card
 	if #Deck.queue_next_cards > 0 then
@@ -160,6 +144,7 @@ function Game:draw()
 	end
 end
 
+-- shows the time passed in the game
 function Game:timer(dt)
 	timer = timer + dt
 
@@ -224,12 +209,6 @@ function Game:preview_char(card,x,y)
 	-- represents the char preview
 	love.graphics.setColor(0.2,0.2,0.7,0.5)
 	love.graphics.draw(CARD_SELECTED.img, CARD_SELECTED.char_x, CARD_SELECTED.char_y)
-	love.graphics.setColor(1,1,1)
-end
-
-function Game:highlight_selected_card(card)
-	love.graphics.setColor(1,1,0)
-	love.graphics.rectangle("fill", card.x - 2, card.y - 2, card.card_img:getWidth() + 4, card.card_img:getHeight() + 4)
 	love.graphics.setColor(1,1,1)
 end
 
