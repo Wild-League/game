@@ -22,7 +22,7 @@ local card6 = Char6
 local card7 = Char7
 local card8 = Char8
 
-local center = Layout:Center(card1.card_img:getWidth(),card1.card_img:getHeight())
+local center = Layout:center(card1.card_img:getWidth(),card1.card_img:getHeight())
 local default_height_card = center.height + 300
 
 local deck_selected = ''

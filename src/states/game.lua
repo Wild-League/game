@@ -8,6 +8,7 @@ local Utils = require('./src/helpers/utils')
 local Map = require('./src/domain/map')
 
 local Deck = require('./src/entities/deck')
+local Tower = require('./src/entities/tower')
 
 local timer = 0
 
@@ -24,7 +25,7 @@ local Game = {
 local should_message = false
 local message = ''
 
-local center = Layout:Center(20, 20)
+local center = Layout:center(20, 20)
 
 local new_font = love.graphics.newFont(20, 'mono')
 
@@ -36,14 +37,7 @@ local CARD_SELECTED = nil
 -- have all the objects in the game
 -- so we can compare collisions easily
 -- (I couln't find another way)
-local ALL_OBJECTS = {
-	test = {
-		x = center.width,
-		y = center.height,
-		width = 20,
-		height = 20
-	}
-}
+local ALL_OBJECTS = {}
 
 setmetatable(Game, Game)
 
@@ -114,7 +108,7 @@ function Game:draw()
 
 	-- TEST: fake char to be attacked
 	-- should remove after tests
-	love.graphics.rectangle("fill", center.width, center.height, 20, 20)
+	-- love.graphics.rectangle("fill", center.width, center.height, 20, 20)
 
 	-- when card is selected
 	if CARD_SELECTED ~= nil then
@@ -128,6 +122,10 @@ function Game:draw()
 		Game:preview_char(CARD_SELECTED, CARD_SELECTED.char_x, CARD_SELECTED.char_y)
 	end
 
+	-- # tower
+	Tower:draw()
+
+	-- # deck
 	Deck:draw()
 	Deck:draw_preview_card()
 
@@ -153,7 +151,7 @@ function Game:timer(dt)
 
 	local time = minutes..':'..seconds
 
-	local new_center = Layout:Center(100, 200)
+	local new_center = Layout:center(100, 200)
 
 	Suit.Label(time, { align='center', font = new_font}, new_center.width, 10, 100, 200)
 end

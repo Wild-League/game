@@ -1,4 +1,3 @@
-local Constants = require('./src/constants')
 local Layout = require('./src/helpers/layout')
 
 local Map = {
@@ -14,7 +13,7 @@ local Map = {
 }
 
 function Map:sides()
-	local center = Layout:Center(2, 2)
+	local center = Layout:center(2, 2)
 
 	Map.left_side.w = center.width
 	Map.right_side.w = center.width * 2

@@ -1,5 +1,7 @@
 local Card = {}
 
+-- TODO: bring all common functions of card here
+
 function Card:get_nearest_enemy(around)
 	-- shoot.x = Char1.char_x
 	-- shoot.y = Char1.char_y
