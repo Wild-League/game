@@ -25,7 +25,7 @@ local Game = {
 local should_message = false
 local message = ''
 
-local center = Layout:center(20, 20)
+-- local center = Layout:center(20, 20)
 
 local new_font = love.graphics.newFont(20, 'mono')
 
@@ -123,7 +123,7 @@ function Game:draw()
 	end
 
 	-- # tower
-	Tower:draw()
+	-- Tower:draw()
 
 	-- # deck
 	Deck:draw()
