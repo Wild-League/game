@@ -5,7 +5,7 @@ local Assets = require('./src/assets')
 local Constants = require('./src/constants')
 
 local Utils = require('./src/helpers/utils')
-local Map = require('./src/domain/map')
+local Map = require('./src/entities/map')
 
 local Deck = require('./src/entities/deck')
 local Tower = require('./src/entities/tower')
@@ -128,6 +128,9 @@ function Game:draw()
 	-- # deck
 	Deck:draw()
 	Deck:draw_preview_card()
+
+	-- # draw map center building
+	-- Map:center_building()
 
 	-- draw spawned cards
 	for _,card in pairs(Game.spawned) do

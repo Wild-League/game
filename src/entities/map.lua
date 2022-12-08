@@ -31,4 +31,9 @@ function Map:block_left_side()
 	love.graphics.setColor(1,1,1)
 end
 
+function Map:center_building()
+	local center = Layout:center(100, 100)
+	love.graphics.ellipse("line", center.width + 50, center.height + 50, 100, 100)
+end
+
 return Map
