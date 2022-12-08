@@ -129,14 +129,7 @@ function Game:draw()
 	end
 
 	Deck:draw()
-
-	-- draw the preview card
-	if #Deck.queue_next_cards > 0 then
-		love.graphics.draw(Deck.queue_next_cards[1].card_img, Deck.queue_next_cards[1].x, Deck.queue_next_cards[1].y, 0, 0.65, 0.65)
-
-		-- TEST: show card names to see the rotation
-		love.graphics.print(Deck.queue_next_cards[1].name, Deck.queue_next_cards[1].x, Deck.queue_next_cards[1].y - 30)
-	end
+	Deck:draw_preview_card()
 
 	-- draw spawned cards
 	for _,card in pairs(Game.spawned) do

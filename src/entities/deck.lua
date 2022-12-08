@@ -98,6 +98,7 @@ function Deck:rotate_deck(card)
 	end
 
 	self.queue_next_cards[1].preview_card = false
+	self.queue_next_cards[1].selectable = true
 	local new_card = self.queue_next_cards[1]
 
 	local new_deck = Deck[deck_selected]
@@ -155,6 +156,15 @@ function Deck:draw()
 		if card.is_card_loading then
 			love.graphics.print(tostring(card.current_cooldown), card.x + 12, card.y + 25, 0, 1.2)
 		end
+	end
+end
+
+function Deck:draw_preview_card()
+	if #self.queue_next_cards > 0 then
+		love.graphics.draw(self.queue_next_cards[1].card_img, self.queue_next_cards[1].x, self.queue_next_cards[1].y, 0, 0.65, 0.65)
+
+		-- TEST: show card names to see the rotation
+		love.graphics.print(self.queue_next_cards[1].name, self.queue_next_cards[1].x, self.queue_next_cards[1].y - 30)
 	end
 end
 
