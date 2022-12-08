@@ -93,8 +93,6 @@ end
 -- add the just spawned card to the end of the queue_next_cards
 -- and the first one in the queue to the deck
 function Deck:rotate_deck(card)
-	print(#Deck[deck_selected])
-
 	if #Deck[deck_selected] <= 4 then
 		return Deck[deck_selected]
 	end
@@ -123,10 +121,6 @@ function Deck:rotate_deck(card)
 
 	Deck:set_queue_next_cards(new_deck)
 	Deck:define_positions(new_deck)
-
-	for k,v in pairs(new_deck) do
-		print(k,v.name)
-	end
 
 	return new_deck
 end
@@ -176,6 +170,7 @@ local DeckMetatable = {
 		deck_selected = Constants.LOGGED_USER.deck_selected
 		if #self[deck_selected] > self.num_cards then
 			for i = self.num_cards + 1, #self[deck_selected] do
+				self[deck_selected][i].selectable = false
 				table.insert(self.queue_next_cards, self[deck_selected][i])
 			end
 

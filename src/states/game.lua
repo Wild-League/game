@@ -227,7 +227,8 @@ function love.mousepressed(x,y,button)
 		for _,card in pairs(Game.deck) do
 			-- click on card?
 			if x >= card.x and x <= (card.x + card.card_img:getWidth())
-				and y >= card.y and y <= (card.y + card.card_img:getHeight()) then
+				and y >= card.y and y <= (card.y + card.card_img:getHeight())
+				and card.selectable ~= false then
 				if not card.is_card_loading then
 					if card.selected then
 						CARD_SELECTED = nil
