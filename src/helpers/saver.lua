@@ -4,6 +4,8 @@ local Lume = require('../../lib/lume')
 local Constants = require('./src/constants')
 local User = require('./src/entities/user')
 
+local get_users = require('./src/api/user')
+
 -- this is the default path LOVE2D sets
 -- Love2D cannot write on another path, we only can do this using IO lib
 -- ~/.local/share/love/wild-league/savedata.txt
@@ -35,6 +37,16 @@ end
 function Saver:retrieveData()
 	-- TODO: added log file
 	print('getting data... ')
+
+	local users = get_users()
+
+
+
+	local a = Lume.deserialize(users[1])
+
+	print(a)
+
+	-- print(user.id, user.nickname, user.email)
 
 	if love.filesystem.getInfo(path) then
 		local file = love.filesystem.read(path)
