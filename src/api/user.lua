@@ -1,8 +1,10 @@
 local https = require('lib.lua-https')
-local ltn12 = require('ltn12')
+local Routes = require('src.api.routes')
 
 local function get_users()
-	local status_code, body = https.request('https://api-wild-league-production.up.railway.app/users', {method='get'})
+	local status_code, body = https.request(Routes.users, {method='get'})
+
+	print(status_code, body)
 
 	return body
 end

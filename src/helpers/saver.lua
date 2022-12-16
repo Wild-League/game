@@ -40,11 +40,11 @@ function Saver:retrieveData()
 
 	local users = get_users()
 
-	print(#users)
+	-- print(#users)
 
-	for key, value in pairs(users) do
-		print(key, value)
-	end
+	-- for key, value in pairs(users) do
+	-- 	print(key, value)
+	-- end
 
 
 	-- print(user.id, user.nickname, user.email)
