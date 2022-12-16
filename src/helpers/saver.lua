@@ -40,11 +40,12 @@ function Saver:retrieveData()
 
 	local users = get_users()
 
+	print(#users)
 
+	for key, value in pairs(users) do
+		print(key, value)
+	end
 
-	local a = Lume.deserialize(users[1])
-
-	print(a)
 
 	-- print(user.id, user.nickname, user.email)
 
