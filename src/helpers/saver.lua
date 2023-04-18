@@ -6,8 +6,10 @@ local User = require('./src/entities/user')
 
 local get_users = require('./src/api/user')
 
+-- TODO: remove lume and use json.lua
+
 -- this is the default path LOVE2D sets
--- Love2D cannot write on another path, we only can do this using IO lib
+-- we only can write on another path using IO lib
 -- ~/.local/share/love/wild-league/savedata.txt
 
 local path = 'savedata.txt'
@@ -35,12 +37,12 @@ function Saver:save(user)
 end
 
 function Saver:retrieveData()
-	-- TODO: added log file
+	-- TODO: add log file
 	print('getting data... ')
 
 	local users = get_users()
 
-	-- print(#users)
+	-- print(users)
 
 	-- for key, value in pairs(users) do
 	-- 	print(key, value)

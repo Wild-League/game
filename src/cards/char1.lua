@@ -87,18 +87,16 @@ Char1.actions = {
 			walk_animation:update(dt)
 		end,
 		draw = function(x,y)
-			if (nearest_enemy.y > y) then
-				y = y + Char1.speed
-			end
-			if (nearest_enemy.y < y) then
-				y = y - Char1.speed
-			end
-			if (nearest_enemy.x > x) then
-				x = x + Char1.speed
-			end
-			if (nearest_enemy.x < x) then
-				x = x - Char1.speed
-			end
+			local dx = nearest_enemy.x - x
+   		local dy = nearest_enemy.y - y
+
+   		local distance = math.sqrt(dx*dx + dy*dy)
+
+			 if distance > 1 then
+				local angle = math.atan2(dy, dx)
+				x = x + Char1.speed * math.cos(angle)
+				y = y + Char1.speed * math.sin(angle)
+		 	end
 
 			walk_animation:draw(walking, x, y)
 			return x,y
@@ -112,6 +110,19 @@ Char1.actions = {
 			if nearest_enemy.width == nil then
 				nearest_enemy = Char1.get_nearest_enemy(Char1.chars_around)
 			end
+
+			------------------------------------
+			-- local dx = nearest_enemy.x - x
+   		-- local dy = nearest_enemy.y - y
+
+   		-- local distance = math.sqrt(dx*dx + dy*dy)
+
+			--  if distance > 1 then
+			-- 	local angle = math.atan2(dy, dx)
+			-- 	shoot.x = shoot.x + Char1.attack_speed * math.cos(angle)
+			-- 	shoot.y = shoot.y + Char1.attack_speed * math.sin(angle)
+		 	-- end
+			------------------------------------
 
 			if (nearest_enemy.y > shoot.y) then
 				shoot.y = shoot.y + Char1.attack_speed

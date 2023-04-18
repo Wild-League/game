@@ -10,6 +10,10 @@ local Map = require('./src/entities/map')
 local Deck = require('./src/entities/deck')
 local Tower = require('./src/entities/tower')
 
+local Json = require('./lib/json')
+
+local Udp = require('./src/network/udp')
+
 local timer = 0
 
 local Game = {
@@ -17,15 +21,12 @@ local Game = {
 	decks = {},
 	deck_selected = '',
 	deck = {},
-	background = Assets.WORLD,
-	spawned = {}
+	background = Assets.WORLD
 }
 
 -- used for message_timer
 local should_message = false
 local message = ''
-
--- local center = Layout:center(20, 20)
 
 local new_font = love.graphics.newFont(20, 'mono')
 
@@ -34,10 +35,18 @@ local new_font = love.graphics.newFont(20, 'mono')
 -- also used to show the preview char
 local CARD_SELECTED = nil
 
--- have all the objects in the game
--- so we can compare collisions easily
--- (I couln't find another way)
-local ALL_OBJECTS = {}
+--[[
+	have all the objects in the game
+	so we can compare collisions easily
+	(I couln't find another way to implement it)
+
+	type = character | building | spells
+]]
+local my_objects = {
+	-- { x = 100, y = 100 }
+}
+
+local enemy_objects = {}
 
 setmetatable(Game, Game)
 
@@ -55,6 +64,17 @@ function Game:load()
 end
 
 function Game:update(dt)
+	local data = Udp:receive_data()
+
+	if data ~= nil then
+		-- local enemy = Json.decode(data)
+		-- table.insert(enemy_objects, enemy)
+		if '{' == data:match('^{') then
+			local enemy = Json.decode(data)
+			table.insert(enemy_objects, enemy)
+		end
+	end
+
 	Game:timer(dt)
 
 	Game:check_cooldown(dt)
@@ -72,27 +92,23 @@ function Game:update(dt)
 		CARD_SELECTED.char_y = y
 	end
 
-	for _,card in pairs(Game.spawned) do
-		if ALL_OBJECTS[card.name] == nil then
-			ALL_OBJECTS[card.name] = card
-		end
+	for _,value in pairs(my_objects) do
+		Udp:send(Json.encode({ x=value.char_x, y=value.char_y, identifier=value.name }))
 
-		card.animate.update(card, dt)
+		value.animate.update(value, dt)
 
-		for _,value in pairs(ALL_OBJECTS) do
-			if Utils.circle_rect_collision(card.char_x + (card.img:getWidth() / 4), card.char_y + (card.img:getHeight() / 4), card.attack_range,
-			value.x, value.y, value.width, value.height) then
-				card.chars_around.key = value
-				card.current_action = 'attack'
-				break
-			end
+		-- if Utils.circle_rect_collision(value.char_x + (value.img:getWidth() / 4), value.char_y + (value.img:getHeight() / 4), value.attack_range,
+		-- 	value.x, value.y, value.width, value.height) then
+		-- 		value.chars_around.key = value
+		-- 		value.current_action = 'attack'
+		-- 		break
+		-- end
 
-			if Utils.circle_rect_collision(card.char_x + (card.img:getWidth() / 4), card.char_y + (card.img:getHeight() / 4),
-					card:perception_range(), value.x, value.y, value.width, value.height) then
-				card.chars_around.key = value
-				card.current_action = 'follow'
-			end
-		end
+		-- if Utils.circle_rect_collision(value.char_x + (value.img:getWidth() / 4), value.char_y + (value.img:getHeight() / 4),
+		-- 	value:perception_range(), value.x, value.y, value.width, value.height) then
+		-- 	value.chars_around.key = value
+		-- 	value.current_action = 'follow'
+		-- end
 	end
 end
 
@@ -108,13 +124,13 @@ function Game:draw()
 
 	-- TEST: fake char to be attacked
 	-- should remove after tests
-	-- love.graphics.rectangle("fill", center.width, center.height, 20, 20)
+	-- love.graphics.rectangle("fill", 100, 100, 20, 20)
 
 	-- when card is selected
 	if CARD_SELECTED ~= nil then
 		Map:block_left_side()
 
-		-- <= because it's from right -> left
+		-- because the char is walking from right -> left (by now)
 		if CARD_SELECTED.char_x <= Map.left_side.w then
 			CARD_SELECTED.char_x = Map.left_side.w
 		end
@@ -132,9 +148,20 @@ function Game:draw()
 	-- # draw map center building
 	-- Map:center_building()
 
-	-- draw spawned cards
-	for _,card in pairs(Game.spawned) do
-		card.char_x, card.char_y = card.animate.draw(card, card.char_x, card.char_y)
+	-- draw all objects
+	for _,card in pairs(my_objects) do
+		if card.type == 'character' then
+			card.char_x, card.char_y = card.animate.draw(card, card.char_x, card.char_y)
+		end
+	end
+
+	for _,card in pairs(enemy_objects) do
+		love.graphics.setColor(1,0,0)
+		love.graphics.rectangle('fill', card.x, card.y, 50, 50)
+		love.graphics.setColor(1,1,1)
+		-- if card.type == 'character' then
+			-- card.char_x, card.char_y = card.animate.draw(card, card.char_x, card.char_y)
+		-- end
 	end
 end
 
@@ -213,9 +240,6 @@ function Game:unselect_all_cards()
 	end
 end
 
-
--- love functions
-
 function love.mousepressed(x,y,button)
 	if button == 1 then
 		for _,card in pairs(Game.deck) do
@@ -251,8 +275,8 @@ function love.mousepressed(x,y,button)
 						card.is_card_loading = true
 
 						-- insert a copy, so we can insert the same card more than once.
-						-- TIP: you can check the behavior by passing only 'card'.
-						table.insert(Game.spawned, Utils.copy_table(card))
+						table.insert(my_objects, Utils.copy_table(card))
+						-- table.insert(my_objects, { type='character', obj=copy_card, identifier=copy_card.name })
 
 						CARD_SELECTED = nil
 						card.selected = false

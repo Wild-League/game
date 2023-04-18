@@ -1,9 +1,11 @@
 local Constants = {
 	LOGGED_USER = {},
 	WINDOW_SETTINGS = {
-		width = 1024,
-		height = 600
-	}
+		width = 1200,
+		height = 800
+	},
+	-- the udp connection with server
+	UDP = {}
 }
 
 setmetatable(Constants, {

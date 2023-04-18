@@ -1,5 +1,7 @@
+local Base = require('src.api.base')
+
 local Routes = {
-	users = 'https://api-wild-league-production.up.railway.app/users'
+	test = Base[Base.current].base_url .. '/test'
 }
 
 setmetatable(Routes, {

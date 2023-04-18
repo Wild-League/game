@@ -18,7 +18,6 @@ function Layout:center(obj_width, obj_height)
 end
 
 function Layout:down_left(obj_width, obj_height)
-	-- local width = Constants.WINDOW_SETTINGS.width
 	local height = Constants.WINDOW_SETTINGS.height
 
 	obj_width = obj_width or 0
@@ -34,7 +33,6 @@ end
 
 function Layout:up_right(obj_width, obj_height)
 	local width = Constants.WINDOW_SETTINGS.width
-	-- local height = Constants.WINDOW_SETTINGS.height
 
 	obj_width = obj_width or 0
 	obj_height = obj_height or 0

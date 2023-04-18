@@ -1,12 +1,14 @@
 local Initial = require('src/states/initial')
 local Auth = require('src/states/auth')
 local Game = require('src/states/game')
+local Queue = require('src/states/queue')
 
 local Context = {
 	states = {
 		initial = Initial,
 		auth = Auth,
-		game = Game
+		game = Game,
+		queue = Queue
 	},
 
 	current = 'initial',
@@ -21,7 +23,7 @@ local Context = {
 
 	change = function(self, ctx)
 		-- TODO: added log file
-		print('changing state for: ', ctx)
+		-- print('changing state for: ', ctx)
 
 		if ctx == nil then
 			error('Context should not be nil')

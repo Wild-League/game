@@ -10,6 +10,8 @@ local BUTTON_HOVER = Assets.BUTTON_HOVER
 
 local Initial = {}
 
+function Initial:load() end
+
 function Initial:update() end
 
 function Initial:draw()
@@ -29,7 +31,7 @@ function Initial:draw()
 		local data = Saver:retrieveData()
 
 		if data ~= nil then
-			CONTEXT:change('game')
+			CONTEXT:change('queue')
 		else
 			CONTEXT:change('auth')
 		end
