@@ -10,9 +10,8 @@ local Map = require('./src/entities/map')
 local Deck = require('./src/entities/deck')
 local Tower = require('./src/entities/tower')
 
-local Json = require('./lib/json')
-
 local Udp = require('./src/network/udp')
+local Events = require('./src/network/events')
 
 local timer = 0
 
@@ -63,17 +62,22 @@ function Game:load()
 	Deck:define_positions(Game.deck)
 end
 
-function Game:update(dt)
+function Game:handle_received_data()
 	local data = Udp:receive_data()
 
 	if data ~= nil then
-		-- local enemy = Json.decode(data)
-		-- table.insert(enemy_objects, enemy)
-		if '{' == data:match('^{') then
-			local enemy = Json.decode(data)
-			table.insert(enemy_objects, enemy)
+		if data.event == Events.Object then
+			local id = data.identifier
+			if id == 'char3' then
+				print('object received!', id)
+			end
+			enemy_objects[id] = data.obj
 		end
 	end
+end
+
+function Game:update(dt)
+	self:handle_received_data()
 
 	Game:timer(dt)
 
@@ -93,22 +97,24 @@ function Game:update(dt)
 	end
 
 	for _,value in pairs(my_objects) do
-		Udp:send(Json.encode({ x=value.char_x, y=value.char_y, identifier=value.name }))
-
 		value.animate.update(value, dt)
 
-		-- if Utils.circle_rect_collision(value.char_x + (value.img:getWidth() / 4), value.char_y + (value.img:getHeight() / 4), value.attack_range,
-		-- 	value.x, value.y, value.width, value.height) then
-		-- 		value.chars_around.key = value
-		-- 		value.current_action = 'attack'
-		-- 		break
-		-- end
+		Udp:send({ identifier=value.name, event=Events.Object, obj={ x=value.char_x, y=value.char_y} })
 
-		-- if Utils.circle_rect_collision(value.char_x + (value.img:getWidth() / 4), value.char_y + (value.img:getHeight() / 4),
-		-- 	value:perception_range(), value.x, value.y, value.width, value.height) then
-		-- 	value.chars_around.key = value
-		-- 	value.current_action = 'follow'
-		-- end
+		for _,enemy in pairs(enemy_objects) do
+			if Utils.circle_rect_collision(value.char_x + (value.img:getWidth() / 4), value.char_y + (value.img:getHeight() / 4), value.attack_range,
+				enemy.x, enemy.y, 100, 100) then
+					value.chars_around.key = value
+					value.current_action = 'attack'
+					break
+			end
+
+			if Utils.circle_rect_collision(value.char_x + (value.img:getWidth() / 4), value.char_y + (value.img:getHeight() / 4),
+				value:perception_range(), enemy.x, enemy.y, 100, 100) then
+				value.chars_around.key = value
+				value.current_action = 'follow'
+			end
+		end
 	end
 end
 
@@ -150,12 +156,13 @@ function Game:draw()
 
 	-- draw all objects
 	for _,card in pairs(my_objects) do
-		if card.type == 'character' then
-			card.char_x, card.char_y = card.animate.draw(card, card.char_x, card.char_y)
-		end
+		card.char_x, card.char_y = card.animate.draw(card, card.char_x, card.char_y)
+		-- if card.type == 'character' then
+		-- 	card.char_x, card.char_y = card.animate.draw(card, card.char_x, card.char_y)
+		-- end
 	end
 
-	for _,card in pairs(enemy_objects) do
+	for k,card in pairs(enemy_objects) do
 		love.graphics.setColor(1,0,0)
 		love.graphics.rectangle('fill', card.x, card.y, 50, 50)
 		love.graphics.setColor(1,1,1)
@@ -276,7 +283,6 @@ function love.mousepressed(x,y,button)
 
 						-- insert a copy, so we can insert the same card more than once.
 						table.insert(my_objects, Utils.copy_table(card))
-						-- table.insert(my_objects, { type='character', obj=copy_card, identifier=copy_card.name })
 
 						CARD_SELECTED = nil
 						card.selected = false

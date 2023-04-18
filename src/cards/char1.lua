@@ -16,6 +16,8 @@ local Char1 = {
 	life = 100,
 	x = 0,
 	y = 0,
+	char_x = 0,
+	char_y = 0,
 	current_action = 'walk',
 	-- ---------
 	animate = {},

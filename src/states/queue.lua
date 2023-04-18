@@ -1,7 +1,7 @@
 local Suit = require('./lib/suit')
 local Layout = require('./src/helpers/layout')
 local Udp = require('./src/network/udp')
-
+local Events = require('./src/network/events')
 local Constants = require('./src/constants')
 
 local Queue = {
@@ -13,7 +13,8 @@ function Queue:load()
 end
 
 function Queue:update()
-	if Udp:receive_data() == 'Match Found' then
+	local data = Udp:receive_data()
+	if data ~= nil and data.event == Events.MatchFound then
 		self.found = true
 	end
 end
