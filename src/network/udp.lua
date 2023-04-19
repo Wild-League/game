@@ -2,12 +2,6 @@ local socket = require("socket")
 local Json = require('lib.json')
 local Events = require('./src/network/events')
 
---[[
-	TODO:
-	# 1 - defines possible network events
-	# 2 - implements pattern matching in Udp:receive_data
-]]
-
 local Udp = {
 	connection = {}
 }
@@ -25,11 +19,11 @@ end
 function Udp:receive_data()
 	local data = self.connection:receive()
 
-	if data ~= nil then
+	if data then
 		return Json.decode(data)
 	end
 
-	return nil
+	return data
 end
 
 --[[

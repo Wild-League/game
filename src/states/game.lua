@@ -20,7 +20,9 @@ local Game = {
 	decks = {},
 	deck_selected = '',
 	deck = {},
-	background = Assets.WORLD
+	background = Assets.WORLD,
+
+	udp_co = {}
 }
 
 -- used for message_timer
@@ -64,21 +66,16 @@ end
 
 function Game:handle_received_data()
 	local data = Udp:receive_data()
-
-	if data ~= nil then
+	if data then
 		if data.event == Events.Object then
-			local id = data.identifier
-			if id == 'char3' then
-				print('object received!', id)
-			end
-			enemy_objects[id] = data.obj
+			enemy_objects[data.identifier] = data.obj
 		end
 	end
+
+	return data
 end
 
 function Game:update(dt)
-	self:handle_received_data()
-
 	Game:timer(dt)
 
 	Game:check_cooldown(dt)
@@ -116,6 +113,10 @@ function Game:update(dt)
 			end
 		end
 	end
+
+	repeat
+		local data = self:handle_received_data()
+	until not data
 end
 
 function Game:draw()
@@ -162,10 +163,10 @@ function Game:draw()
 		-- end
 	end
 
-	for k,card in pairs(enemy_objects) do
-		love.graphics.setColor(1,0,0)
-		love.graphics.rectangle('fill', card.x, card.y, 50, 50)
-		love.graphics.setColor(1,1,1)
+	for _,enemy in pairs(enemy_objects) do
+		-- love.graphics.setColor(1,0,0)
+		love.graphics.rectangle('fill', enemy.x, enemy.y, 50, 50)
+		-- love.graphics.setColor(1,1,1)
 		-- if card.type == 'character' then
 			-- card.char_x, card.char_y = card.animate.draw(card, card.char_x, card.char_y)
 		-- end
