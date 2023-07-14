@@ -22,7 +22,7 @@ local Context = {
 	end,
 
 	change = function(self, ctx)
-		-- TODO: added log file
+		-- TODO: add log file
 		-- print('changing state for: ', ctx)
 
 		if ctx == nil then
