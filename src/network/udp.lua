@@ -7,6 +7,7 @@ local Udp = {
 }
 
 function Udp:connect()
+	-- TODO: check if connected successfully
 	self.connection = socket.udp()
 	self.connection:settimeout(0)
 	self.connection:setpeername('127.0.0.1', 9091)
