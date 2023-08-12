@@ -20,3 +20,8 @@ function love.draw()
 	CONTEXT:draw()
 	Suit.draw()
 end
+
+function love.resize(w,h)
+	Constants.WINDOW_SETTINGS.width = w
+	Constants.WINDOW_SETTINGS.height = h
+end
