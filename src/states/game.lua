@@ -13,16 +13,16 @@ local Tower = require('./src/entities/tower')
 local Udp = require('./src/network/udp')
 local Events = require('./src/network/events')
 
+local Timer = require('./src/helpers/timer')
+
 local timer = 0
 
 local Game = {
 	user = {},
-	decks = {},
-	deck_selected = '',
 	deck = {},
 	background = Assets.WORLD,
 
-	udp_co = {}
+	-- udp_co = {}
 }
 
 -- used for message_timer
@@ -55,13 +55,13 @@ function Game:load()
 	-- setup the deck
 	Deck()
 
-	Game.user = Constants.LOGGED_USER
+	-- Game.user = Constants.LOGGED_USER
 
-	Game.deck_selected = Game.user.deck_selected
+	-- Game.deck_selected = Game.user.deck_selected
 
-	Game.deck = Deck[Game.deck_selected]
+	self.deck = Deck[Deck.deck_selected]
 
-	Deck:define_positions(Game.deck)
+	-- Deck:define_positions(Game.deck)
 end
 
 function Game:handle_received_data()
@@ -76,11 +76,19 @@ function Game:handle_received_data()
 end
 
 function Game:update(dt)
-	Game:timer(dt)
+	Deck:update(dt)
+
+	-- timer
+	local new_center = Layout:center(100, 200)
+	Suit.Label(Timer:match(dt), { align='center', font = new_font}, new_center.width, 10, 100, 200)
+
+	-- Game:timer(dt)
 
 	Game:check_cooldown(dt)
 
 	Game:message_timer(dt)
+
+	Tower:update(dt)
 
 	-- TODO: implement function to show player details
 	-- nickname, level
@@ -96,7 +104,7 @@ function Game:update(dt)
 	for _,value in pairs(my_objects) do
 		value.animate.update(value, dt)
 
-		Udp:send({ identifier=value.name, event=Events.Object, obj={ x=value.char_x, y=value.char_y} })
+		-- Udp:send({ identifier=value.name, event=Events.Object, obj={ x=value.char_x, y=value.char_y} })
 
 		for _,enemy in pairs(enemy_objects) do
 			if Utils.circle_rect_collision(value.char_x + (value.img:getWidth() / 4), value.char_y + (value.img:getHeight() / 4), value.attack_range,
@@ -114,9 +122,9 @@ function Game:update(dt)
 		end
 	end
 
-	repeat
-		local data = self:handle_received_data()
-	until not data
+	-- repeat
+	-- 	local data = self:handle_received_data()
+	-- until not data
 end
 
 function Game:draw()
@@ -146,14 +154,10 @@ function Game:draw()
 	end
 
 	-- # tower
-	-- Tower:draw()
+	Tower:draw()
 
 	-- # deck
 	Deck:draw()
-	Deck:draw_preview_card()
-
-	-- # draw map center building
-	-- Map:center_building()
 
 	-- draw all objects
 	for _,card in pairs(my_objects) do
