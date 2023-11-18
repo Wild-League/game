@@ -18,13 +18,13 @@ function Instance:validate(url)
 		['Content-Lenght'] = string.len(body)
 	}
 
-	local code,response = https.request(Routes.nodeinfo..'/validate', {
+	local _,response = https.request(Routes.nodeinfo..'/validate', {
 		data = body,
 		method = 'POST',
 		headers = headers
 	})
 
-	print(code, response)
+	return json.decode(response)
 end
 
 return Instance
