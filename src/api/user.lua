@@ -1,12 +1,36 @@
--- local https = require('lib.lua-https')
+local https = require('https')
+local json = require('lib.json')
 local Routes = require('src.api.routes')
 
-local function get_users()
-	-- local status_code, body = https.request(Routes.test, {method='get'})
+local User = {}
 
-	print('teste')
+--[[
+	try to sign in at domain.com/auth/signin
+]]
+function User:signin(username, password)
+	local body = json.encode({
+		username = username,
+		password = password
+	})
 
-	-- return body
+	local headers = {
+		['Content-Type'] = 'application/json',
+		['Content-Lenght'] = #body
+	}
+
+	local _,response = https.request(Routes.auth..'/signin', {
+		data = body,
+		method = 'POST',
+		headers = headers
+	})
+
+	return json.decode(response)
 end
 
-return get_users
+--[[
+	return the user data
+]]
+function User:get()
+end
+
+return User

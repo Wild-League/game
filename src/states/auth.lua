@@ -1,40 +1,51 @@
-local Suit = require('./lib/suit')
-local Saver = require('./src/helpers/saver')
+local Suit = require('lib.suit')
+local Saver = require('src.helpers.saver')
+local User = require('src.api.user')
+local Constants = require('src.constants')
 
-local Auth = {}
+local Auth = {
+	username_input = { text = '' },
+	password_input = { text = '' },
 
-local nickname_input = { text = '' }
+	message_error = ''
+}
 
-setmetatable(Auth, Auth)
+function Auth:save_token(access_token)
+	Constants.access_token = access_token
+end
 
 function Auth:load() end
 
 function Auth:update()
-	Suit.Label('nickname: ', { align='center' }, 10, 0, 200, 30)
-	Suit.Input(nickname_input, 10, 40, 200, 30)
+	Suit.Label('username: ', { align='center' }, 10, 0, 200, 30)
+	Suit.Input(self.username_input, 10, 40, 200, 30)
 
-	local save_nick = Suit.Button('Enter', 10, 80, 200, 30)
+	Suit.Label('password: ', { align='center' }, 10, 80, 200, 30)
+	Suit.Input(self.password_input, 10, 120, 200, 30)
+end
+
+function Auth:draw()
+	local save_nick = Suit.Button('Enter', 10, 160, 200, 30)
+
+	if self.message_error ~= '' then
+		love.graphics.setColor(1,0,0)
+		love.graphics.print(self.message_error, 50, 200)
+		love.graphics.setColor(0,0,0)
+	end
 
 	if save_nick.hit then
-		if (nickname_input.text ~= '') then
-			local save = Saver:save({ nickname = nickname_input.text, level = 1 })
-			if save == true then
-				CONTEXT:change('game')
-			end
+		local data = User:signin(self.username_input.text, self.password_input.text)
+
+		if data.message then
+			self.message_error = data.message
+		end
+
+		if data.access_token then
+			self.message_error = ''
+			self:save_token(data.access_token)
+			CONTEXT:change('game')
 		end
 	end
-end
-
-function Auth:draw() end
-
--- love functions
-
-function love.textinput(t)
-	Suit.textinput(t)
-end
-
-function love.keypressed(key)
-	Suit.keypressed(key)
 end
 
 return Auth
