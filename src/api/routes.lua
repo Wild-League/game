@@ -1,7 +1,8 @@
 local Base = require('src.api.base')
 
 local Routes = {
-	test = Base[Base.current].base_url .. '/test'
+	nodeinfo = Base[Base.current].base_url .. 'nodeinfo',
+	test = Base[Base.current].base_url .. 'test'
 }
 
 setmetatable(Routes, {
