@@ -1,17 +1,19 @@
-local Initial = require('src/states/initial')
-local Auth = require('src/states/auth')
-local Game = require('src/states/game')
-local Queue = require('src/states/queue')
+local Initial = require('src.states.initial')
+local Auth = require('src.states.auth')
+local Game = require('src.states.game')
+local Queue = require('src.states.queue')
+local Lobby = require('src.states.lobby')
 
 local Context = {
 	states = {
 		initial = Initial,
 		auth = Auth,
-		game = Game,
-		queue = Queue
+		lobby = Lobby,
+		queue = Queue,
+		game = Game
 	},
 
-	current = 'initial',
+	current = 'game',
 
 	update = function(self, dt)
 		return self.states[self.current]:update(dt)
