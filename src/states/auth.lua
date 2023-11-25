@@ -11,7 +11,7 @@ local Auth = {
 }
 
 function Auth:save_token(access_token)
-	Constants.access_token = access_token
+	Constants.ACCESS_TOKEN = access_token
 end
 
 function Auth:load() end
@@ -43,7 +43,7 @@ function Auth:draw()
 		if data.access_token then
 			self.message_error = ''
 			self:save_token(data.access_token)
-			CONTEXT:change('game')
+			CONTEXT:change('lobby')
 		end
 	end
 end

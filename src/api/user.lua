@@ -1,6 +1,7 @@
 local https = require('https')
 local json = require('lib.json')
 local Routes = require('src.api.routes')
+local Constants = require('src.constants')
 
 local User = {}
 
@@ -31,6 +32,12 @@ end
 	return the user data
 ]]
 function User:get()
+	local _,response = https.request(Routes.user..'/current', {
+		method = 'GET',
+		headers = { authorization = 'Bearer '..Constants.ACCESS_TOKEN }
+	})
+
+	return json.decode(response)
 end
 
 return User

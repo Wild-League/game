@@ -2,7 +2,9 @@ local Base = require('src.api.base')
 
 local Routes = {
 	nodeinfo = Base[Base.current].base_url .. 'nodeinfo',
-	test = Base[Base.current].base_url .. 'test'
+	test = Base[Base.current].base_url .. 'test',
+	auth = Base[Base.current].base_url .. 'auth',
+	user = Base[Base.current].base_url .. 'user',
 }
 
 setmetatable(Routes, {

@@ -1,6 +1,6 @@
 local socket = require("socket")
 local Json = require('lib.json')
-local Events = require('./src/network/events')
+local Events = require('src.network.events')
 
 local Udp = {
 	connection = {}

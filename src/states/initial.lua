@@ -7,8 +7,8 @@ local Constants = require('src.constants')
 local Instance = require('src.api.instance')
 
 local BACKGROUND = Assets.BACKGROUND_INITIAL
-local BUTTON = Assets.BUTTON
-local BUTTON_HOVER = Assets.BUTTON_HOVER
+-- local BUTTON = Assets.BUTTON
+-- local BUTTON_HOVER = Assets.BUTTON_HOVER
 
 local Initial = {
 	instance_input = { text = 'https://wildleague.org' },
@@ -18,16 +18,16 @@ local Initial = {
 function Initial:load() end
 
 function Initial:update()
-	local center = Layout:center(BUTTON:getWidth(), BUTTON:getHeight() - 200)
+	local center = Layout:center(100, 100 - 200)
 	Suit.Input(self.instance_input, center.width, center.height - 80, 300, 30)
 end
 
 function Initial:draw()
-	local center = Layout:center(BUTTON:getWidth(), BUTTON:getHeight() - 200)
+	local center = Layout:center(100, 100 - 200)
 
 	Suit.Label('Enter the instance you want to join', center.width, center.height - 200, 300, 200)
 
-	local play_button = Suit.Button('asdasds', { hovered = BUTTON_HOVER }, center.width, center.height)
+	local play_button = Suit.Button('Enter', center.width, center.height)
 
 	if self.instance_invalid then
 		love.graphics.setColor(1,0,0)
