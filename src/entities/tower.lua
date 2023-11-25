@@ -1,58 +1,56 @@
-local Layout = require('./src/helpers/layout')
+local Layout = require('src.helpers.layout')
+local Assets = require('src.assets')
 
-local tower_size = 50
-
-local down_left = Layout:down_left(tower_size, tower_size)
-local up_right = Layout:up_right(tower_size, tower_size)
-
+-- TODO: review
 local Tower = {
-	num_towers = 3,
-	positions_left = {
-		tower1 = {
-			x = down_left.width,
-			y = down_left.height - 200
-		},
-		tower2 = {
-			x = down_left.width,
-			y = down_left.height
-		},
-		tower3 = {
-			x = down_left.width + 200,
-			y = down_left.height
-		}
+	range = 220,
+
+	shoot = {
+		x = 0,
+		y = 0
 	},
-	positions_right = {
-		tower1 = {
-			x = up_right.width - 200,
-			y = up_right.height
-		},
-		tower2 = {
-			x = up_right.width,
-			y = up_right.height
-		},
-		tower3 = {
-			x = up_right.width,
-			y = up_right.height + 200
-		}
-	}
+
+	num_towers = 2
 }
 
--- local TowerMetatable = {}
+function Tower:update()
+	local center = Layout:center(Assets.TOWER_LEFT:getWidth(), Assets.TOWER_LEFT:getHeight())
 
-function Tower:draw()
-	for i = 1, self.num_towers do
-		local pos = self.positions_left['tower'..i]
-		love.graphics.rectangle('fill', pos.x, pos.y, 50, 50)
-		love.graphics.ellipse('line', pos.x + 25, pos.y+ 25, 100, 100)
-	end
+	self.positions_left = {
+		tower1 = {
+			x = center.width - 470,
+			y = center.height - 250
+		},
+		tower2 = {
+			x = center.width - 470,
+			y = center.height + 250
+		}
+	}
 
-	for i = 1, self.num_towers do
-		local pos = self.positions_right['tower'..i]
-		love.graphics.rectangle('fill', pos.x, pos.y, 50, 50)
-		love.graphics.ellipse('line', pos.x + 25, pos.y+ 25, 100, 100)
-	end
+	self.positions_right = {
+		tower1 = {
+			x = center.width + 470,
+			y = center.height - 250
+		},
+		tower2 = {
+			x = center.width + 470,
+			y = center.height + 250
+		}
+	}
 end
 
--- setmetatable(Tower, TowerMetatable)
+function Tower:draw()
+	-- towers from left
+	for i = 1, self.num_towers do
+		local pos = self.positions_left['tower'..i]
+		love.graphics.draw(Assets.TOWER_LEFT, pos.x, pos.y)
+	end
+
+	-- towers from right
+	for i = 1, self.num_towers do
+		local pos = self.positions_right['tower'..i]
+		love.graphics.draw(Assets.TOWER_RIGHT, pos.x, pos.y)
+	end
+end
 
 return Tower
