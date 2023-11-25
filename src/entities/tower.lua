@@ -13,7 +13,7 @@ local Tower = {
 	num_towers = 2
 }
 
-function Tower:update()
+function Tower:load()
 	local center = Layout:center(Assets.TOWER_LEFT:getWidth(), Assets.TOWER_LEFT:getHeight())
 
 	self.positions_left = {
@@ -38,6 +38,8 @@ function Tower:update()
 		}
 	}
 end
+
+function Tower:update() end
 
 function Tower:draw()
 	-- towers from left

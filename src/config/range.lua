@@ -1,7 +1,7 @@
 local Range = {
-	melee_short = 2,
-	melee_medium = 4,
-	melee_long = 6,
+	melee_short = 20,
+	melee_medium = 30,
+	melee_long = 40,
 	distance = 0
 }
 

@@ -13,7 +13,7 @@ local Context = {
 		game = Game
 	},
 
-	current = 'game',
+	current = 'lobby',
 
 	update = function(self, dt)
 		return self.states[self.current]:update(dt)

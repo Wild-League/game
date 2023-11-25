@@ -21,7 +21,6 @@ local sti = require("lib.sti")
 local Game = {
 	user = {},
 	deck = {},
-	-- background = Assets.WORLD,
 
 	--[[
 		TODO: find another way to implement it
@@ -44,29 +43,44 @@ local message = ''
 
 setmetatable(Game, Game)
 
--- ONLY FOR TESTING
-Deck:load()
-Game.deck = Deck.decks['deck1']
-
-Game.map = sti('assets/world.lua')
-
 function Game:load()
+	Tower:load()
+	Deck:load()
+	Game.deck = Deck.decks['deck1']
+
+	Game.map = sti('assets/world.lua')
+
 	table.insert(self.my_objects, {
-		{ x = Tower.positions_right.tower1.x, y = Tower.positions_right.tower1.y, type = 'static' },
-		{ x = Tower.positions_right.tower2.x, y = Tower.positions_right.tower2.y, type = 'static' }
+		type = 'static',
+		x = Tower.positions_right.tower1.x,
+		y = Tower.positions_right.tower1.y,
+		w = Assets.TOWER_LEFT:getWidth() / 1.5,
+		h = Assets.TOWER_LEFT:getHeight() / 1.5
+	})
+
+	table.insert(self.my_objects, {
+		type = 'static',
+		x = Tower.positions_right.tower2.x,
+		y = Tower.positions_right.tower2.y,
+		w = Assets.TOWER_LEFT:getWidth() / 1.5,
+		h = Assets.TOWER_LEFT:getHeight() / 1.5
 	})
 
 	table.insert(self.enemy_objects, {
-		{ x = Tower.positions_left.tower1.x, y = Tower.positions_left.tower1.y, type = 'static' },
-		{ x = Tower.positions_left.tower2.x, y = Tower.positions_left.tower2.y, type = 'static' }
+		type = 'static',
+		x = Tower.positions_left.tower1.x,
+		y = Tower.positions_left.tower1.y,
+		w = Assets.TOWER_LEFT:getWidth() / 1.5,
+		h = Assets.TOWER_LEFT:getHeight() / 1.5
 	})
-	-- setup the deck
-	-- Deck()
 
-	-- Game.user = Constants.LOGGED_USER
-	-- self.deck_selected = Constants.deck_selected
-	-- self.deck = Deck['deck1']
-	-- Deck:define_positions(Game.deck)
+	table.insert(self.enemy_objects, {
+		type = 'static',
+		x = Tower.positions_left.tower2.x,
+		y = Tower.positions_left.tower2.y,
+		w = Assets.TOWER_LEFT:getWidth() / 1.5,
+		h = Assets.TOWER_LEFT:getHeight() / 1.5
+	})
 end
 
 function Game:handle_received_data()
@@ -119,17 +133,17 @@ function Game:update(dt)
 
 		for _,enemy in pairs(self.enemy_objects) do
 			if value.type ~= 'static' then
-				if Utils.circle_rect_collision(value.char_x + (value.img:getWidth() / 4), value.char_y + (value.img:getHeight() / 4), value.attack_range,
-					enemy.x, enemy.y, 100, 100) then
-						value.chars_around.key = value
-						value.current_action = 'attack'
-						break
+				if Utils.circle_rect_collision(value.char_x + (value.img:getWidth() / 4), value.char_y + (value.img:getHeight() / 4),
+					value:perception_range(), enemy.x, enemy.y, enemy.w, enemy.h) then
+					value.chars_around.key = enemy
+					value.current_action = 'follow'
 				end
 
-				if Utils.circle_rect_collision(value.char_x + (value.img:getWidth() / 4), value.char_y + (value.img:getHeight() / 4),
-					value:perception_range(), enemy.x, enemy.y, 100, 100) then
-					value.chars_around.key = value
-					value.current_action = 'follow'
+				if Utils.circle_rect_collision(value.char_x + (value.img:getWidth() / 4), value.char_y + (value.img:getHeight() / 4), value.attack_range,
+					enemy.x, enemy.y, enemy.w, enemy.h) then
+						value.chars_around.key = enemy
+						value.current_action = 'attack'
+						-- break
 				end
 			end
 		end
@@ -182,7 +196,7 @@ function Game:draw()
 
 	for _,enemy in pairs(self.enemy_objects) do
 		-- love.graphics.setColor(1,0,0)
-		love.graphics.rectangle('fill', enemy.x, enemy.y, 50, 50)
+		-- love.graphics.rectangle('fill', enemy.x, enemy.y, 50, 50)
 		-- love.graphics.setColor(1,1,1)
 		-- if card.type == 'character' then
 			-- card.char_x, card.char_y = card.animate.draw(card, card.char_x, card.char_y)
@@ -228,9 +242,9 @@ end
 
 function Game:preview_char(card,x,y)
 	-- attack range
-	love.graphics.ellipse("line", x + (card.img:getWidth() / 4), y + (card.img:getHeight() / 4), card.attack_range, card.attack_range)
+	love.graphics.ellipse("line", x + (card.img:getWidth() / 2), y + (card.img:getHeight() / 2), card.attack_range, card.attack_range)
 	-- perception range
-	love.graphics.ellipse("line", x + (card.img:getWidth() / 4), y + (card.img:getHeight() / 4), card:perception_range(), card:perception_range())
+	love.graphics.ellipse("line", x + (card.img:getWidth() / 2), y + (card.img:getHeight() / 2), card:perception_range(), card:perception_range())
 
 	-- represents the char preview
 	love.graphics.setColor(0.2,0.2,0.7,0.5)
