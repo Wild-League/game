@@ -8,6 +8,9 @@ local Dino = {
 	card_img = Assets.CARD,
 	is_card_loading = false,
 
+	life = 100,
+	current_life = 100,
+
 	speed = 1.5,
 	current_action = 'walk',
 	attack_range = Range:getSize('melee_medium'),
@@ -51,7 +54,7 @@ Dino.animate.update = function(self, dt)
 end
 
 Dino.animate.draw = function(self, x, y, ...)
-	self.lifebar(x,y)
+	self:lifebar(x,y)
 
 	return self.actions[self.current_action].draw(x,y)
 end
@@ -107,10 +110,10 @@ Dino.actions = {
 
 -- show life level for each char
 -- TODO: move to generic card module
-function Dino.lifebar(x,y)
+function Dino:lifebar(x,y)
 	love.graphics.setColor(255/255,29/255,29/255)
-	love.graphics.rectangle("line", x - 10, y - 10, 50, 5)
-	love.graphics.rectangle("fill", x - 10, y - 10, 50, 5)
+	love.graphics.rectangle("line", x + 10, y - 10, self.life / 2, 5)
+	love.graphics.rectangle("fill", x + 10, y - 10, self.current_life / 2, 5)
 	love.graphics.setColor(255,255,255)
 end
 

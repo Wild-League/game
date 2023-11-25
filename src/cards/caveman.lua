@@ -8,7 +8,9 @@ local Caveman = {
 	card_img = Assets.CARD,
 	is_card_loading = false,
 
-	speed = 1.5,
+	life = 100,
+	current_life = 100,
+	speed = 1,
 	current_action = 'walk',
 	attack_range = Range:getSize('melee_short'),
 
@@ -35,18 +37,20 @@ local Caveman = {
 
 local walking = Assets.WALK_LEFT
 local grid_walking = anim8.newGrid(60, 60, walking:getWidth(), walking:getHeight())
-local walk_animation = anim8.newAnimation(grid_walking('1-11', 1), 0.2)
+local walk_animation = anim8.newAnimation(grid_walking('1-11', 1), Caveman.speed/10)
 
 local attack = Assets.ATTACK_LEFT
 local grid_attack = anim8.newGrid(70, 60, attack:getWidth(), attack:getHeight())
-local attack_animation = anim8.newAnimation(grid_attack('1-9', 1), 0.2)
+local attack_animation = anim8.newAnimation(grid_attack('1-9', 1), 0.2, function()
+	print('teste')
+end)
 
 Caveman.animate.update = function(self, dt)
 	return self.actions[self.current_action].update(dt)
 end
 
 Caveman.animate.draw = function(self, x, y, ...)
-	self.lifebar(x,y)
+	self:lifebar(x,y)
 
 	return self.actions[self.current_action].draw(x,y)
 end
@@ -107,10 +111,10 @@ Caveman.actions = {
 
 -- show life level for each char
 -- TODO: move to generic card module
-function Caveman.lifebar(x,y)
+function Caveman:lifebar(x,y)
 	love.graphics.setColor(255/255,29/255,29/255)
-	love.graphics.rectangle("line", x - 10, y - 10, 50, 5)
-	love.graphics.rectangle("fill", x - 10, y - 10, 50, 5)
+	love.graphics.rectangle("line", x + 10, y - 10, self.life / 2, 5)
+	love.graphics.rectangle("fill", x + 10, y - 10, self.current_life / 2, 5)
 	love.graphics.setColor(255,255,255)
 end
 
