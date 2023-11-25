@@ -1,3 +1,4 @@
 .vscode
 lib/lua-https.so
 .DS_Store
+test/
