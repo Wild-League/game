@@ -1,4 +1,4 @@
-local Layout = require('./src/helpers/layout')
+local Layout = require('src.helpers.layout')
 
 local Map = {
 	-- indicates the max value in x to each side
@@ -31,7 +31,8 @@ function Map:block_left_side()
 	love.graphics.setColor(1,1,1)
 end
 
-function Map:center_building()
+-- TODO: should be used to draw buildings (except tower)
+function Map:buildings()
 	local center = Layout:center(100, 100)
 	love.graphics.ellipse("line", center.width + 50, center.height + 50, 100, 100)
 end

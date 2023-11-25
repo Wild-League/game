@@ -1,4 +1,4 @@
-local Deck = require('./src/entities/deck')
+local Deck = require('src.entities.deck')
 
 local function User(nickname, level)
 	local obj = {

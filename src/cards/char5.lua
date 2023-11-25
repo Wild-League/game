@@ -1,7 +1,7 @@
-local Assets = require('./src/assets')
-local anim8 = require('./lib/anim8')
+local Assets = require('src.assets')
+local anim8 = require('lib.anim8')
+local Range = require('src.config.range')
 
-local Range = require('./src/config/range')
 
 local Char5 = {
 	name = 'Char5',
@@ -21,6 +21,7 @@ local Char5 = {
 	actions = {},
 	chars_around = {},
 	selected = false,
+	selectable = false,
 	preview_card = false
 }
 

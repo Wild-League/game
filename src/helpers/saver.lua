@@ -1,10 +1,10 @@
 local Saver = {}
-local Lume = require('../../lib/lume')
+local Lume = require('lib.lume')
 
-local Constants = require('./src/constants')
-local User = require('./src/entities/user')
+local Constants = require('src.constants')
+local User = require('src.entities.user')
 
-local get_users = require('./src/api/user')
+local get_users = require('src.api.user')
 
 -- TODO: remove lume and use json.lua
 

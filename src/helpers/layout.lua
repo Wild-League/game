@@ -1,10 +1,8 @@
-local Constants = require('./src/constants')
-
 local Layout = {}
 
 function Layout:center(obj_width, obj_height)
-	local width = Constants.WINDOW_SETTINGS.width
-	local height = Constants.WINDOW_SETTINGS.height
+	local width = love.graphics.getWidth()
+	local height = love.graphics.getHeight()
 
 	obj_width = obj_width or 0
 	obj_height = obj_height or 0
@@ -18,7 +16,7 @@ function Layout:center(obj_width, obj_height)
 end
 
 function Layout:down_left(obj_width, obj_height)
-	local height = Constants.WINDOW_SETTINGS.height
+	local height = love.graphics.getHeight()
 
 	obj_width = obj_width or 0
 	obj_height = obj_height or 0
@@ -32,8 +30,8 @@ function Layout:down_left(obj_width, obj_height)
 end
 
 function Layout:down_right(obj_width, obj_height)
-	local width = Constants.WINDOW_SETTINGS.width
-	local height = Constants.WINDOW_SETTINGS.height
+	local width = love.graphics.getWidth()
+	local height = love.graphics.getHeight()
 
 	obj_width = obj_width or 0
 	obj_height = obj_height or 0
@@ -47,7 +45,7 @@ function Layout:down_right(obj_width, obj_height)
 end
 
 function Layout:up_right(obj_width, obj_height)
-	local width = Constants.WINDOW_SETTINGS.width
+	local width = love.graphics.getWidth()
 
 	obj_width = obj_width or 0
 	obj_height = obj_height or 0

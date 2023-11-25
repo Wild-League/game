@@ -1,26 +1,39 @@
-local Suit = require('./lib/suit')
-local Layout = require('./src/helpers/layout')
+local Suit = require('lib.suit')
+local Layout = require('src.helpers.layout')
 
-local Assets = require('./src/assets')
-local Constants = require('./src/constants')
+local Assets = require('src.assets')
+local Constants = require('src.constants')
 
-local Utils = require('./src/helpers/utils')
-local Map = require('./src/entities/map')
+local Utils = require('src.helpers.utils')
+local Map = require('src.entities.map')
 
-local Deck = require('./src/entities/deck')
-local Tower = require('./src/entities/tower')
+local Deck = require('src.entities.deck')
+local Tower = require('src.entities.tower')
 
-local Udp = require('./src/network/udp')
-local Events = require('./src/network/events')
+local Udp = require('src.network.udp')
+local Events = require('src.network.events')
 
-local Timer = require('./src/helpers/timer')
+local Timer = require('src.helpers.timer')
 
 local timer = 0
+local sti = require("lib.sti")
 
 local Game = {
 	user = {},
 	deck = {},
-	background = Assets.WORLD,
+	-- background = Assets.WORLD,
+
+	--[[
+		TODO: find another way to implement it
+
+		have all the objects in the game
+		so we can compare collisions easily
+		type = character | building | spells
+	]]
+	my_objects = {},
+	enemy_objects = {},
+
+	card_selected = nil,
 
 	-- udp_co = {}
 }
@@ -29,38 +42,30 @@ local Game = {
 local should_message = false
 local message = ''
 
-local new_font = love.graphics.newFont(20, 'mono')
-
--- store the current selected card
--- used to block selecting more than one card at time
--- also used to show the preview char
-local CARD_SELECTED = nil
-
---[[
-	have all the objects in the game
-	so we can compare collisions easily
-	(I couln't find another way to implement it)
-
-	type = character | building | spells
-]]
-local my_objects = {
-	-- { x = 100, y = 100 }
-}
-
-local enemy_objects = {}
-
 setmetatable(Game, Game)
 
+-- ONLY FOR TESTING
+Deck:load()
+Game.deck = Deck.decks['deck1']
+
+Game.map = sti('assets/world.lua')
+
 function Game:load()
+	table.insert(self.my_objects, {
+		{ x = Tower.positions_right.tower1.x, y = Tower.positions_right.tower1.y, type = 'static' },
+		{ x = Tower.positions_right.tower2.x, y = Tower.positions_right.tower2.y, type = 'static' }
+	})
+
+	table.insert(self.enemy_objects, {
+		{ x = Tower.positions_left.tower1.x, y = Tower.positions_left.tower1.y, type = 'static' },
+		{ x = Tower.positions_left.tower2.x, y = Tower.positions_left.tower2.y, type = 'static' }
+	})
 	-- setup the deck
-	Deck()
+	-- Deck()
 
 	-- Game.user = Constants.LOGGED_USER
-
-	-- Game.deck_selected = Game.user.deck_selected
-
-	self.deck = Deck[Deck.deck_selected]
-
+	-- self.deck_selected = Constants.deck_selected
+	-- self.deck = Deck['deck1']
 	-- Deck:define_positions(Game.deck)
 end
 
@@ -68,7 +73,7 @@ function Game:handle_received_data()
 	local data = Udp:receive_data()
 	if data then
 		if data.event == Events.Object then
-			enemy_objects[data.identifier] = data.obj
+			self.enemy_objects[data.identifier] = data.obj
 		end
 	end
 
@@ -76,48 +81,56 @@ function Game:handle_received_data()
 end
 
 function Game:update(dt)
+	Tower:update()
 	Deck:update(dt)
 
 	-- timer
-	local new_center = Layout:center(100, 200)
-	Suit.Label(Timer:match(dt), { align='center', font = new_font}, new_center.width, 10, 100, 200)
+	local new_center = Layout:center(100, 100)
+	love.graphics.setColor(1,1,1)
+	-- love.graphics.print(Timer:match(dt), new_center.width, 10)
+	Suit.Label(Timer:match(dt), new_center.width, 35, 100, 0)
+	love.graphics.setColor(1,1,1)
 
 	-- Game:timer(dt)
 
-	Game:check_cooldown(dt)
+	-- Game:check_cooldown(dt)
 
 	Game:message_timer(dt)
-
-	Tower:update(dt)
 
 	-- TODO: implement function to show player details
 	-- nickname, level
 	-- Suit.Label(Game.user.nickname, { align='center', font = new_font}, 10, 680, 200, 30)
 	-- Suit.Label('lv. '..Game.user.level, { align='center', font = new_font  }, 10, 695, 200, 30)
 
-	if CARD_SELECTED ~= nil then
-		local x,y = love.mouse.getPosition()
-		CARD_SELECTED.char_x = x
-		CARD_SELECTED.char_y = y
+	for _,card in pairs(self.deck) do
+		if card.selected then
+			local x,y = love.mouse.getPosition()
+			card.char_x = x
+			card.char_y = y
+		end
 	end
 
-	for _,value in pairs(my_objects) do
-		value.animate.update(value, dt)
+	for _,value in pairs(self.my_objects) do
+		if value.type ~= 'static' then
+			value.animate.update(value, dt)
+		end
 
 		-- Udp:send({ identifier=value.name, event=Events.Object, obj={ x=value.char_x, y=value.char_y} })
 
-		for _,enemy in pairs(enemy_objects) do
-			if Utils.circle_rect_collision(value.char_x + (value.img:getWidth() / 4), value.char_y + (value.img:getHeight() / 4), value.attack_range,
-				enemy.x, enemy.y, 100, 100) then
-					value.chars_around.key = value
-					value.current_action = 'attack'
-					break
-			end
+		for _,enemy in pairs(self.enemy_objects) do
+			if value.type ~= 'static' then
+				if Utils.circle_rect_collision(value.char_x + (value.img:getWidth() / 4), value.char_y + (value.img:getHeight() / 4), value.attack_range,
+					enemy.x, enemy.y, 100, 100) then
+						value.chars_around.key = value
+						value.current_action = 'attack'
+						break
+				end
 
-			if Utils.circle_rect_collision(value.char_x + (value.img:getWidth() / 4), value.char_y + (value.img:getHeight() / 4),
-				value:perception_range(), enemy.x, enemy.y, 100, 100) then
-				value.chars_around.key = value
-				value.current_action = 'follow'
+				if Utils.circle_rect_collision(value.char_x + (value.img:getWidth() / 4), value.char_y + (value.img:getHeight() / 4),
+					value:perception_range(), enemy.x, enemy.y, 100, 100) then
+					value.chars_around.key = value
+					value.current_action = 'follow'
+				end
 			end
 		end
 	end
@@ -128,30 +141,15 @@ function Game:update(dt)
 end
 
 function Game:draw()
-	-- world background
-	local sx = love.graphics.getWidth() / Game.background:getWidth()
-	local sy = love.graphics.getHeight() / Game.background:getHeight()
-	for i = 0, Constants.WINDOW_SETTINGS.width / Game.background:getWidth() do
-		for j = 0, Constants.WINDOW_SETTINGS.height / Game.background:getHeight() do
-			love.graphics.draw(Game.background, i * Game.background:getWidth(), j * Game.background:getHeight(), 0, sx, sy)
-		end
-	end
+	self.map:draw()
 
-	-- TEST: fake char to be attacked
-	-- should remove after tests
+	local new_center = Layout:center(100, 100)
+	love.graphics.setColor(0,0,0, 0.8)
+	love.graphics.rectangle('fill', new_center.width, 10, 100, 50)
+	love.graphics.setColor(1,1,1)
+
+	-- TEST: fake char to be attacked, should remove after tests
 	-- love.graphics.rectangle("fill", 100, 100, 20, 20)
-
-	-- when card is selected
-	if CARD_SELECTED ~= nil then
-		Map:block_left_side()
-
-		-- because the char is walking from right -> left (by now)
-		if CARD_SELECTED.char_x <= Map.left_side.w then
-			CARD_SELECTED.char_x = Map.left_side.w
-		end
-
-		Game:preview_char(CARD_SELECTED, CARD_SELECTED.char_x, CARD_SELECTED.char_y)
-	end
 
 	-- # tower
 	Tower:draw()
@@ -159,15 +157,30 @@ function Game:draw()
 	-- # deck
 	Deck:draw()
 
+	for _, card in pairs(self.deck) do
+		if card.selected then
+			Map:block_left_side()
+
+			-- because the char is walking from right -> left (by now)
+			if card.char_x <= Map.left_side.w then
+				card.char_x = Map.left_side.w
+			end
+
+			Game:preview_char(card, card.char_x, card.char_y)
+		end
+	end
+
 	-- draw all objects
-	for _,card in pairs(my_objects) do
-		card.char_x, card.char_y = card.animate.draw(card, card.char_x, card.char_y)
+	for _,card in pairs(self.my_objects) do
+		if card.type ~= 'static' then
+			card.char_x, card.char_y = card.animate.draw(card, card.char_x, card.char_y)
+		end
 		-- if card.type == 'character' then
 		-- 	card.char_x, card.char_y = card.animate.draw(card, card.char_x, card.char_y)
 		-- end
 	end
 
-	for _,enemy in pairs(enemy_objects) do
+	for _,enemy in pairs(self.enemy_objects) do
 		-- love.graphics.setColor(1,0,0)
 		love.graphics.rectangle('fill', enemy.x, enemy.y, 50, 50)
 		-- love.graphics.setColor(1,1,1)
@@ -175,6 +188,7 @@ function Game:draw()
 			-- card.char_x, card.char_y = card.animate.draw(card, card.char_x, card.char_y)
 		-- end
 	end
+	-- rs.pop()
 end
 
 -- shows the time passed in the game
@@ -195,28 +209,7 @@ function Game:timer(dt)
 
 	local new_center = Layout:center(100, 200)
 
-	Suit.Label(time, { align='center', font = new_font}, new_center.width, 10, 100, 200)
-end
-
--- used for check cooldown timer each second
-local countdown_timer = 1
-
-function Game:check_cooldown(dt)
-	countdown_timer = countdown_timer - dt
-
-	if countdown_timer <= 0 then
-		countdown_timer = countdown_timer + 1
-
-		for i = 1, #Game.deck do
-			local card = Game.deck[i]
-			if card.is_card_loading then
-				card.current_cooldown = card.current_cooldown - 1
-				if card.current_cooldown <= 0 then
-					card.is_card_loading = false
-				end
-			end
-		end
-	end
+	Suit.Label(time, { align='center'}, new_center.width, 10, 100, 200)
 end
 
 local countdown_message = 5
@@ -225,7 +218,7 @@ function Game:message_timer(dt)
 	countdown_message = countdown_message - dt
 
 	if should_message then
-		Suit.Label(message, {align='center',font=new_font},100,25,100,200)
+		Suit.Label(message, {align='center'},100,25,100,200)
 		if countdown_message <= 0 then
 			countdown_message = countdown_message + 5
 			should_message = false
@@ -241,67 +234,12 @@ function Game:preview_char(card,x,y)
 
 	-- represents the char preview
 	love.graphics.setColor(0.2,0.2,0.7,0.5)
-	love.graphics.draw(CARD_SELECTED.img, CARD_SELECTED.char_x, CARD_SELECTED.char_y)
+	love.graphics.draw(card.img, card.char_x, card.char_y)
 	love.graphics.setColor(1,1,1)
 end
 
-function Game:unselect_all_cards()
-	for i = 1, #Game.deck do
-		local card = Game.deck[i]
-		card.selected = false
-	end
-end
-
-function love.mousepressed(x,y,button)
-	if button == 1 then
-		for _,card in pairs(Game.deck) do
-			-- click on card?
-			if x >= card.x and x <= (card.x + card.card_img:getWidth())
-				and y >= card.y and y <= (card.y + card.card_img:getHeight())
-				and card.selectable ~= false then
-				if not card.is_card_loading then
-					if card.selected then
-						CARD_SELECTED = nil
-						card.selected = false
-					else
-						Game:unselect_all_cards()
-						CARD_SELECTED = card
-						card.selected = true
-					end
-					break
-				end
-			else
-				-- this is the selected card?
-				if card.selected then
-					-- click on map?
-					if not (x >= card.x and x <= (card.x + card.card_img:getWidth()))
-						and not (y >= card.y and y <= (card.y + card.card_img:getHeight())) then
-
-						card.char_x = x
-						card.char_y = y
-
-						if CARD_SELECTED.char_x <= Map.left_side.w then
-							CARD_SELECTED.char_x = Map.left_side.w
-						end
-
-						card.is_card_loading = true
-
-						-- insert a copy, so we can insert the same card more than once.
-						table.insert(my_objects, Utils.copy_table(card))
-
-						CARD_SELECTED = nil
-						card.selected = false
-
-						card.current_cooldown = card.cooldown
-
-						Game.deck = Deck:rotate_deck(card)
-
-						break
-					end
-				end
-			end
-		end
-	end
+function love.resize(w,h)
+	Game.map:resize(w, h)
 end
 
 return Game
