@@ -211,6 +211,8 @@ function Deck:check_cooldown(dt)
 end
 
 function love.mousepressed(x,y,button)
+	if CONTEXT.current ~= 'game' then return end
+
 	-- left click
 	if button == 1 then
 		for _,card in pairs(Deck.decks[Deck.deck_selected]) do
