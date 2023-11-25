@@ -1,6 +1,5 @@
 local https = require('https')
 local json = require('lib.json')
-
 local Routes = require('src.api.routes')
 
 local Instance = {}
