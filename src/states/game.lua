@@ -34,7 +34,7 @@ local Game = {
 
 	card_selected = nil,
 
-	-- udp_co = {}
+	udp_co = {}
 }
 
 -- used for message_timer
@@ -44,9 +44,10 @@ local message = ''
 setmetatable(Game, Game)
 
 function Game:load()
+	Udp:connect()
 	Tower:load()
 	Deck:load()
-	Game.deck = Deck.decks['deck1']
+	Game.deck = Deck.deck_selected
 
 	Game.map = sti('assets/world.lua')
 
@@ -55,7 +56,8 @@ function Game:load()
 		x = Tower.positions_right.tower1.x,
 		y = Tower.positions_right.tower1.y,
 		w = Assets.TOWER_LEFT:getWidth() / 1.5,
-		h = Assets.TOWER_LEFT:getHeight() / 1.5
+		h = Assets.TOWER_LEFT:getHeight() / 1.5,
+		current_life = Tower.current_life
 	})
 
 	table.insert(self.my_objects, {
@@ -63,7 +65,8 @@ function Game:load()
 		x = Tower.positions_right.tower2.x,
 		y = Tower.positions_right.tower2.y,
 		w = Assets.TOWER_LEFT:getWidth() / 1.5,
-		h = Assets.TOWER_LEFT:getHeight() / 1.5
+		h = Assets.TOWER_LEFT:getHeight() / 1.5,
+		current_life = Tower.current_life
 	})
 
 	table.insert(self.enemy_objects, {
@@ -71,7 +74,8 @@ function Game:load()
 		x = Tower.positions_left.tower1.x,
 		y = Tower.positions_left.tower1.y,
 		w = Assets.TOWER_LEFT:getWidth() / 1.5,
-		h = Assets.TOWER_LEFT:getHeight() / 1.5
+		h = Assets.TOWER_LEFT:getHeight() / 1.5,
+		current_life = Tower.current_life
 	})
 
 	table.insert(self.enemy_objects, {
@@ -79,7 +83,8 @@ function Game:load()
 		x = Tower.positions_left.tower2.x,
 		y = Tower.positions_left.tower2.y,
 		w = Assets.TOWER_LEFT:getWidth() / 1.5,
-		h = Assets.TOWER_LEFT:getHeight() / 1.5
+		h = Assets.TOWER_LEFT:getHeight() / 1.5,
+		current_life = Tower.current_life
 	})
 end
 
@@ -101,13 +106,8 @@ function Game:update(dt)
 	-- timer
 	local new_center = Layout:center(100, 100)
 	love.graphics.setColor(1,1,1)
-	-- love.graphics.print(Timer:match(dt), new_center.width, 10)
 	Suit.Label(Timer:match(dt), new_center.width, 35, 100, 0)
 	love.graphics.setColor(1,1,1)
-
-	-- Game:timer(dt)
-
-	-- Game:check_cooldown(dt)
 
 	Game:message_timer(dt)
 
@@ -129,12 +129,12 @@ function Game:update(dt)
 			value.animate.update(value, dt)
 		end
 
-		-- Udp:send({ identifier=value.name, event=Events.Object, obj={ x=value.char_x, y=value.char_y} })
+		Udp:send({ identifier=value.name, event=Events.Object, obj={ x=value.char_x, y=value.char_y} })
 
 		for _,enemy in pairs(self.enemy_objects) do
 			if value.type ~= 'static' then
 				if Utils.circle_rect_collision(value.char_x + (value.img:getWidth() / 4), value.char_y + (value.img:getHeight() / 4),
-					value:perception_range(), enemy.x, enemy.y, enemy.w, enemy.h) then
+					value.perception_range, enemy.x, enemy.y, enemy.w, enemy.h) then
 					value.chars_around.key = enemy
 					value.current_action = 'follow'
 				end
@@ -149,9 +149,9 @@ function Game:update(dt)
 		end
 	end
 
-	-- repeat
-	-- 	local data = self:handle_received_data()
-	-- until not data
+	repeat
+		local data = self:handle_received_data()
+	until not data
 end
 
 function Game:draw()
@@ -180,7 +180,10 @@ function Game:draw()
 				card.char_x = Map.left_side.w
 			end
 
-			Game:preview_char(card, card.char_x, card.char_y)
+			-- card.char_x = card.char_x + card.img:getWidth() / 2
+			-- card.char_y = card.char_y + card.img:getHeight() / 2
+
+			Game:preview_char(card, card.char_x + card.img_preview:getWidth() / 2, card.char_y + card.img_preview:getHeight() / 2)
 		end
 	end
 
@@ -195,14 +198,10 @@ function Game:draw()
 	end
 
 	for _,enemy in pairs(self.enemy_objects) do
-		-- love.graphics.setColor(1,0,0)
-		-- love.graphics.rectangle('fill', enemy.x, enemy.y, 50, 50)
-		-- love.graphics.setColor(1,1,1)
-		-- if card.type == 'character' then
-			-- card.char_x, card.char_y = card.animate.draw(card, card.char_x, card.char_y)
-		-- end
+		if enemy.type ~= 'static' then
+			enemy.char_x, enemy.char_y = enemy.animate.draw(enemy, enemy.char_x, enemy.char_y)
+		end
 	end
-	-- rs.pop()
 end
 
 -- shows the time passed in the game
@@ -242,13 +241,13 @@ end
 
 function Game:preview_char(card,x,y)
 	-- attack range
-	love.graphics.ellipse("line", x + (card.img:getWidth() / 2), y + (card.img:getHeight() / 2), card.attack_range, card.attack_range)
+	love.graphics.ellipse("line", x, y, card.attack_range, card.attack_range)
 	-- perception range
-	love.graphics.ellipse("line", x + (card.img:getWidth() / 2), y + (card.img:getHeight() / 2), card:perception_range(), card:perception_range())
+	love.graphics.ellipse("line", x, y, card.perception_range, card.perception_range)
 
 	-- represents the char preview
 	love.graphics.setColor(0.2,0.2,0.7,0.5)
-	love.graphics.draw(card.img, card.char_x, card.char_y)
+	love.graphics.draw(card.img_preview, card.char_x, card.char_y)
 	love.graphics.setColor(1,1,1)
 end
 

@@ -1,20 +1,54 @@
+local Char = require('src.entities.cards.char')
+local Spell = require('src.entities.cards.spell')
+
 local Card = {}
 
--- TODO: bring all common functions of card here
+local default_props = {
+	x = 0,
+	y = 0,
+	char_x = 0,
+	char_y = 0,
+	current_cooldown = 0,
+	selected = false,
+	selectable = false,
+	preview_card = false,
+	is_card_loading = false,
+	frame_width = 0,
+	frame_height = 0,
+	animate = {}
+}
 
-function Card:get_nearest_enemy(around)
-	-- shoot.x = Char1.char_x
-	-- shoot.y = Char1.char_y
+function Card:new(name, type, cooldown, damage, life, speed, attack_range, width, height)
+	local card = {}
 
-	-- for _,v in pairs(around) do
-	-- 	local distance_x = v.x - Char1.char_x
-	-- 	local distance_y = v.y - Char1.char_y
+	if type == 'spell' then
+		card = Spell:new(name, type, cooldown, damage, life, speed, attack_range, width, height)
+	end
 
-	-- 	if (distance_x >= (nearest_enemy.x - Char1.char_x))
-	-- 		and (distance_y >= (nearest_enemy.y - Char1.char_y)) then
-	-- 		return v
-	-- 	end
-	-- end
+	if type == 'char' then
+		card = Char:new(name, type, cooldown, damage, life, speed, attack_range, width, height)
+	end
+
+	for key, value in pairs(default_props) do
+		card[key] = value
+	end
+
+	card.animate.update = function(char_, dt)
+		return char_.actions[char_.current_action].update(dt)
+	end
+
+	card.animate.draw = function(char_, x, y, ...)
+		self:lifebar(x,y)
+
+		return char_.actions[char_.current_action].draw(x,y)
+	end
+
+	return card
+end
+
+-- only showed on preview
+function Card:perception_range()
+	return self.attack_range * 2
 end
 
 function Card:lifebar(x,y)
@@ -28,12 +62,6 @@ function Card:show_name(x, y)
 	love.graphics.print(self.name, x, y + 30)
 end
 
-local CardMetatable = {
-	__call = function(self)
-		print(self)	 -- ....
-	end
-}
-
-setmetatable(Card, CardMetatable)
+Card.__index = Card
 
 return Card

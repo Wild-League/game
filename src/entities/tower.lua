@@ -75,6 +75,8 @@ function Tower:draw()
 end
 
 function Tower:lifebar(x,y)
+	-- print(self.current_life)
+
 	love.graphics.setColor(255/255,29/255,29/255)
 	love.graphics.rectangle("line", x, y, 100, 5)
 	love.graphics.rectangle("fill", x, y, 100, 5)

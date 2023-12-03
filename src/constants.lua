@@ -6,8 +6,7 @@ local Constants = {
 	-- 	height = 800
 	-- },
 	-- the udp connection with server
-	UDP = {},
-	DECK_SELECTED = 'deck1'
+	UDP = {}
 }
 
 setmetatable(Constants, {

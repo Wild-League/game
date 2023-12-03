@@ -17,6 +17,8 @@ local Dino = {
 
 	cooldown = 5, -- seconds
 
+	damage = 200,
+
 	------------
 
 	-- TODO: move all props below to an abstract `card` class
@@ -74,7 +76,6 @@ Dino.actions = {
 	follow = {
 		update = function(dt)
 			nearest_enemy = Dino:get_nearest_enemy(Dino.chars_around)
-
 			walk_animation:update(dt)
 		end,
 		draw = function(x,y)
@@ -98,7 +99,7 @@ Dino.actions = {
 			attack_animation:update(dt)
 		end,
 		draw = function(x,y)
-			if nearest_enemy.width == nil then
+			if not nearest_enemy.width then
 				nearest_enemy = Dino:get_nearest_enemy(Dino.chars_around)
 			end
 

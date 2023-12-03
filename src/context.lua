@@ -3,6 +3,7 @@ local Auth = require('src.states.auth')
 local Game = require('src.states.game')
 local Queue = require('src.states.queue')
 local Lobby = require('src.states.lobby')
+local LoadingGame = require('src.states.loading-game')
 
 local Context = {
 	states = {
@@ -10,6 +11,7 @@ local Context = {
 		auth = Auth,
 		lobby = Lobby,
 		queue = Queue,
+		loading_game = LoadingGame,
 		game = Game
 	},
 

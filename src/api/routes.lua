@@ -5,6 +5,7 @@ local Routes = {
 	test = Base[Base.current].base_url .. 'test',
 	auth = Base[Base.current].base_url .. 'auth',
 	user = Base[Base.current].base_url .. 'user',
+	deck = Base[Base.current].base_url .. 'deck',
 }
 
 setmetatable(Routes, {

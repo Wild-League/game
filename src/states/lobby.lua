@@ -15,7 +15,7 @@ function Lobby:draw()
 	local play_button = Suit.Button('Play', 10, 10)
 
 	if play_button.hit then
-		CONTEXT:change('game')
+		CONTEXT:change('queue')
 	end
 
 	-- love.graphics.print('Lobby', 10, 10)

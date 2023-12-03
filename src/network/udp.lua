@@ -10,7 +10,7 @@ function Udp:connect()
 	-- TODO: check if connected successfully
 	self.connection = socket.udp()
 	self.connection:settimeout(0)
-	self.connection:setpeername('127.0.0.1', 9091)
+	self.connection:setpeername('localhost', 9091)
 
 	-- TODO: sends matchmaking on connect just in this initial phase - just a reminder to remove later
 	self:send({ event = Events.Connect })

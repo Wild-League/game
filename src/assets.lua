@@ -1,5 +1,5 @@
 local Assets = {
-	BACKGROUND_INITIAL = love.graphics.newImage('assets/initial-background.png'),
+	-- BACKGROUND_INITIAL = love.graphics.newImage('assets/initial-background.png'),
 	-- BUTTON = love.graphics.newImage('assets/button-play.png'),
 	-- BUTTON_HOVER = love.graphics.newImage('assets/button-play-hover.png'),
 	-- WORLD = love.graphics.newImage('assets/world.png'),

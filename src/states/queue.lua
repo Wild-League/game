@@ -14,7 +14,8 @@ end
 
 function Queue:update()
 	local data = Udp:receive_data()
-	if data ~= nil and data.event == Events.MatchFound then
+
+	if data and data.event == Events.MatchFound then
 		self.found = true
 	end
 end
@@ -26,12 +27,12 @@ function Queue:draw()
 	local btn_cancel = Suit.Button('Cancel', pos.width, pos.height, 100, 50)
 
 	if btn_cancel.hit then
-		CONTEXT:change('initial')
+		CONTEXT:change('lobby')
 	end
 
 	if self.found then
 		love.graphics.print('FOUND!', pos.width + 125, pos.height - 50)
-		CONTEXT:change('game')
+		CONTEXT:change('loading_game')
 	end
 end
 

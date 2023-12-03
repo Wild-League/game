@@ -28,15 +28,26 @@ function Utils.circle_rect_collision(cx, cy, cr, rx, ry, rw, rh)
 	return corner_distance_sq <= math.pow(cr, 2)
 end
 
-function Utils.copy_table(tb)
-	local copy = {}
+function Utils.copy_table(orig, copies)
+	copies = copies or {}
+	local orig_type = type(orig)
+	local copy
 
-	for k,v in pairs(tb) do
-		copy[k] = v
+	if orig_type == 'table' then
+		if copies[orig] then
+			copy = copies[orig]
+		else
+			copy = {}
+			copies[orig] = copy
 
-		if type(v) == 'table' then
-			Utils.copy_table(v)
+			for orig_key, orig_value in next, orig, nil do
+				copy[Utils.copy_table(orig_key, copies)] = Utils.copy_table(orig_value, copies)
+			end
+
+			setmetatable(copy, Utils.copy_table(getmetatable(orig), copies))
 		end
+	else -- number, string, boolean, etc
+		copy = orig
 	end
 
 	return copy

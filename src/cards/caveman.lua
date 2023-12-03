@@ -16,6 +16,8 @@ local Caveman = {
 
 	cooldown = 10, -- seconds
 
+	damage = 100,
+
 	------------
 
 	-- TODO: move all props below to an abstract `card` class
@@ -35,15 +37,23 @@ local Caveman = {
 	preview_card = false
 }
 
+local nearest_enemy = {
+	x = 0,
+	y = 0,
+	current_life = 0
+}
+
+local function handle_damage()
+	nearest_enemy.current_life = nearest_enemy.current_life - Caveman.damage
+end
+
 local walking = Assets.WALK_LEFT
 local grid_walking = anim8.newGrid(60, 60, walking:getWidth(), walking:getHeight())
 local walk_animation = anim8.newAnimation(grid_walking('1-11', 1), Caveman.speed/10)
 
 local attack = Assets.ATTACK_LEFT
 local grid_attack = anim8.newGrid(70, 60, attack:getWidth(), attack:getHeight())
-local attack_animation = anim8.newAnimation(grid_attack('1-9', 1), 0.2, function()
-	print('teste')
-end)
+local attack_animation = anim8.newAnimation(grid_attack('1-9', 1), 0.2, handle_damage())
 
 Caveman.animate.update = function(self, dt)
 	return self.actions[self.current_action].update(dt)
@@ -54,11 +64,6 @@ Caveman.animate.draw = function(self, x, y, ...)
 
 	return self.actions[self.current_action].draw(x,y)
 end
-
-local nearest_enemy = {
-	x = 0,
-	y = 0
-}
 
 Caveman.actions = {
 	walk = {
