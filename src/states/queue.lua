@@ -9,7 +9,7 @@ local Queue = {
 }
 
 function Queue:load()
-	Constants.UDP = Udp:connect()
+	Udp:connect()
 end
 
 function Queue:update()

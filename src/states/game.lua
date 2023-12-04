@@ -32,9 +32,7 @@ local Game = {
 	my_objects = {},
 	enemy_objects = {},
 
-	card_selected = nil,
-
-	udp_co = {}
+	card_selected = nil
 }
 
 -- used for message_timer
@@ -44,7 +42,6 @@ local message = ''
 setmetatable(Game, Game)
 
 function Game:load()
-	Udp:connect()
 	Tower:load()
 	Deck:load()
 	Game.deck = Deck.deck_selected
@@ -91,7 +88,7 @@ end
 function Game:handle_received_data()
 	local data = Udp:receive_data()
 	if data then
-		if data.event == Events.Object then
+		if data.event == Events.Object and data.identifier then
 			self.enemy_objects[data.identifier] = data.obj
 		end
 	end
@@ -252,7 +249,9 @@ function Game:preview_char(card,x,y)
 end
 
 function love.resize(w,h)
-	Game.map:resize(w, h)
+	if CONTEXT.current == 'game' then
+		Game.map:resize(w, h)
+	end
 end
 
 return Game

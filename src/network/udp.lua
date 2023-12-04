@@ -19,7 +19,6 @@ end
 
 function Udp:receive_data()
 	local data = self.connection:receive()
-
 	if data then
 		return Json.decode(data)
 	end
@@ -28,7 +27,7 @@ function Udp:receive_data()
 end
 
 --[[
-	this should receive a event mandatorily
+	this should send a event mandatorily
 
 	Note: the identifier and obj is only mandatory when the event is 'object',
 	where identifiers = the object name or id
@@ -46,7 +45,8 @@ function Udp:send(data)
 		end
 	end
 
-	self.connection:send(Json.encode(data))
+	local encoded_data = Json.encode(data)
+	self.connection:send(encoded_data)
 end
 
 return Udp
