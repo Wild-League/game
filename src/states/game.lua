@@ -43,6 +43,7 @@ setmetatable(Game, Game)
 
 function Game:load()
 	Tower:load()
+
 	Deck:load()
 	Game.deck = Deck.deck_selected
 
@@ -89,7 +90,10 @@ function Game:handle_received_data()
 	local data = Udp:receive_data()
 	if data then
 		if data.event == Events.Object and data.identifier then
-			self.enemy_objects[data.identifier] = data.obj
+			Deck.enemy_possible_cards[data.identifier].char_x = data.obj.x
+			Deck.enemy_possible_cards[data.identifier].char_y = data.obj.y
+			-- self.enemy_objects[data.identifier] = Deck.enemy_possible_cards[data.identifier]
+			table.insert(self.enemy_objects, Deck.enemy_possible_cards[data.identifier])
 		end
 	end
 
@@ -97,6 +101,10 @@ function Game:handle_received_data()
 end
 
 function Game:update(dt)
+	repeat
+		local data = self:handle_received_data()
+	until not data
+
 	Tower:update()
 	Deck:update(dt)
 
@@ -126,7 +134,7 @@ function Game:update(dt)
 			value.animate.update(value, dt)
 		end
 
-		Udp:send({ identifier=value.name, event=Events.Object, obj={ x=value.char_x, y=value.char_y} })
+		Udp:send({ identifier=value.name, event=Events.Object, obj={ x = value.char_x, y = value.char_y } })
 
 		for _,enemy in pairs(self.enemy_objects) do
 			if value.type ~= 'static' then
@@ -146,9 +154,11 @@ function Game:update(dt)
 		end
 	end
 
-	repeat
-		local data = self:handle_received_data()
-	until not data
+	for _, enemy in pairs(self.enemy_objects) do
+		if enemy.type ~= 'static' then
+			enemy.animate.update(enemy, dt)
+		end
+	end
 end
 
 function Game:draw()
@@ -176,9 +186,6 @@ function Game:draw()
 			if card.char_x <= Map.left_side.w then
 				card.char_x = Map.left_side.w
 			end
-
-			-- card.char_x = card.char_x + card.img:getWidth() / 2
-			-- card.char_y = card.char_y + card.img:getHeight() / 2
 
 			Game:preview_char(card, card.char_x + card.img_preview:getWidth() / 2, card.char_y + card.img_preview:getHeight() / 2)
 		end

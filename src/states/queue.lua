@@ -2,7 +2,6 @@ local Suit = require('lib.suit')
 local Layout = require('src.helpers.layout')
 local Udp = require('src.network.udp')
 local Events = require('src.network.events')
-local Constants = require('src.constants')
 
 local Queue = {
 	found = false

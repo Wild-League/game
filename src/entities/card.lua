@@ -18,7 +18,7 @@ local default_props = {
 	animate = {}
 }
 
-function Card:new(name, type, cooldown, damage, life, speed, attack_range, width, height)
+function Card:new(enemy, name, type, cooldown, damage, life, speed, attack_range, width, height)
 	local card = {}
 
 	if type == 'spell' then
@@ -26,7 +26,7 @@ function Card:new(name, type, cooldown, damage, life, speed, attack_range, width
 	end
 
 	if type == 'char' then
-		card = Char:new(name, type, cooldown, damage, life, speed, attack_range, width, height)
+		card = Char:new(enemy, name, type, cooldown, damage, life, speed, attack_range, width, height)
 	end
 
 	for key, value in pairs(default_props) do

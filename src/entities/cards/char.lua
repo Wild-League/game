@@ -17,7 +17,7 @@ local Char = {
 	}
 }
 
-function Char:new(name, type, cooldown, damage, life, speed, attack_range, width, height)
+function Char:new(enemy, name, type, cooldown, damage, life, speed, attack_range, width, height)
 	local char = {
 		name = name,
 		type = type,
@@ -33,7 +33,7 @@ function Char:new(name, type, cooldown, damage, life, speed, attack_range, width
 		animations = {}
 	}
 
-	char = self:load_images(char)
+	char = self:load_images(char, enemy)
 	char = self:load_animations(char)
 	char = self:load_actions(char)
 
@@ -123,14 +123,16 @@ function Char:load_animations(char)
 	return char
 end
 
-function Char:load_images(card)
+function Char:load_images(card, enemy)
 	local name = card.name
+
+	local side = enemy and 'right' or 'left'
 
 	card.img = Image:load_from_url('http://localhost:9000/cards/'.. string.lower(name) ..'/card.png', name..'.png')
 	card.img_preview = Image:load_from_url('http://localhost:9000/cards/'.. string.lower(name) ..'/preview.png', name..'.png')
-	card.img_attack = Image:load_from_url('http://localhost:9000/cards/'.. string.lower(name) ..'/attack-left.png', name..'.png')
-	card.img_death = Image:load_from_url('http://localhost:9000/cards/'.. string.lower(name) ..'/death-left.png', name..'.png')
-	card.img_walk = Image:load_from_url('http://localhost:9000/cards/'.. string.lower(name) ..'/walk-left.png', name..'.png')
+	card.img_attack = Image:load_from_url('http://localhost:9000/cards/'.. string.lower(name) ..'/attack-'..side..'.png', name..'.png')
+	card.img_death = Image:load_from_url('http://localhost:9000/cards/'.. string.lower(name) ..'/death-'..side..'.png', name..'.png')
+	card.img_walk = Image:load_from_url('http://localhost:9000/cards/'.. string.lower(name) ..'/walk-'..side..'.png', name..'.png')
 
 	return card
 end
