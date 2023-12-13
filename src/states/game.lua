@@ -90,15 +90,18 @@ function Game:handle_received_data()
 	local data = Udp:receive_data()
 	if data then
 		if data.event == Events.Object and data.identifier then
-			Deck.enemy_possible_cards[data.identifier].char_x = data.obj.x
-			Deck.enemy_possible_cards[data.identifier].char_y = data.obj.y
-			-- self.enemy_objects[data.identifier] = Deck.enemy_possible_cards[data.identifier]
-			table.insert(self.enemy_objects, Deck.enemy_possible_cards[data.identifier])
+			if self.enemy_objects[data.identifier] then
+				Deck.enemy_possible_cards[data.identifier].char_x = data.obj.x
+				Deck.enemy_possible_cards[data.identifier].char_y = data.obj.y
+			end
+
+			self.enemy_objects[data.identifier]	= self.enemy_objects[data.identifier] or Deck.enemy_possible_cards[data.identifier]
 		end
 	end
 
 	return data
 end
+
 
 function Game:update(dt)
 	repeat
