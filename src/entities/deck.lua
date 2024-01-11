@@ -283,7 +283,7 @@ function love.mousepressed(x,y,button)
 						local Game = require('src.states.game')
 
 						-- insert a copy, so we can insert the same card more than once.
-						table.insert(Game.my_objects, Utils.copy_table(card))
+						Game.my_objects[tostring(Utils.copy_table(card))] = Utils.copy_table(card)
 
 						card.selected = false
 
