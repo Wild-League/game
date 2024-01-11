@@ -40,26 +40,26 @@ function Deck:load()
 		)
 	end
 
-	for i = 1, #self.enemy_deck do
-		local card = self.enemy_deck[i]
+	-- for i = 1, #self.enemy_deck do
+	-- 	local card = self.enemy_deck[i]
 
-		-- TODO: create columns for the images on card table, so we don't need to do this here
-		local new_card = Card:new(
-			true,
-			card.name,
-			card.type,
-			card.cooldown,
-			card.damage,
-			card.life,
-			card.speed,
-			card.attack_range,
-			card.width,
-			card.height
-		)
+	-- 	-- TODO: create columns for the images on card table, so we don't need to do this here
+	-- 	local new_card = Card:new(
+	-- 		true,
+	-- 		card.name,
+	-- 		card.type,
+	-- 		card.cooldown,
+	-- 		card.damage,
+	-- 		card.life,
+	-- 		card.speed,
+	-- 		card.attack_range,
+	-- 		card.width,
+	-- 		card.height
+	-- 	)
 
-		self.enemy_possible_cards[card.name] = new_card
-		self.enemy_deck[i] = new_card
-	end
+	-- 	self.enemy_possible_cards[card.name] = new_card
+	-- 	self.enemy_deck[i] = new_card
+	-- end
 
 	-- if greather than `selectable_cards`, should rotate cards
 	if #self.deck_selected > self.selectable_cards then

@@ -1,6 +1,8 @@
 local User = require('src.api.user')
 local Suit = require('lib.suit')
 
+-- TODO: draw the actual lobby
+
 local Lobby = {
 	user = {}
 }

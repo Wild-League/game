@@ -24,6 +24,7 @@ function Char:new(enemy, name, type, cooldown, damage, life, speed, attack_range
 		cooldown = cooldown,
 		damage = damage,
 		life = life,
+		current_life = life,
 		speed = speed,
 		attack_range = attack_range,
 		perception_range = attack_range * 2,
@@ -50,6 +51,7 @@ function Char:load_actions(char)
 				char.animations['walk']:update(dt)
 			end,
 			draw = function(x,y)
+				char:lifebar(x,y)
 				x = x - char.speed
 
 				char.animations['walk']:draw(char.img_walk, x,y)
@@ -63,18 +65,20 @@ function Char:load_actions(char)
 				char.animations['walk']:update(dt)
 			end,
 			draw = function(x,y)
+				char:lifebar(x,y)
+
 				local dx = char.nearest_enemy.x - x
-				 local dy = char.nearest_enemy.y - y
+				local dy = char.nearest_enemy.y - y
 
-				 local distance = math.sqrt(dx*dx + dy*dy)
+				local distance = math.sqrt(dx*dx + dy*dy)
 
-				 if distance > 1 then
-					local angle = math.atan2(dy, dx)
-					x = x + char.speed * math.cos(angle)
-					y = y + char.speed * math.sin(angle)
-				 end
+				if distance > 1 then
+				local angle = math.atan2(dy, dx)
+				x = x + char.speed * math.cos(angle)
+				y = y + char.speed * math.sin(angle)
+				end
 
-				 char.animations['walk']:draw(char.img_walk, x, y)
+				char.animations['walk']:draw(char.img_walk, x, y)
 				return x,y
 			end
 		},
@@ -83,6 +87,8 @@ function Char:load_actions(char)
 				char.animations['attack']:update(dt)
 			end,
 			draw = function(x,y)
+				char:lifebar(x,y)
+
 				if char.nearest_enemy.width == nil then
 					char.nearest_enemy = char:get_nearest_enemy(char.chars_around)
 				end
@@ -97,6 +103,7 @@ function Char:load_actions(char)
 end
 
 function Char:get_nearest_enemy(around)
+	-- print(#around)
 	for _,v in pairs(around) do
 		local distance_x = v.x - self.char_x
 		local distance_y = v.y - self.char_y
@@ -115,7 +122,22 @@ function Char:load_animations(char)
 		local number_frames = math.floor(char['img_'..value]:getWidth() / char.frame_width)
 
 		local grid = anim8.newGrid(char.frame_width, char.frame_height, char['img_'..value]:getWidth(), char['img_'..value]:getHeight())
-		local animation = anim8.newAnimation(grid('1-'..number_frames, 1), char.speed/10)
+
+		local animation = {}
+
+		if value == 'attack' then
+			animation = anim8.newAnimation(grid('1-'..number_frames, 1), char.speed/10, function()
+				-- print('life', self.nearest_enemy.current_life)
+
+				if self.nearest_enemy.current_life > 0 then
+					self.nearest_enemy.current_life = self.nearest_enemy.current_life - self.damage
+				else
+					self.nearest_enemy.current_life = 0
+				end
+			end)
+		else
+			animation = anim8.newAnimation(grid('1-'..number_frames, 1), char.speed/10)
+		end
 
 		char.animations[value] = animation
 	end
@@ -135,6 +157,13 @@ function Char:load_images(card, enemy)
 	card.img_walk = Image:load_from_url('http://localhost:9000/cards/'.. string.lower(name) ..'/walk-'..side..'.png', name..'.png')
 
 	return card
+end
+
+function Char:lifebar(x,y)
+	love.graphics.setColor(255/255,29/255,29/255)
+	love.graphics.rectangle("line", x - 10, y - 10, self.life, 5)
+	love.graphics.rectangle("fill", x - 10, y - 10, self.current_life, 5)
+	love.graphics.setColor(255,255,255)
 end
 
 return Char

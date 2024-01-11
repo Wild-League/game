@@ -38,8 +38,6 @@ function Card:new(enemy, name, type, cooldown, damage, life, speed, attack_range
 	end
 
 	card.animate.draw = function(char_, x, y, ...)
-		self:lifebar(x,y)
-
 		return char_.actions[char_.current_action].draw(x,y)
 	end
 
@@ -49,13 +47,6 @@ end
 -- only showed on preview
 function Card:perception_range()
 	return self.attack_range * 2
-end
-
-function Card:lifebar(x,y)
-	love.graphics.setColor(255/255,29/255,29/255)
-	love.graphics.rectangle("line", x - 10, y - 10, 50, 5)
-	love.graphics.rectangle("fill", x - 10, y - 10, 50, 5)
-	love.graphics.setColor(255,255,255)
 end
 
 function Card:show_name(x, y)

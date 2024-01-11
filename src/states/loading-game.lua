@@ -14,7 +14,6 @@ function LoadingGame:load()
 			local cards = DeckApi:get_cards('2')
 
 			love.thread.getChannel('cards'):push(cards)
-			love.thread.getChannel('enemy_cards'):push(cards)
 			love.thread.getChannel('state'):push('ready')
 		]]
 	):start()
@@ -22,11 +21,8 @@ end
 
 function LoadingGame:update()
 	local cards = love.thread.getChannel('cards'):pop()
-	local enemy_cards = love.thread.getChannel('enemy_cards'):pop()
 
 	if cards then
-		-- TODO: test only
-		Deck.enemy_deck = enemy_cards
 		Deck.deck_selected = cards
 	end
 

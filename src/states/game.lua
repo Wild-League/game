@@ -9,6 +9,7 @@ local Map = require('src.entities.map')
 
 local Deck = require('src.entities.deck')
 local Tower = require('src.entities.tower')
+local Card = require('src.entities.card')
 
 local Udp = require('src.network.udp')
 local Events = require('src.network.events')
@@ -17,6 +18,8 @@ local Timer = require('src.helpers.timer')
 
 local timer = 0
 local sti = require("lib.sti")
+
+local json = require('lib.json')
 
 local Game = {
 	user = {},
@@ -49,41 +52,41 @@ function Game:load()
 
 	Game.map = sti('assets/world.lua')
 
-	table.insert(self.my_objects, {
+	self.my_objects['tower_1'] = {
 		type = 'static',
 		x = Tower.positions_right.tower1.x,
 		y = Tower.positions_right.tower1.y,
 		w = Assets.TOWER_LEFT:getWidth() / 1.5,
 		h = Assets.TOWER_LEFT:getHeight() / 1.5,
 		current_life = Tower.current_life
-	})
+	}
 
-	table.insert(self.my_objects, {
+	self.my_objects['tower_2'] = {
 		type = 'static',
 		x = Tower.positions_right.tower2.x,
 		y = Tower.positions_right.tower2.y,
 		w = Assets.TOWER_LEFT:getWidth() / 1.5,
 		h = Assets.TOWER_LEFT:getHeight() / 1.5,
 		current_life = Tower.current_life
-	})
+	}
 
-	table.insert(self.enemy_objects, {
+	self.enemy_objects['tower_1'] = {
 		type = 'static',
 		x = Tower.positions_left.tower1.x,
 		y = Tower.positions_left.tower1.y,
 		w = Assets.TOWER_LEFT:getWidth() / 1.5,
 		h = Assets.TOWER_LEFT:getHeight() / 1.5,
 		current_life = Tower.current_life
-	})
+	}
 
-	table.insert(self.enemy_objects, {
+	self.enemy_objects['tower_2'] = {
 		type = 'static',
 		x = Tower.positions_left.tower2.x,
 		y = Tower.positions_left.tower2.y,
 		w = Assets.TOWER_LEFT:getWidth() / 1.5,
 		h = Assets.TOWER_LEFT:getHeight() / 1.5,
 		current_life = Tower.current_life
-	})
+	}
 end
 
 function Game:handle_received_data()
@@ -91,11 +94,24 @@ function Game:handle_received_data()
 	if data then
 		if data.event == Events.Object and data.identifier then
 			if self.enemy_objects[data.identifier] then
-				Deck.enemy_possible_cards[data.identifier].char_x = data.obj.x
-				Deck.enemy_possible_cards[data.identifier].char_y = data.obj.y
-			end
+				self.enemy_objects[data.identifier].char_x = data.obj.x
+				self.enemy_objects[data.identifier].char_y = data.obj.y
+				self.enemy_objects[data.identifier].current_action = data.obj.current_action
+			else
 
-			self.enemy_objects[data.identifier]	= self.enemy_objects[data.identifier] or Deck.enemy_possible_cards[data.identifier]
+				self.enemy_objects[data.identifier]	= Card:new(
+					true,
+					data.obj.name,
+					data.obj.type,
+					data.obj.cooldown,
+					data.obj.damage,
+					data.obj.life,
+					data.obj.speed,
+					data.obj.attack_range,
+					data.obj.width,
+					data.obj.height
+				)
+			end
 		end
 	end
 
@@ -135,21 +151,39 @@ function Game:update(dt)
 	for _,value in pairs(self.my_objects) do
 		if value.type ~= 'static' then
 			value.animate.update(value, dt)
+			Udp:send({ identifier=tostring(value), event=Events.Object, obj={
+				x = value.char_x,
+				y = value.char_y,
+				current_action = value.current_action,
+				name = value.name,
+				type = value.type,
+				cooldown = value.cooldown,
+				damage = value.damage,
+				life = value.life,
+				speed = value.speed,
+				attack_range = value.attack_range,
+				width = value.img_preview:getWidth() or 60,
+				height = value.img_preview:getHeight() or 60
+			} })
 		end
-
-		Udp:send({ identifier=value.name, event=Events.Object, obj={ x = value.char_x, y = value.char_y } })
 
 		for _,enemy in pairs(self.enemy_objects) do
 			if value.type ~= 'static' then
-				if Utils.circle_rect_collision(value.char_x + (value.img:getWidth() / 4), value.char_y + (value.img:getHeight() / 4),
-					value.perception_range, enemy.x, enemy.y, enemy.w, enemy.h) then
-					value.chars_around.key = enemy
-					value.current_action = 'follow'
+				local enemy_x = enemy.char_x and enemy.char_x or 0
+				local enemy_y = enemy.char_y and enemy.char_y or 0
+				local enemy_w = enemy.img_preview and enemy.img_preview:getWidth() or 60 -- default size
+				local enemy_h = enemy.img_preview and enemy.img_preview:getHeight() or 60
+
+				if Utils.circle_rect_collision(value.char_x + (value.img_preview:getWidth() / 2), value.char_y + (value.img_preview:getHeight() / 2),
+					value.perception_range, enemy_x, enemy_y, enemy_w, enemy_h) then
+						-- value.chars_around[enemy.name] = enemy
+						value.current_action = 'follow'
 				end
 
-				if Utils.circle_rect_collision(value.char_x + (value.img:getWidth() / 4), value.char_y + (value.img:getHeight() / 4), value.attack_range,
-					enemy.x, enemy.y, enemy.w, enemy.h) then
-						value.chars_around.key = enemy
+				if Utils.circle_rect_collision(value.char_x + (value.img_preview:getWidth() / 2), value.char_y + (value.img_preview:getHeight() / 2), value.attack_range,
+					enemy_x, enemy_y, enemy_w, enemy_h) then
+						table.insert(value.chars_around, enemy)
+						-- value.chars_around[enemy.name] = enemy
 						value.current_action = 'attack'
 						-- break
 				end
@@ -199,9 +233,6 @@ function Game:draw()
 		if card.type ~= 'static' then
 			card.char_x, card.char_y = card.animate.draw(card, card.char_x, card.char_y)
 		end
-		-- if card.type == 'character' then
-		-- 	card.char_x, card.char_y = card.animate.draw(card, card.char_x, card.char_y)
-		-- end
 	end
 
 	for _,enemy in pairs(self.enemy_objects) do

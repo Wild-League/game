@@ -1,14 +1,7 @@
 local Suit = require('lib.suit')
 local Layout = require('src.helpers.layout')
--- local Saver = require('src.helpers.saver')
--- local Assets = require('src.assets')
--- local Constants = require('src.constants')
 
 local Instance = require('src.api.instance')
-
--- local BACKGROUND = Assets.BACKGROUND_INITIAL
--- local BUTTON = Assets.BUTTON
--- local BUTTON_HOVER = Assets.BUTTON_HOVER
 
 local Initial = {
 	instance_input = { text = 'https://wildleague.org' },
