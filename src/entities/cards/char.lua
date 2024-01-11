@@ -5,7 +5,8 @@ local Char = {
 	-- some actions may use the same animation. e.g: walk | follow
 	possible_animations = {
 		'walk',
-		'attack'
+		'attack',
+		'death'
 	},
 	current_action = 'walk',
 	current_life = 0,
@@ -42,6 +43,10 @@ function Char:new(enemy, name, type, cooldown, damage, life, speed, attack_range
 	self.__index = self
 
 	return char
+end
+
+function Char.handle_chars_around(enemy)
+	Char.chars_around[tostring(enemy)] = enemy
 end
 
 function Char:load_actions(char)
@@ -96,6 +101,17 @@ function Char:load_actions(char)
 				char.animations['attack']:draw(char.img_attack,x,y)
 				return x,y
 			end
+		},
+		death = {
+			update = function(dt)
+				char.animations['death']:update(dt)
+			end,
+			draw = function(x,y)
+				char:lifebar(x,y)
+
+				char.animations['death']:draw(char.img_death,x,y)
+				return x,y
+			end
 		}
 	}
 
@@ -103,7 +119,6 @@ function Char:load_actions(char)
 end
 
 function Char:get_nearest_enemy(around)
-	-- print(#around)
 	for _,v in pairs(around) do
 		local distance_x = v.x - self.char_x
 		local distance_y = v.y - self.char_y
@@ -127,13 +142,17 @@ function Char:load_animations(char)
 
 		if value == 'attack' then
 			animation = anim8.newAnimation(grid('1-'..number_frames, 1), char.speed/10, function()
-				-- print('life', self.nearest_enemy.current_life)
-
-				if self.nearest_enemy.current_life > 0 then
-					self.nearest_enemy.current_life = self.nearest_enemy.current_life - self.damage
+				if char.nearest_enemy.current_life > 0 then
+					char.nearest_enemy.current_life = char.nearest_enemy.current_life - char.damage
 				else
-					self.nearest_enemy.current_life = 0
+					char.nearest_enemy.current_life = 0
 				end
+			end)
+		elseif value == 'death' then
+			animation = anim8.newAnimation(grid('1-'..number_frames, 1), char.speed/10, function()
+				local Game = require('src.states.game')
+				Game.enemy_objects[tostring(char.nearest_enemy)] = nil
+				Char.chars_around[tostring(char.nearest_enemy)] = nil
 			end)
 		else
 			animation = anim8.newAnimation(grid('1-'..number_frames, 1), char.speed/10)
