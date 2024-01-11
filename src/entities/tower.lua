@@ -22,22 +22,22 @@ function Tower:load()
 	self.positions_left = {
 		tower1 = {
 			x = center.width - 470,
-			y = center.height - 250
+			y = center.height - 200
 		},
 		tower2 = {
 			x = center.width - 470,
-			y = center.height + 250
+			y = center.height + 200
 		}
 	}
 
 	self.positions_right = {
 		tower1 = {
 			x = center.width + 470,
-			y = center.height - 250
+			y = center.height - 200
 		},
 		tower2 = {
 			x = center.width + 470,
-			y = center.height + 250
+			y = center.height + 200
 		}
 	}
 end
