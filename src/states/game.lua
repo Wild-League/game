@@ -19,8 +19,6 @@ local Timer = require('src.helpers.timer')
 local timer = 0
 local sti = require("lib.sti")
 
-local json = require('lib.json')
-
 local Game = {
 	user = {},
 	deck = {},
@@ -45,47 +43,57 @@ local message = ''
 setmetatable(Game, Game)
 
 function Game:load()
-	Tower:load()
-
 	Deck:load()
 	Game.deck = Deck.deck_selected
 
 	Game.map = sti('assets/world.lua')
 
-	self.my_objects['tower_1'] = {
+	local tower1 = Tower:new('left', 'top')
+
+	self.enemy_objects[tostring(tower1)] = {
 		type = 'static',
-		x = Tower.positions_right.tower1.x,
-		y = Tower.positions_right.tower1.y,
-		w = Assets.TOWER_LEFT:getWidth() / 1.5,
-		h = Assets.TOWER_LEFT:getHeight() / 1.5,
-		current_life = Tower.current_life
+		img = tower1.img,
+		x = tower1.x,
+		y = tower1.y,
+		w = tower1.w,
+		h = tower1.h,
+		current_life = tower1.current_life
 	}
 
-	self.my_objects['tower_2'] = {
+	local tower2 = Tower:new('left', 'bottom')
+
+	self.enemy_objects[tostring(tower2)] = {
 		type = 'static',
-		x = Tower.positions_right.tower2.x,
-		y = Tower.positions_right.tower2.y,
-		w = Assets.TOWER_LEFT:getWidth() / 1.5,
-		h = Assets.TOWER_LEFT:getHeight() / 1.5,
-		current_life = Tower.current_life
+		img = tower2.img,
+		x = tower2.x,
+		y = tower2.y,
+		w = tower2.w,
+		h = tower2.h,
+		current_life = tower2.current_life
 	}
 
-	self.enemy_objects['tower_1'] = {
+	local tower3 = Tower:new('right', 'top')
+
+	self.my_objects[tostring(tower3)] = {
 		type = 'static',
-		x = Tower.positions_left.tower1.x,
-		y = Tower.positions_left.tower1.y,
-		w = Assets.TOWER_LEFT:getWidth() / 1.5,
-		h = Assets.TOWER_LEFT:getHeight() / 1.5,
-		current_life = Tower.current_life
+		img = tower3.img,
+		x = tower3.x,
+		y = tower3.y,
+		w = tower3.w,
+		h = tower3.h,
+		current_life = tower3.current_life
 	}
 
-	self.enemy_objects['tower_2'] = {
+	local tower4 = Tower:new('right', 'bottom')
+
+	self.my_objects[tostring(tower4)] = {
 		type = 'static',
-		x = Tower.positions_left.tower2.x,
-		y = Tower.positions_left.tower2.y,
-		w = Assets.TOWER_LEFT:getWidth() / 1.5,
-		h = Assets.TOWER_LEFT:getHeight() / 1.5,
-		current_life = Tower.current_life
+		img = tower4.img,
+		x = tower4.x,
+		y = tower4.y,
+		w = tower4.w,
+		h = tower4.h,
+		current_life = tower4.current_life
 	}
 end
 
@@ -124,7 +132,6 @@ function Game:update(dt)
 		local data = self:handle_received_data()
 	until not data
 
-	Tower:update()
 	Deck:update(dt)
 
 	-- timer
@@ -151,6 +158,7 @@ function Game:update(dt)
 	for _,value in pairs(self.my_objects) do
 		if value.type ~= 'static' then
 			value.animate.update(value, dt)
+
 			Udp:send({ identifier=tostring(value), event=Events.Object, obj={
 				x = value.char_x,
 				y = value.char_y,
@@ -169,24 +177,41 @@ function Game:update(dt)
 
 		for _,enemy in pairs(self.enemy_objects) do
 			if value.type ~= 'static' then
-				local enemy_x = enemy.char_x and enemy.char_x or 0
-				local enemy_y = enemy.char_y and enemy.char_y or 0
-				local enemy_w = enemy.img_preview and enemy.img_preview:getWidth() or 60 -- default size
-				local enemy_h = enemy.img_preview and enemy.img_preview:getHeight() or 60
 
-				if Utils.circle_rect_collision(value.char_x + (value.img_preview:getWidth() / 2), value.char_y + (value.img_preview:getHeight() / 2),
-					value.perception_range, enemy_x, enemy_y, enemy_w, enemy_h) then
-						-- value.chars_around[enemy.name] = enemy
-						value.current_action = 'follow'
+				if enemy.type == 'static' then
+					if Utils.circle_rect_collision(value.char_x + (value.img_preview:getWidth() / 2), value.char_y + (value.img_preview:getHeight() / 2),
+						value.perception_range, enemy.x, enemy.y, enemy.w, enemy.h) then
+							value.handle_chars_around(enemy)
+							value.current_action = 'follow'
+					end
+
+					if Utils.circle_rect_collision(value.char_x + (value.img_preview:getWidth() / 2), value.char_y + (value.img_preview:getHeight() / 2),
+						value.attack_range, enemy.x, enemy.y, enemy.w, enemy.h) then
+							value.current_action = 'attack'
+					end
+				else
+					local enemy_x = enemy.char_x and enemy.char_x or 0
+					local enemy_y = enemy.char_y and enemy.char_y or 0
+					local enemy_w = enemy.img_preview and enemy.img_preview:getWidth() or 60 -- default size
+					local enemy_h = enemy.img_preview and enemy.img_preview:getHeight() or 60
+
+					if Utils.circle_rect_collision(value.char_x + (value.img_preview:getWidth() / 2), value.char_y + (value.img_preview:getHeight() / 2),
+						value.perception_range, enemy_x, enemy_y, enemy_w, enemy_h) then
+							value.handle_chars_around(enemy)
+							value.current_action = 'follow'
+					end
+
+					if Utils.circle_rect_collision(value.char_x + (value.img_preview:getWidth() / 2), value.char_y + (value.img_preview:getHeight() / 2), value.attack_range,
+						enemy_x, enemy_y, enemy_w, enemy_h) then
+
+							if enemy.current_life == 0 then
+								enemy.current_action = 'death'
+							end
+
+							value.current_action = 'attack'
+					end
 				end
 
-				if Utils.circle_rect_collision(value.char_x + (value.img_preview:getWidth() / 2), value.char_y + (value.img_preview:getHeight() / 2), value.attack_range,
-					enemy_x, enemy_y, enemy_w, enemy_h) then
-						table.insert(value.chars_around, enemy)
-						-- value.chars_around[enemy.name] = enemy
-						value.current_action = 'attack'
-						-- break
-				end
 			end
 		end
 	end
@@ -206,12 +231,6 @@ function Game:draw()
 	love.graphics.rectangle('fill', new_center.width, 10, 100, 50)
 	love.graphics.setColor(1,1,1)
 
-	-- TEST: fake char to be attacked, should remove after tests
-	-- love.graphics.rectangle("fill", 100, 100, 20, 20)
-
-	-- # tower
-	Tower:draw()
-
 	-- # deck
 	Deck:draw()
 
@@ -230,12 +249,22 @@ function Game:draw()
 
 	-- draw all objects
 	for _,card in pairs(self.my_objects) do
+		if card.type == 'static' then
+			love.graphics.draw(card.img, card.x, card.y)
+			Tower:lifebar(card.x + card.w / 4, card.y + card.h / 1.4, card.current_life)
+		end
+
 		if card.type ~= 'static' then
 			card.char_x, card.char_y = card.animate.draw(card, card.char_x, card.char_y)
 		end
 	end
 
 	for _,enemy in pairs(self.enemy_objects) do
+		if enemy.type == 'static' then
+			love.graphics.draw(enemy.img, enemy.x, enemy.y)
+			Tower:lifebar(enemy.x + enemy.w / 4, enemy.y + enemy.h / 1.4, enemy.current_life)
+		end
+
 		if enemy.type ~= 'static' then
 			enemy.char_x, enemy.char_y = enemy.animate.draw(enemy, enemy.char_x, enemy.char_y)
 		end

@@ -1,84 +1,71 @@
 local Layout = require('src.helpers.layout')
 local Assets = require('src.assets')
 
--- TODO: review
-local Tower = {
-	range = 220,
+local Tower = {}
 
-	life = 2000,
-	current_life = 2000,
+local default_props = {
+	life = 100,
+	current_life = 100,
 
-	shoot = {
-		x = 0,
-		y = 0
-	},
-
-	num_towers = 2
+	w = Assets.TOWER_LEFT:getWidth(),
+	h = Assets.TOWER_LEFT:getHeight()
 }
 
-function Tower:load()
-	local center = Layout:center(Assets.TOWER_LEFT:getWidth(), Assets.TOWER_LEFT:getHeight())
+local center = Layout:center(Assets.TOWER_LEFT:getWidth(), Assets.TOWER_LEFT:getHeight())
 
-	self.positions_left = {
-		tower1 = {
+local positions = {
+	left = {
+		top = {
 			x = center.width - 470,
 			y = center.height - 200
 		},
-		tower2 = {
+		bottom = {
 			x = center.width - 470,
 			y = center.height + 200
 		}
-	}
-
-	self.positions_right = {
-		tower1 = {
+	},
+	right = {
+		top = {
 			x = center.width + 470,
 			y = center.height - 200
 		},
-		tower2 = {
+		bottom = {
 			x = center.width + 470,
 			y = center.height + 200
 		}
 	}
-end
+}
 
-function Tower:update() end
-
-function Tower:draw()
-	-- towers from left
-	for i = 1, self.num_towers do
-		local pos = self.positions_left['tower'..i]
-		love.graphics.draw(Assets.TOWER_LEFT, pos.x, pos.y)
-
-		local w = Assets.TOWER_LEFT:getWidth() / 2
-		local h = Assets.TOWER_LEFT:getHeight() / 1.4
-
-		local x = pos.x + w / 2
-		local y = pos.y + h
-
-		self:lifebar(x, y)
+function Tower:new(side, position)
+	if side ~= 'left' and side ~= 'right' then
+		error('Invalid side for Tower')
 	end
 
-	-- towers from right
-	for i = 1, self.num_towers do
-		local pos = self.positions_right['tower'..i]
-		love.graphics.draw(Assets.TOWER_RIGHT, pos.x, pos.y)
-
-		local w = Assets.TOWER_RIGHT:getWidth() / 2
-		local h = Assets.TOWER_RIGHT:getHeight() / 1.4
-
-		local x = pos.x + w / 1.4
-		local y = pos.y + h
-
-		self:lifebar(x, y)
+	if position ~= 'top' and position ~= 'bottom' then
+		error('Invalid position for Tower')
 	end
+
+	local tower = {}
+
+	for key, value in pairs(default_props) do
+		tower[key] = value
+	end
+
+	tower.x = positions[side][position].x
+	tower.y = positions[side][position].y
+
+	tower.img = side == 'left' and Assets.TOWER_LEFT or Assets.TOWER_RIGHT
+
+	setmetatable(tower, self)
+	self.__index = self
+
+	return tower
 end
 
-function Tower:lifebar(x,y)
-	-- print(self.current_life)
+function Tower:lifebar(x,y, current_life)
 	love.graphics.setColor(255/255,29/255,29/255)
 	love.graphics.rectangle("line", x, y, 100, 5)
-	love.graphics.rectangle("fill", x, y, 100, 5)
+	love.graphics.rectangle("fill", x, y, current_life, 5)
 	love.graphics.setColor(255,255,255)
 end
 
