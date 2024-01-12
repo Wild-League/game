@@ -32,7 +32,8 @@ function Char:new(enemy, name, type, cooldown, damage, life, speed, attack_range
 		frame_width = width,
 		frame_height = height,
 		actions = {},
-		animations = {}
+		animations = {},
+		enemy = enemy
 	}
 
 	char = self:load_images(char, enemy)
@@ -56,7 +57,6 @@ function Char:load_actions(char)
 				char.animations['walk']:update(dt)
 			end,
 			draw = function(x,y)
-				char:lifebar(x,y)
 				x = x - char.speed
 
 				char.animations['walk']:draw(char.img_walk, x,y)
@@ -70,8 +70,6 @@ function Char:load_actions(char)
 				char.animations['walk']:update(dt)
 			end,
 			draw = function(x,y)
-				char:lifebar(x,y)
-
 				local dx = char.nearest_enemy.x - x
 				local dy = char.nearest_enemy.y - y
 
@@ -92,8 +90,6 @@ function Char:load_actions(char)
 				char.animations['attack']:update(dt)
 			end,
 			draw = function(x,y)
-				char:lifebar(x,y)
-
 				if char.nearest_enemy.width == nil then
 					char.nearest_enemy = char:get_nearest_enemy(char.chars_around)
 				end
@@ -107,8 +103,6 @@ function Char:load_actions(char)
 				char.animations['death']:update(dt)
 			end,
 			draw = function(x,y)
-				char:lifebar(x,y)
-
 				char.animations['death']:draw(char.img_death,x,y)
 				return x,y
 			end
@@ -151,8 +145,15 @@ function Char:load_animations(char)
 		elseif value == 'death' then
 			animation = anim8.newAnimation(grid('1-'..number_frames, 1), char.speed/10, function()
 				local Game = require('src.states.game')
-				Game.enemy_objects[tostring(char.nearest_enemy)] = nil
-				Char.chars_around[tostring(char.nearest_enemy)] = nil
+
+				-- why the char does not disappear?
+				if char.enemy then
+					Game.enemy_objects[tostring(char)] = nil
+				else
+					Game.my_objects[tostring(char)] = nil
+				end
+
+				-- Game.enemy_objects[tostring(char.nearest_enemy)] = nil
 			end)
 		else
 			animation = anim8.newAnimation(grid('1-'..number_frames, 1), char.speed/10)
@@ -178,10 +179,10 @@ function Char:load_images(card, enemy)
 	return card
 end
 
-function Char:lifebar(x,y)
+function Char:lifebar(x,y, current_life)
 	love.graphics.setColor(255/255,29/255,29/255)
 	love.graphics.rectangle("line", x - 10, y - 10, self.life, 5)
-	love.graphics.rectangle("fill", x - 10, y - 10, self.current_life, 5)
+	love.graphics.rectangle("fill", x - 10, y - 10, current_life, 5)
 	love.graphics.setColor(255,255,255)
 end
 

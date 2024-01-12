@@ -11,7 +11,9 @@ local Events = {
 	-- when match was found, it should occur after matchmaking event
 	MatchFound = 'match_found',
 	-- represent any object sent, like a card played.
-	Object = 'object'
+	Object = 'object',
+	-- represent any object sent, like a card played. (from enemy)
+	EnemyObject = 'enemy_object',
 }
 
 return Events

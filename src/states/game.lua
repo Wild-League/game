@@ -99,8 +99,8 @@ end
 
 function Game:handle_received_data()
 	local data = Udp:receive_data()
-	if data then
-		if data.event == Events.Object and data.identifier then
+	if data and data.identifier then
+		if data.event == Events.Object then
 			if self.enemy_objects[data.identifier] then
 				self.enemy_objects[data.identifier].char_x = data.obj.x
 				self.enemy_objects[data.identifier].char_y = data.obj.y
@@ -119,6 +119,13 @@ function Game:handle_received_data()
 					data.obj.width,
 					data.obj.height
 				)
+			end
+		end
+
+		if data.event == Events.EnemyObject then
+			if self.my_objects[data.identifier] then
+				self.my_objects[data.identifier].current_life = data.obj.current_life
+				-- self.my_objects[data.identifier].current_action = data.obj.current_action
 			end
 		end
 	end
@@ -175,7 +182,7 @@ function Game:update(dt)
 			} })
 		end
 
-		for _,enemy in pairs(self.enemy_objects) do
+		for k,enemy in pairs(self.enemy_objects) do
 			if value.type ~= 'static' then
 
 				if enemy.type == 'static' then
@@ -189,6 +196,10 @@ function Game:update(dt)
 						value.attack_range, enemy.x, enemy.y, enemy.w, enemy.h) then
 							value.current_action = 'attack'
 					end
+
+					Udp:send({ identifier=k, event=Events.EnemyObject, obj={
+						current_life = enemy.current_life
+					} })
 				else
 					local enemy_x = enemy.char_x and enemy.char_x or 0
 					local enemy_y = enemy.char_y and enemy.char_y or 0
@@ -209,9 +220,17 @@ function Game:update(dt)
 							end
 
 							value.current_action = 'attack'
-					end
-				end
 
+							if value.current_life == 0 then
+								value.current_action = 'death'
+							end
+					end
+
+					Udp:send({ identifier=k, event=Events.EnemyObject, obj={
+						current_life = enemy.current_life,
+						current_action = enemy.current_action
+					} })
+				end
 			end
 		end
 	end
@@ -256,6 +275,7 @@ function Game:draw()
 
 		if card.type ~= 'static' then
 			card.char_x, card.char_y = card.animate.draw(card, card.char_x, card.char_y)
+			card:lifebar(card.char_x, card.char_y, card.current_life)
 		end
 	end
 
@@ -267,6 +287,7 @@ function Game:draw()
 
 		if enemy.type ~= 'static' then
 			enemy.char_x, enemy.char_y = enemy.animate.draw(enemy, enemy.char_x, enemy.char_y)
+			enemy:lifebar(enemy.char_x, enemy.char_y, enemy.current_life)
 		end
 	end
 end
