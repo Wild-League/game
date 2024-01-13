@@ -12,8 +12,10 @@ local Events = {
 	MatchFound = 'match_found',
 	-- represent any object sent, like a card played.
 	Object = 'object',
-	-- represent any object sent, like a card played. (from enemy)
 	EnemyObject = 'enemy_object',
+	-- represent a list of objects
+	Objects = 'objects',
+	EnemyObjects = 'enemy_objects'
 }
 
 return Events

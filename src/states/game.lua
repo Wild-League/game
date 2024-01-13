@@ -1,257 +1,110 @@
 local Suit = require('lib.suit')
 local Layout = require('src.helpers.layout')
-
-local Assets = require('src.assets')
-local Constants = require('src.constants')
-
 local Utils = require('src.helpers.utils')
-local Map = require('src.entities.map')
 
-local Deck = require('src.entities.deck')
+local Map = require('src.entities.map')
 local Tower = require('src.entities.tower')
+local Deck = require('src.entities.deck')
+local Timer = require('src.helpers.timer')
 local Card = require('src.entities.card')
 
 local Udp = require('src.network.udp')
 local Events = require('src.network.events')
 
-local Timer = require('src.helpers.timer')
-
-local timer = 0
-local sti = require("lib.sti")
-
 local Game = {
-	user = {},
-	deck = {},
-
-	--[[
-		TODO: find another way to implement it
-
-		have all the objects in the game
-		so we can compare collisions easily
-		type = character | building | spells
-	]]
+	all_objects = {},
 	my_objects = {},
 	enemy_objects = {},
-
-	card_selected = nil
+	deck = {}
 }
 
--- used for message_timer
-local should_message = false
-local message = ''
-
-setmetatable(Game, Game)
-
 function Game:load()
+	Map:load()
+	Game:load_towers()
+
 	Deck:load()
 	Game.deck = Deck.deck_selected
-
-	Game.map = sti('assets/world.lua')
-
-	local tower1 = Tower:new('left', 'top')
-
-	self.enemy_objects[tostring(tower1)] = {
-		type = 'static',
-		img = tower1.img,
-		x = tower1.x,
-		y = tower1.y,
-		w = tower1.w,
-		h = tower1.h,
-		current_life = tower1.current_life
-	}
-
-	local tower2 = Tower:new('left', 'bottom')
-
-	self.enemy_objects[tostring(tower2)] = {
-		type = 'static',
-		img = tower2.img,
-		x = tower2.x,
-		y = tower2.y,
-		w = tower2.w,
-		h = tower2.h,
-		current_life = tower2.current_life
-	}
-
-	local tower3 = Tower:new('right', 'top')
-
-	self.my_objects[tostring(tower3)] = {
-		type = 'static',
-		img = tower3.img,
-		x = tower3.x,
-		y = tower3.y,
-		w = tower3.w,
-		h = tower3.h,
-		current_life = tower3.current_life
-	}
-
-	local tower4 = Tower:new('right', 'bottom')
-
-	self.my_objects[tostring(tower4)] = {
-		type = 'static',
-		img = tower4.img,
-		x = tower4.x,
-		y = tower4.y,
-		w = tower4.w,
-		h = tower4.h,
-		current_life = tower4.current_life
-	}
 end
-
-function Game:handle_received_data()
-	local data = Udp:receive_data()
-	if data and data.identifier then
-		if data.event == Events.Object then
-			if self.enemy_objects[data.identifier] then
-				self.enemy_objects[data.identifier].char_x = data.obj.x
-				self.enemy_objects[data.identifier].char_y = data.obj.y
-				self.enemy_objects[data.identifier].current_action = data.obj.current_action
-			else
-
-				self.enemy_objects[data.identifier]	= Card:new(
-					true,
-					data.obj.name,
-					data.obj.type,
-					data.obj.cooldown,
-					data.obj.damage,
-					data.obj.life,
-					data.obj.speed,
-					data.obj.attack_range,
-					data.obj.width,
-					data.obj.height
-				)
-			end
-		end
-
-		if data.event == Events.EnemyObject then
-			if self.my_objects[data.identifier] then
-				self.my_objects[data.identifier].current_life = data.obj.current_life
-				-- self.my_objects[data.identifier].current_action = data.obj.current_action
-			end
-		end
-	end
-
-	return data
-end
-
 
 function Game:update(dt)
 	repeat
 		local data = self:handle_received_data()
 	until not data
 
+
+	-- repeat
+	-- 	local data = self:handle_tower_data()
+	-- until not data
+
+	self.all_objects = Utils.merge_tables(self.my_objects, self.enemy_objects)
+
 	Deck:update(dt)
 
-	-- timer
-	local new_center = Layout:center(100, 100)
-	love.graphics.setColor(1,1,1)
-	Suit.Label(Timer:match(dt), new_center.width, 35, 100, 0)
-	love.graphics.setColor(1,1,1)
-
-	Game:message_timer(dt)
-
-	-- TODO: implement function to show player details
-	-- nickname, level
-	-- Suit.Label(Game.user.nickname, { align='center', font = new_font}, 10, 680, 200, 30)
-	-- Suit.Label('lv. '..Game.user.level, { align='center', font = new_font  }, 10, 695, 200, 30)
+	Game:timer(dt)
 
 	for _,card in pairs(self.deck) do
 		if card.selected then
-			local x,y = love.mouse.getPosition()
+			local x, y = love.mouse.getPosition()
 			card.char_x = x
 			card.char_y = y
 		end
 	end
 
-	for _,value in pairs(self.my_objects) do
-		if value.type ~= 'static' then
-			value.animate.update(value, dt)
-
-			Udp:send({ identifier=tostring(value), event=Events.Object, obj={
-				x = value.char_x,
-				y = value.char_y,
-				current_action = value.current_action,
-				name = value.name,
-				type = value.type,
-				cooldown = value.cooldown,
-				damage = value.damage,
-				life = value.life,
-				speed = value.speed,
-				attack_range = value.attack_range,
-				width = value.img_preview:getWidth() or 60,
-				height = value.img_preview:getHeight() or 60
-			} })
+	for key, obj in pairs(self.all_objects) do
+		-- remove from list if off-screen
+		if obj.char_x < -50 or obj.char_x > (love.graphics.getWidth() + 50) then
+			self.all_objects[key] = nil
+			break
 		end
 
-		for k,enemy in pairs(self.enemy_objects) do
-			if value.type ~= 'static' then
-
-				if enemy.type == 'static' then
-					if Utils.circle_rect_collision(value.char_x + (value.img_preview:getWidth() / 2), value.char_y + (value.img_preview:getHeight() / 2),
-						value.perception_range, enemy.x, enemy.y, enemy.w, enemy.h) then
-							value.handle_chars_around(enemy)
-							value.current_action = 'follow'
-					end
-
-					if Utils.circle_rect_collision(value.char_x + (value.img_preview:getWidth() / 2), value.char_y + (value.img_preview:getHeight() / 2),
-						value.attack_range, enemy.x, enemy.y, enemy.w, enemy.h) then
-							value.current_action = 'attack'
-					end
-
-					Udp:send({ identifier=k, event=Events.EnemyObject, obj={
-						current_life = enemy.current_life
-					} })
-				else
-					local enemy_x = enemy.char_x and enemy.char_x or 0
-					local enemy_y = enemy.char_y and enemy.char_y or 0
-					local enemy_w = enemy.img_preview and enemy.img_preview:getWidth() or 60 -- default size
-					local enemy_h = enemy.img_preview and enemy.img_preview:getHeight() or 60
-
-					if Utils.circle_rect_collision(value.char_x + (value.img_preview:getWidth() / 2), value.char_y + (value.img_preview:getHeight() / 2),
-						value.perception_range, enemy_x, enemy_y, enemy_w, enemy_h) then
-							value.handle_chars_around(enemy)
-							value.current_action = 'follow'
-					end
-
-					if Utils.circle_rect_collision(value.char_x + (value.img_preview:getWidth() / 2), value.char_y + (value.img_preview:getHeight() / 2), value.attack_range,
-						enemy_x, enemy_y, enemy_w, enemy_h) then
-
-							if enemy.current_life == 0 then
-								enemy.current_action = 'death'
-							end
-
-							value.current_action = 'attack'
-
-							if value.current_life == 0 then
-								value.current_action = 'death'
-							end
-					end
-
-					Udp:send({ identifier=k, event=Events.EnemyObject, obj={
-						current_life = enemy.current_life,
-						current_action = enemy.current_action
-					} })
-				end
+		if obj.type ~= 'tower' then
+			if self.my_objects[key] then
+				Udp:send({ event=Events.Object, identifier=key, obj={
+					key = key,
+					name = obj.name,
+					type = obj.type,
+					damage = obj.damage,
+					cooldown = obj.cooldown,
+					speed = obj.speed,
+					attack_range = obj.attack_range,
+					life = obj.life,
+					char_x = obj.char_x,
+					char_y = obj.char_y,
+					current_action = obj.current_action,
+					current_life = obj.current_life,
+					width = obj.img_preview:getWidth() or 60,
+					height = obj.img_preview:getHeight() or 60
+				} })
 			end
+		-- else
+		-- 	Udp:send({ event=Events.Object, identifier=key, obj={ current_life = obj.current_life } })
 		end
+
+		obj.update(obj, dt)
 	end
 
-	for _, enemy in pairs(self.enemy_objects) do
-		if enemy.type ~= 'static' then
-			enemy.animate.update(enemy, dt)
+	for _, obj in pairs(self.my_objects) do
+		if obj.type ~= 'tower' then
+			for _, enemy in pairs(self.enemy_objects) do
+				if Utils.circle_rect_collision(obj.char_x, obj.char_y, obj.perception_range, enemy.char_x, enemy.char_y, enemy.w, enemy.h) then
+					obj.handle_chars_around(enemy)
+					obj.current_action = 'follow'
+				end
+
+				if Utils.circle_rect_collision(obj.char_x, obj.char_y, obj.attack_range, enemy.char_x, enemy.char_y, enemy.w, enemy.h) then
+					obj.current_action = 'attack'
+				end
+			end
 		end
 	end
 end
 
 function Game:draw()
-	self.map:draw()
+	Map:draw()
 
-	local new_center = Layout:center(100, 100)
-	love.graphics.setColor(0,0,0, 0.8)
-	love.graphics.rectangle('fill', new_center.width, 10, 100, 50)
-	love.graphics.setColor(1,1,1)
-
-	-- # deck
 	Deck:draw()
+
+	Game:timer_background()
 
 	for _, card in pairs(self.deck) do
 		if card.selected then
@@ -266,65 +119,74 @@ function Game:draw()
 		end
 	end
 
-	-- draw all objects
-	for _,card in pairs(self.my_objects) do
-		if card.type == 'static' then
-			love.graphics.draw(card.img, card.x, card.y)
-			Tower:lifebar(card.x + card.w / 4, card.y + card.h / 1.4, card.current_life)
-		end
-
-		if card.type ~= 'static' then
-			card.char_x, card.char_y = card.animate.draw(card, card.char_x, card.char_y)
-			card:lifebar(card.char_x, card.char_y, card.current_life)
-		end
+	for _, obj in pairs(self.all_objects) do
+		obj.char_x, obj.char_y = obj.draw(obj, obj.current_life, obj.char_x, obj.char_y)
 	end
+end
 
-	for _,enemy in pairs(self.enemy_objects) do
-		if enemy.type == 'static' then
-			love.graphics.draw(enemy.img, enemy.x, enemy.y)
-			Tower:lifebar(enemy.x + enemy.w / 4, enemy.y + enemy.h / 1.4, enemy.current_life)
+-- private functions ---------
+
+function Game:handle_received_data()
+	local data = Udp:receive_data()
+
+	if data then
+		if data.event == Events.EnemyObject then
+			if self.enemy_objects[data.identifier] then
+				self.enemy_objects[data.identifier].key = data.obj.key
+				self.enemy_objects[data.identifier].char_x = data.obj.char_x
+				self.enemy_objects[data.identifier].char_y = data.obj.char_y
+				self.enemy_objects[data.identifier].current_action = data.obj.current_action
+			else
+				self.enemy_objects[data.identifier] = Card:new(
+					true,
+					data.obj.name,
+					data.obj.type,
+					data.obj.cooldown,
+					data.obj.damage,
+					data.obj.life,
+					data.obj.speed,
+					data.obj.attack_range,
+					data.obj.width,
+					data.obj.height
+				)
+			end
+
+			self.enemy_objects[data.identifier].key = data.obj.key
 		end
 
-		if enemy.type ~= 'static' then
-			enemy.char_x, enemy.char_y = enemy.animate.draw(enemy, enemy.char_x, enemy.char_y)
-			enemy:lifebar(enemy.char_x, enemy.char_y, enemy.current_life)
+		if data.event == Events.Object and self.my_objects[data.identifier] then
+			self.my_objects[data.identifier].key = data.obj.key
+			self.my_objects[data.identifier].current_life = data.obj.current_life
 		end
 	end
 end
 
--- shows the time passed in the game
-function Game:timer(dt)
-	timer = timer + dt
+function Game:handle_tower_data()
+	local data = Udp:receive_data()
 
-	local seconds = tostring(math.floor(timer % 60))
-	local minutes = tostring(math.floor(timer / 60))
+	if data then
+		if data.event == Events.EnemyObject then
+			self.enemy_objects[data.identifier].current_life = data.obj.current_life
+		end
 
-	if tonumber(seconds) <= 9 then
-		seconds = '0'..seconds
-	end
-	if tonumber(minutes) <= 9 then
-		minutes = '0'..minutes
-	end
-
-	local time = minutes..':'..seconds
-
-	local new_center = Layout:center(100, 200)
-
-	Suit.Label(time, { align='center'}, new_center.width, 10, 100, 200)
-end
-
-local countdown_message = 5
--- TODO: create class for messages like this
-function Game:message_timer(dt)
-	countdown_message = countdown_message - dt
-
-	if should_message then
-		Suit.Label(message, {align='center'},100,25,100,200)
-		if countdown_message <= 0 then
-			countdown_message = countdown_message + 5
-			should_message = false
+		if data.event == Events.Object then
+			self.my_objects[data.identifier].current_life = data.obj.current_life
 		end
 	end
+end
+
+function Game:load_towers()
+	local tower1 = Tower:new('left', 'top')
+	self.enemy_objects[tostring(tower1)] = tower1
+
+	local tower2 = Tower:new('left', 'bottom')
+	self.enemy_objects[tostring(tower2)] = tower2
+
+	local tower3 = Tower:new('right', 'top')
+	self.my_objects[tostring(tower3)] = tower3
+
+	local tower4 = Tower:new('right', 'bottom')
+	self.my_objects[tostring(tower4)] = tower4
 end
 
 function Game:preview_char(card,x,y)
@@ -339,10 +201,18 @@ function Game:preview_char(card,x,y)
 	love.graphics.setColor(1,1,1)
 end
 
-function love.resize(w,h)
-	if CONTEXT.current == 'game' then
-		Game.map:resize(w, h)
-	end
+function Game:timer(dt)
+	local new_center = Layout:center(100, 100)
+	love.graphics.setColor(1,1,1)
+	Suit.Label(Timer:match(dt), new_center.width, 35, 100, 0)
+	love.graphics.setColor(1,1,1)
+end
+
+function Game:timer_background()
+	local new_center = Layout:center(100, 100)
+	love.graphics.setColor(0,0,0, 0.8)
+	love.graphics.rectangle('fill', new_center.width, 10, 100, 50)
+	love.graphics.setColor(1,1,1)
 end
 
 return Game

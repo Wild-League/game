@@ -1,6 +1,9 @@
 local anim8 = require('lib.anim8')
 local Image = require('src.helpers.image')
 
+local Udp = require('src.network.udp')
+local Events = require('src.network.events')
+
 local Char = {
 	-- some actions may use the same animation. e.g: walk | follow
 	possible_animations = {
@@ -12,8 +15,8 @@ local Char = {
 	current_life = 0,
 	chars_around = {},
 	nearest_enemy = {
-		x = 0,
-		y = 0,
+		char_x = 0,
+		char_y = 0,
 		current_life = 0
 	}
 }
@@ -48,6 +51,7 @@ end
 
 function Char.handle_chars_around(enemy)
 	Char.chars_around[tostring(enemy)] = enemy
+	Char.chars_around[tostring(enemy)].key = tostring(enemy)
 end
 
 function Char:load_actions(char)
@@ -56,11 +60,12 @@ function Char:load_actions(char)
 			update = function(dt)
 				char.animations['walk']:update(dt)
 			end,
-			draw = function(x,y)
+			draw = function(x, y, current_life)
+				char:lifebar(x,y, current_life)
 				x = x - char.speed
 
-				char.animations['walk']:draw(char.img_walk, x,y)
-				return x,y
+				char.animations['walk']:draw(char.img_walk, x, y)
+				return x, y
 			end
 		},
 		follow = {
@@ -69,9 +74,11 @@ function Char:load_actions(char)
 
 				char.animations['walk']:update(dt)
 			end,
-			draw = function(x,y)
-				local dx = char.nearest_enemy.x - x
-				local dy = char.nearest_enemy.y - y
+			draw = function(x,y, current_life)
+				char:lifebar(x,y, current_life)
+
+				local dx = char.nearest_enemy.char_x - x
+				local dy = char.nearest_enemy.char_y - y
 
 				local distance = math.sqrt(dx*dx + dy*dy)
 
@@ -89,7 +96,9 @@ function Char:load_actions(char)
 			update = function(dt)
 				char.animations['attack']:update(dt)
 			end,
-			draw = function(x,y)
+			draw = function(x,y, current_life)
+				char:lifebar(x,y, current_life)
+
 				if char.nearest_enemy.width == nil then
 					char.nearest_enemy = char:get_nearest_enemy(char.chars_around)
 				end
@@ -102,7 +111,8 @@ function Char:load_actions(char)
 			update = function(dt)
 				char.animations['death']:update(dt)
 			end,
-			draw = function(x,y)
+			draw = function(x,y, current_life)
+				char:lifebar(x,y, current_life)
 				char.animations['death']:draw(char.img_death,x,y)
 				return x,y
 			end
@@ -114,11 +124,11 @@ end
 
 function Char:get_nearest_enemy(around)
 	for _,v in pairs(around) do
-		local distance_x = v.x - self.char_x
-		local distance_y = v.y - self.char_y
+		local distance_x = v.char_x - self.char_x
+		local distance_y = v.char_y - self.char_y
 
-		if (distance_x >= (self.nearest_enemy.x - self.char_x))
-			and (distance_y >= (self.nearest_enemy.y - self.char_y)) then
+		if (distance_x >= (self.nearest_enemy.char_x - self.char_x))
+			and (distance_y >= (self.nearest_enemy.char_y - self.char_y)) then
 			return v
 		end
 	end
@@ -138,6 +148,12 @@ function Char:load_animations(char)
 			animation = anim8.newAnimation(grid('1-'..number_frames, 1), char.speed/10, function()
 				if char.nearest_enemy.current_life > 0 then
 					char.nearest_enemy.current_life = char.nearest_enemy.current_life - char.damage
+
+					Udp:send({ identifier=char.nearest_enemy.key, event=Events.EnemyObject, obj={
+						key = char.nearest_enemy.key,
+						name = char.nearest_enemy.name,
+						current_life = char.nearest_enemy.current_life
+					} })
 				else
 					char.nearest_enemy.current_life = 0
 				end

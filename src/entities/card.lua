@@ -14,8 +14,7 @@ local default_props = {
 	preview_card = false,
 	is_card_loading = false,
 	frame_width = 0,
-	frame_height = 0,
-	animate = {}
+	frame_height = 0
 }
 
 function Card:new(enemy, name, type, cooldown, damage, life, speed, attack_range, width, height)
@@ -33,12 +32,12 @@ function Card:new(enemy, name, type, cooldown, damage, life, speed, attack_range
 		card[key] = value
 	end
 
-	card.animate.update = function(char_, dt)
-		return char_.actions[char_.current_action].update(dt)
+	card.update = function(card_, dt)
+		return card_.actions[card_.current_action].update(dt)
 	end
 
-	card.animate.draw = function(char_, x, y, ...)
-		return char_.actions[char_.current_action].draw(x,y)
+	card.draw = function(card_, current_life, x, y)
+		return card_.actions[card_.current_action].draw(x,y, current_life)
 	end
 
 	return card

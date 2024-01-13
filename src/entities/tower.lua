@@ -4,6 +4,7 @@ local Assets = require('src.assets')
 local Tower = {}
 
 local default_props = {
+	type = 'tower',
 	life = 100,
 	current_life = 100,
 
@@ -51,15 +52,31 @@ function Tower:new(side, position)
 		tower[key] = value
 	end
 
-	tower.x = positions[side][position].x
-	tower.y = positions[side][position].y
+	tower.char_x = positions[side][position].x
+	tower.char_y = positions[side][position].y
 
 	tower.img = side == 'left' and Assets.TOWER_LEFT or Assets.TOWER_RIGHT
+
+	tower.update = function(tower_, dt)
+		return Tower.update(tower_, dt)
+	end
+
+	tower.draw = function(tower_, current_life)
+		return Tower.draw(tower_, current_life)
+	end
 
 	setmetatable(tower, self)
 	self.__index = self
 
 	return tower
+end
+
+function Tower:update(dt) end
+
+function Tower.draw(tower_, current_life)
+	love.graphics.draw(tower_.img, tower_.char_x, tower_.char_y)
+	Tower:lifebar(tower_.char_x + tower_.w / 4, tower_.char_y + tower_.h / 1.4, current_life)
+	return tower_.char_x, tower_.char_y
 end
 
 function Tower:lifebar(x,y, current_life)

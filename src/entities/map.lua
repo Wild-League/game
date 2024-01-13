@@ -1,4 +1,5 @@
 local Layout = require('src.helpers.layout')
+local sti = require("lib.sti")
 
 local Map = {
 	-- indicates the max value in x to each side
@@ -9,8 +10,17 @@ local Map = {
 	right_side = {
 		w = 0,
 		h = 0
-	}
+	},
+	map = {}
 }
+
+function Map:load()
+	self.map = sti('assets/world.lua')
+end
+
+function Map:draw()
+	self.map:draw()
+end
 
 function Map:sides()
 	local center = Layout:center(2, 2)
