@@ -13,9 +13,9 @@ local Events = {
 	-- represent any object sent, like a card played.
 	Object = 'object',
 	EnemyObject = 'enemy_object',
-	-- represent a list of objects
-	Objects = 'objects',
-	EnemyObjects = 'enemy_objects'
+
+	Tower = 'tower',
+	EnemyTower = 'enemy_tower'
 }
 
 return Events

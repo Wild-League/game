@@ -50,8 +50,8 @@ function Char:new(enemy, name, type, cooldown, damage, life, speed, attack_range
 end
 
 function Char.handle_chars_around(enemy)
-	Char.chars_around[tostring(enemy)] = enemy
-	Char.chars_around[tostring(enemy)].key = tostring(enemy)
+	Char.chars_around[enemy.key] = enemy
+	Char.chars_around[enemy.key].key = enemy.key
 end
 
 function Char:load_actions(char)
@@ -99,9 +99,7 @@ function Char:load_actions(char)
 			draw = function(x,y, current_life)
 				char:lifebar(x,y, current_life)
 
-				if char.nearest_enemy.width == nil then
-					char.nearest_enemy = char:get_nearest_enemy(char.chars_around)
-				end
+				char.nearest_enemy = char:get_nearest_enemy(char.chars_around)
 
 				char.animations['attack']:draw(char.img_attack,x,y)
 				return x,y
@@ -149,11 +147,19 @@ function Char:load_animations(char)
 				if char.nearest_enemy.current_life > 0 then
 					char.nearest_enemy.current_life = char.nearest_enemy.current_life - char.damage
 
-					Udp:send({ identifier=char.nearest_enemy.key, event=Events.EnemyObject, obj={
-						key = char.nearest_enemy.key,
-						name = char.nearest_enemy.name,
-						current_life = char.nearest_enemy.current_life
-					} })
+					if char.nearest_enemy.type == 'tower' then
+						Udp:send({ identifier=char.nearest_enemy.key, event=Events.EnemyTower, obj={
+							key = char.nearest_enemy.key,
+							current_life = char.nearest_enemy.current_life
+						} })
+					else
+						Udp:send({ identifier=char.nearest_enemy.key, event=Events.EnemyObject, obj={
+							key = char.nearest_enemy.key,
+							name = char.nearest_enemy.name,
+							current_life = char.nearest_enemy.current_life
+						} })
+					end
+
 				else
 					char.nearest_enemy.current_life = 0
 				end

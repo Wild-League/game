@@ -31,11 +31,6 @@ function Game:update(dt)
 		local data = self:handle_received_data()
 	until not data
 
-
-	-- repeat
-	-- 	local data = self:handle_tower_data()
-	-- until not data
-
 	self.all_objects = Utils.merge_tables(self.my_objects, self.enemy_objects)
 
 	Deck:update(dt)
@@ -57,27 +52,23 @@ function Game:update(dt)
 			break
 		end
 
-		if obj.type ~= 'tower' then
-			if self.my_objects[key] then
-				Udp:send({ event=Events.Object, identifier=key, obj={
-					key = key,
-					name = obj.name,
-					type = obj.type,
-					damage = obj.damage,
-					cooldown = obj.cooldown,
-					speed = obj.speed,
-					attack_range = obj.attack_range,
-					life = obj.life,
-					char_x = obj.char_x,
-					char_y = obj.char_y,
-					current_action = obj.current_action,
-					current_life = obj.current_life,
-					width = obj.img_preview:getWidth() or 60,
-					height = obj.img_preview:getHeight() or 60
-				} })
-			end
-		-- else
-		-- 	Udp:send({ event=Events.Object, identifier=key, obj={ current_life = obj.current_life } })
+		if self.my_objects[key] and obj.type ~= 'tower' then
+			Udp:send({ event=Events.Object, identifier=key, obj={
+				key = key,
+				name = obj.name,
+				type = obj.type,
+				damage = obj.damage,
+				cooldown = obj.cooldown,
+				speed = obj.speed,
+				attack_range = obj.attack_range,
+				life = obj.life,
+				char_x = obj.char_x,
+				char_y = obj.char_y,
+				current_action = obj.current_action,
+				current_life = obj.current_life,
+				width = obj.img_preview:getWidth() or 60,
+				height = obj.img_preview:getHeight() or 60
+			} })
 		end
 
 		obj.update(obj, dt)
@@ -158,35 +149,43 @@ function Game:handle_received_data()
 			self.my_objects[data.identifier].key = data.obj.key
 			self.my_objects[data.identifier].current_life = data.obj.current_life
 		end
-	end
-end
 
-function Game:handle_tower_data()
-	local data = Udp:receive_data()
-
-	if data then
-		if data.event == Events.EnemyObject then
-			self.enemy_objects[data.identifier].current_life = data.obj.current_life
+		if data.event == Events.Tower then
+			self.my_objects[data.identifier].current_life = data.obj.current_life
 		end
 
-		if data.event == Events.Object then
-			self.my_objects[data.identifier].current_life = data.obj.current_life
+		if data.event == Events.EnemyTower then
+			if not self.enemy_objects[data.identifier] then
+				self.enemy_objects[data.identifier] = Tower:new('left', data.obj.position)
+				self.enemy_objects[data.identifier].key = data.obj.key
+				self.enemy_objects[data.identifier].current_life = data.obj.current_life
+			else
+				self.enemy_objects[data.identifier].current_life = data.obj.current_life
+			end
 		end
 	end
 end
 
 function Game:load_towers()
-	local tower1 = Tower:new('left', 'top')
-	self.enemy_objects[tostring(tower1)] = tower1
-
-	local tower2 = Tower:new('left', 'bottom')
-	self.enemy_objects[tostring(tower2)] = tower2
-
 	local tower3 = Tower:new('right', 'top')
 	self.my_objects[tostring(tower3)] = tower3
+	self.my_objects[tostring(tower3)].key = tostring(tower3)
+
+	Udp:send({ identifier = tostring(tower3), event = Events.Tower, obj = {
+		key = tostring(tower3),
+		current_life = tower3.current_life,
+		position = 'top'
+	} })
 
 	local tower4 = Tower:new('right', 'bottom')
 	self.my_objects[tostring(tower4)] = tower4
+	self.my_objects[tostring(tower4)].key = tostring(tower4)
+
+	Udp:send({ identifier = tostring(tower4), event = Events.Tower, obj = {
+		key = tostring(tower4),
+		current_life = tower4.current_life,
+		position = 'bottom'
+	} })
 end
 
 function Game:preview_char(card,x,y)
