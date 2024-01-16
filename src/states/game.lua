@@ -15,7 +15,12 @@ local Game = {
 	all_objects = {},
 	my_objects = {},
 	enemy_objects = {},
-	deck = {}
+	deck = {},
+	updaterate = 0.1,
+	t = 0,
+
+	last_timestamp = 0,
+	ping = 0
 }
 
 function Game:load()
@@ -27,6 +32,8 @@ function Game:load()
 end
 
 function Game:update(dt)
+	self.t = self.t + dt
+
 	repeat
 		local data = self:handle_received_data()
 	until not data
@@ -45,6 +52,7 @@ function Game:update(dt)
 		end
 	end
 
+
 	for key, obj in pairs(self.all_objects) do
 		-- remove from list if off-screen
 		if obj.char_x < -50 or obj.char_x > (love.graphics.getWidth() + 50) then
@@ -53,22 +61,28 @@ function Game:update(dt)
 		end
 
 		if self.my_objects[key] and obj.type ~= 'tower' then
-			Udp:send({ event=Events.Object, identifier=key, obj={
-				key = key,
-				name = obj.name,
-				type = obj.type,
-				damage = obj.damage,
-				cooldown = obj.cooldown,
-				speed = obj.speed,
-				attack_range = obj.attack_range,
-				life = obj.life,
-				char_x = obj.char_x,
-				char_y = obj.char_y,
-				current_action = obj.current_action,
-				current_life = obj.current_life,
-				width = obj.img_preview:getWidth() or 60,
-				height = obj.img_preview:getHeight() or 60
-			} })
+			if self.t > self.updaterate then
+				self.last_timestamp = os.time()
+
+				Udp:send({ event=Events.Object, identifier=key, obj={
+					key = key,
+					name = obj.name,
+					type = obj.type,
+					damage = obj.damage,
+					cooldown = obj.cooldown,
+					speed = obj.speed,
+					attack_range = obj.attack_range,
+					life = obj.life,
+					char_x = obj.char_x,
+					char_y = obj.char_y,
+					current_action = obj.current_action,
+					current_life = obj.current_life,
+					width = obj.img_preview:getWidth() or 60,
+					height = obj.img_preview:getHeight() or 60
+				} })
+
+				self.t = 0
+			end
 		end
 
 		obj.update(obj, dt)
@@ -113,6 +127,8 @@ function Game:draw()
 	for _, obj in pairs(self.all_objects) do
 		obj.char_x, obj.char_y = obj.draw(obj, obj.current_life, obj.char_x, obj.char_y)
 	end
+
+	love.graphics.print(tostring(self.ping), 10, 10, 0, 1, 1, 0, 0, 0, 0)
 end
 
 -- private functions ---------
@@ -121,6 +137,10 @@ function Game:handle_received_data()
 	local data = Udp:receive_data()
 
 	if data then
+		if data.timestamp then
+			self.ping = os.time() - self.last_timestamp
+		end
+
 		if data.event == Events.EnemyObject then
 			if self.enemy_objects[data.identifier] then
 				self.enemy_objects[data.identifier].key = data.obj.key
