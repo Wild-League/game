@@ -16,8 +16,8 @@ local Game = {
 	my_objects = {},
 	enemy_objects = {},
 	deck = {},
-	updaterate = 0.1,
 	t = 0,
+	update_interval = 0.1,
 
 	last_timestamp = 0,
 	ping = 0
@@ -60,44 +60,47 @@ function Game:update(dt)
 			break
 		end
 
-		if self.my_objects[key] and obj.type ~= 'tower' then
-			if self.t > self.updaterate then
-				self.last_timestamp = os.time()
-
-				Udp:send({ event=Events.Object, identifier=key, obj={
-					key = key,
-					name = obj.name,
-					type = obj.type,
-					damage = obj.damage,
-					cooldown = obj.cooldown,
-					speed = obj.speed,
-					attack_range = obj.attack_range,
-					life = obj.life,
-					char_x = obj.char_x,
-					char_y = obj.char_y,
-					current_action = obj.current_action,
-					current_life = obj.current_life,
-					width = obj.img_preview:getWidth() or 60,
-					height = obj.img_preview:getHeight() or 60
-				} })
-
-				self.t = 0
-			end
-		end
-
 		obj.update(obj, dt)
 	end
 
-	for _, obj in pairs(self.my_objects) do
+	for key, obj in pairs(self.my_objects) do
 		if obj.type ~= 'tower' then
 			for _, enemy in pairs(self.enemy_objects) do
+				if Utils.circle_rect_collision(obj.char_x, obj.char_y, obj.attack_range, enemy.char_x, enemy.char_y, enemy.w, enemy.h) then
+					obj.current_action = 'attack'
+
+					if self.t > self.update_interval then
+						self.last_timestamp = os.time()
+
+						Udp:send({ event=Events.Object, identifier=key, obj={
+							key = key,
+							char_x = obj.char_x,
+							char_y = obj.char_y,
+							current_action = obj.current_action,
+						} })
+
+						self.t = 0
+					end
+
+					break
+				end
+
 				if Utils.circle_rect_collision(obj.char_x, obj.char_y, obj.perception_range, enemy.char_x, enemy.char_y, enemy.w, enemy.h) then
 					obj.handle_chars_around(enemy)
 					obj.current_action = 'follow'
-				end
 
-				if Utils.circle_rect_collision(obj.char_x, obj.char_y, obj.attack_range, enemy.char_x, enemy.char_y, enemy.w, enemy.h) then
-					obj.current_action = 'attack'
+					if self.t > self.update_interval then
+						self.last_timestamp = os.time()
+
+						Udp:send({ event=Events.Object, identifier=key, obj={
+							key = key,
+							char_x = obj.char_x,
+							char_y = obj.char_y,
+							current_action = obj.current_action,
+						} })
+
+						self.t = 0
+					end
 				end
 			end
 		end
@@ -124,8 +127,8 @@ function Game:draw()
 		end
 	end
 
-	for _, obj in pairs(self.all_objects) do
-		obj.char_x, obj.char_y = obj.draw(obj, obj.current_life, obj.char_x, obj.char_y)
+	for key, obj in pairs(self.all_objects) do
+		obj.char_x, obj.char_y = obj.draw(obj, obj.current_life, obj.char_x, obj.char_y, self.enemy_objects[key])
 	end
 
 	love.graphics.print(tostring(self.ping), 10, 10, 0, 1, 1, 0, 0, 0, 0)
@@ -143,6 +146,8 @@ function Game:handle_received_data()
 
 		if data.event == Events.EnemyObject then
 			if self.enemy_objects[data.identifier] then
+				-- print(data.obj.current_action)
+
 				self.enemy_objects[data.identifier].key = data.obj.key
 				self.enemy_objects[data.identifier].char_x = data.obj.char_x
 				self.enemy_objects[data.identifier].char_y = data.obj.char_y
@@ -163,6 +168,8 @@ function Game:handle_received_data()
 			end
 
 			self.enemy_objects[data.identifier].key = data.obj.key
+			self.enemy_objects[data.identifier].char_x = data.obj.char_x
+			self.enemy_objects[data.identifier].char_y = data.obj.char_y
 		end
 
 		if data.event == Events.Object and self.my_objects[data.identifier] then

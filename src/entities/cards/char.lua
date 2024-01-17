@@ -60,9 +60,14 @@ function Char:load_actions(char)
 			update = function(dt)
 				char.animations['walk']:update(dt)
 			end,
-			draw = function(x, y, current_life)
+			draw = function(x, y, current_life, enemy)
 				char:lifebar(x,y, current_life)
-				x = x - char.speed
+
+				if enemy then
+					x = x + char.speed
+				else
+					x = x - char.speed
+				end
 
 				char.animations['walk']:draw(char.img_walk, x, y)
 				return x, y

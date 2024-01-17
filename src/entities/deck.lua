@@ -1,5 +1,6 @@
 local Layout = require('src.helpers.layout')
-local Constants = require('src.constants')
+local Udp = require('src.network.udp')
+local Events = require('src.network.events')
 local Map = require('src.entities.map')
 local Card = require('src.entities.card')
 local Utils = require('src.helpers.utils')
@@ -284,7 +285,26 @@ function love.mousepressed(x,y,button)
 
 						-- insert a copy, so we can insert the same card more than once.
 						local new_card = Utils.copy_table(card)
-						Game.my_objects[tostring(new_card)] = new_card
+						local key = tostring(new_card)
+
+						Game.my_objects[key] = new_card
+
+						Udp:send({ event=Events.Object, identifier=key, obj={
+							key = key,
+							name = new_card.name,
+							type = new_card.type,
+							damage = new_card.damage,
+							cooldown = new_card.cooldown,
+							speed = new_card.speed,
+							attack_range = new_card.attack_range,
+							life = new_card.life,
+							char_x = new_card.char_x,
+							char_y = new_card.char_y,
+							current_action = new_card.current_action,
+							current_life = new_card.current_life,
+							width = new_card.img_preview:getWidth() or 60,
+							height = new_card.img_preview:getHeight() or 60
+						} })
 
 						card.selected = false
 

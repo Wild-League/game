@@ -37,7 +37,7 @@ function Card:new(enemy, name, type, cooldown, damage, life, speed, attack_range
 	end
 
 	card.draw = function(card_, current_life, x, y)
-		return card_.actions[card_.current_action].draw(x,y, current_life)
+		return card_.actions[card_.current_action].draw(x,y, current_life, enemy)
 	end
 
 	return card
