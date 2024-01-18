@@ -49,9 +49,9 @@ function Char:new(enemy, name, type, cooldown, damage, life, speed, attack_range
 	return char
 end
 
-function Char.handle_chars_around(enemy)
-	Char.chars_around[enemy.key] = enemy
-	Char.chars_around[enemy.key].key = enemy.key
+function Char.handle_chars_around(char, enemy)
+	char.chars_around[enemy.key] = enemy
+	char.chars_around[enemy.key].key = enemy.key
 end
 
 function Char:load_actions(char)
@@ -75,7 +75,7 @@ function Char:load_actions(char)
 		},
 		follow = {
 			update = function(dt)
-				char.nearest_enemy = char:get_nearest_enemy(char.chars_around)
+				char.nearest_enemy = char:get_nearest_enemy(char, char.chars_around)
 
 				char.animations['walk']:update(dt)
 			end,
@@ -88,9 +88,9 @@ function Char:load_actions(char)
 				local distance = math.sqrt(dx*dx + dy*dy)
 
 				if distance > 1 then
-				local angle = math.atan2(dy, dx)
-				x = x + char.speed * math.cos(angle)
-				y = y + char.speed * math.sin(angle)
+					local angle = math.atan2(dy, dx)
+					x = x + char.speed * math.cos(angle)
+					y = y + char.speed * math.sin(angle)
 				end
 
 				char.animations['walk']:draw(char.img_walk, x, y)
@@ -104,7 +104,7 @@ function Char:load_actions(char)
 			draw = function(x,y, current_life)
 				char:lifebar(x,y, current_life)
 
-				char.nearest_enemy = char:get_nearest_enemy(char.chars_around)
+				char.nearest_enemy = char:get_nearest_enemy(char, char.chars_around)
 
 				char.animations['attack']:draw(char.img_attack,x,y)
 				return x,y
@@ -114,8 +114,7 @@ function Char:load_actions(char)
 			update = function(dt)
 				char.animations['death']:update(dt)
 			end,
-			draw = function(x,y, current_life)
-				char:lifebar(x,y, current_life)
+			draw = function(x,y, _)
 				char.animations['death']:draw(char.img_death,x,y)
 				return x,y
 			end
@@ -125,13 +124,13 @@ function Char:load_actions(char)
 	return char
 end
 
-function Char:get_nearest_enemy(around)
+function Char:get_nearest_enemy(char, around)
 	for _,v in pairs(around) do
-		local distance_x = v.char_x - self.char_x
-		local distance_y = v.char_y - self.char_y
+		local distance_x = v.char_x - char.char_x
+		local distance_y = v.char_y - char.char_y
 
-		if (distance_x >= (self.nearest_enemy.char_x - self.char_x))
-			and (distance_y >= (self.nearest_enemy.char_y - self.char_y)) then
+		if (distance_x >= (char.nearest_enemy.char_x - char.char_x))
+			and (distance_y >= (char.nearest_enemy.char_y - char.char_y)) then
 			return v
 		end
 	end
@@ -149,6 +148,8 @@ function Char:load_animations(char)
 
 		if value == 'attack' then
 			animation = anim8.newAnimation(grid('1-'..number_frames, 1), char.speed/10, function()
+				if char.enemy then return end
+
 				if char.nearest_enemy.current_life > 0 then
 					char.nearest_enemy.current_life = char.nearest_enemy.current_life - char.damage
 
@@ -166,23 +167,50 @@ function Char:load_animations(char)
 					end
 
 				else
-					char.nearest_enemy.current_life = 0
+					char.nearest_enemy = {
+						char_x = 0,
+						char_y = 0,
+						current_life = 0
+					}
+
+					char.current_action = 'walk'
+					char.chars_around = {}
+
+					local key = tostring(char)
+
+					Udp:send({ identifier=key, event=Events.Object, obj={
+						key = key,
+						current_action = 'walk',
+						char_x = char.char_x,
+						char_y = char.char_y
+					} })
 				end
 			end)
 		elseif value == 'death' then
 			animation = anim8.newAnimation(grid('1-'..number_frames, 1), char.speed/10, function()
 				local Game = require('src.states.game')
 
-				-- why the char does not disappear?
+				local key = tostring(char)
+
 				if char.enemy then
-					Game.enemy_objects[tostring(char)] = nil
+					Game.enemy_objects[key] = nil
+
+					Udp:send({ identifier=key, event=Events.EnemyObject, obj={
+						key = key,
+						current_action = 'dead'
+					} })
 				else
-					Game.my_objects[tostring(char)] = nil
+					Game.my_objects[key] = nil
+
+					Udp:send({ identifier=key, event=Events.Object, obj={
+						key = key,
+						current_action = 'dead'
+					} })
 				end
 
-				-- Game.enemy_objects[tostring(char.nearest_enemy)] = nil
 			end)
 		else
+			-- walk
 			animation = anim8.newAnimation(grid('1-'..number_frames, 1), char.speed/10)
 		end
 

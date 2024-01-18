@@ -284,7 +284,22 @@ function love.mousepressed(x,y,button)
 						local Game = require('src.states.game')
 
 						-- insert a copy, so we can insert the same card more than once.
-						local new_card = Utils.copy_table(card)
+						local new_card = Card:new(
+							false,
+							card.name,
+							card.type,
+							card.cooldown,
+							card.damage,
+							card.life,
+							card.speed,
+							card.attack_range,
+							card.img_preview:getWidth() or 60,
+							card.img_preview:getHeight() or 60
+						)
+
+						new_card.char_x = card.char_x
+						new_card.char_y = card.char_y
+
 						local key = tostring(new_card)
 
 						Game.my_objects[key] = new_card

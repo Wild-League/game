@@ -53,18 +53,31 @@ function Game:update(dt)
 	end
 
 
-	for key, obj in pairs(self.all_objects) do
+	for _, obj in pairs(self.all_objects) do
 		-- remove from list if off-screen
-		if obj.char_x < -50 or obj.char_x > (love.graphics.getWidth() + 50) then
-			self.all_objects[key] = nil
-			break
-		end
+		-- if (obj.char_x < -50 or obj.char_x > (love.graphics.getWidth() + 50)) then
+		-- 	self.all_objects[key] = nil
+		-- 	break
+		-- end
 
 		obj.update(obj, dt)
 	end
 
 	for key, obj in pairs(self.my_objects) do
 		if obj.type ~= 'tower' then
+			if obj.current_life <= 0 then
+				obj.current_action = 'death'
+
+				Udp:send({ event=Events.Object, identifier=key, obj={
+					key = key,
+					char_x = obj.char_x,
+					char_y = obj.char_y,
+					current_life = obj.current_life,
+					current_action = obj.current_action,
+				} })
+				break
+			end
+
 			for _, enemy in pairs(self.enemy_objects) do
 				if Utils.circle_rect_collision(obj.char_x, obj.char_y, obj.attack_range, enemy.char_x, enemy.char_y, enemy.w, enemy.h) then
 					obj.current_action = 'attack'
@@ -86,7 +99,7 @@ function Game:update(dt)
 				end
 
 				if Utils.circle_rect_collision(obj.char_x, obj.char_y, obj.perception_range, enemy.char_x, enemy.char_y, enemy.w, enemy.h) then
-					obj.handle_chars_around(enemy)
+					obj.handle_chars_around(obj, enemy)
 					obj.current_action = 'follow'
 
 					if self.t > self.update_interval then
@@ -146,8 +159,11 @@ function Game:handle_received_data()
 
 		if data.event == Events.EnemyObject then
 			if self.enemy_objects[data.identifier] then
-				-- print(data.obj.current_action)
-
+				if data.obj.current_action == 'dead' then
+					self.enemy_objects[data.identifier] = nil
+					self.all_objects = Utils.merge_tables(self.my_objects, self.enemy_objects)
+					return
+				end
 				self.enemy_objects[data.identifier].key = data.obj.key
 				self.enemy_objects[data.identifier].char_x = data.obj.char_x
 				self.enemy_objects[data.identifier].char_y = data.obj.char_y
