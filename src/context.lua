@@ -15,7 +15,7 @@ local Context = {
 		game = Game
 	},
 
-	current = 'lobby',
+	current = 'initial',
 
 	update = function(self, dt)
 		return self.states[self.current]:update(dt)
@@ -26,9 +26,6 @@ local Context = {
 	end,
 
 	change = function(self, ctx)
-		-- TODO: add log file
-		-- print('changing state for: ', ctx)
-
 		if ctx == nil then
 			error('Context should not be nil')
 		end

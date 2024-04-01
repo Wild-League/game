@@ -8,11 +8,11 @@ local default_props = {
 	life = 100,
 	current_life = 100,
 
-	w = Assets.TOWER_LEFT:getWidth(),
-	h = Assets.TOWER_LEFT:getHeight()
+	w = 10, -- Assets.TOWER_LEFT:getWidth(),
+	h = 10, -- Assets.TOWER_LEFT:getHeight()
 }
 
-local center = Layout:center(Assets.TOWER_LEFT:getWidth(), Assets.TOWER_LEFT:getHeight())
+local center = { width = 50, height = 50 } -- Layout:center(Assets.TOWER_LEFT:getWidth(), Assets.TOWER_LEFT:getHeight())
 
 local positions = {
 	left = {
