@@ -46,7 +46,7 @@ function Initial:draw()
 
 		if response.success then
 			self.is_instance_valid = true
-			CONTEXT:change('auth')
+			CONTEXT:change('lobby')
 		else
 			self.is_instance_valid = false
 		end
