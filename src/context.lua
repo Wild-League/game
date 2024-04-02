@@ -1,5 +1,6 @@
 local Initial = require('src.states.initial')
-local Auth = require('src.states.auth')
+local SignIn = require('src.states.auth.signin')
+local SignUp = require('src.states.auth.signup')
 local Game = require('src.states.game')
 local Queue = require('src.states.queue')
 local Lobby = require('src.states.lobby')
@@ -8,14 +9,15 @@ local LoadingGame = require('src.states.loading-game')
 local Context = {
 	states = {
 		initial = Initial,
-		auth = Auth,
+		signin = SignIn,
+		signup = SignUp,
 		lobby = Lobby,
 		queue = Queue,
 		loading_game = LoadingGame,
 		game = Game
 	},
 
-	current = 'initial',
+	current = 'lobby',
 
 	update = function(self, dt)
 		return self.states[self.current]:update(dt)

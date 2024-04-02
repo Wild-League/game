@@ -1,0 +1,3 @@
+local SignUp = {}
+
+return SignUp
