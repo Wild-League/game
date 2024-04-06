@@ -417,8 +417,6 @@ function M.authenticate_device(client, id, vars, create_bool, username_str, call
 	assert(not id or type(id) == "string", "Argument 'id' must be 'nil' or of type 'string'")
 	assert(not vars or type(vars) == "table", "Argument 'vars' must be 'nil' or of type 'table'")
 
-	print('asdasd')
-
 	-- unset the token so username+password credentials will be used
 	client.config.bearer_token = nil
 
@@ -433,8 +431,6 @@ function M.authenticate_device(client, id, vars, create_bool, username_str, call
 	id = id,
 	vars = vars,
 	})
-
-	print('data', post_data)
 
 	return http(client, callback, url_path, query_params, "POST", post_data, retry_policy, cancellation_token, function(result)
 		if not result.error and api_session then

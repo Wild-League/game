@@ -11,15 +11,16 @@ local Lobby = {
 
 local client = nakama.create_client({
 	host = 'localhost',
-	port = 7351,
-	username = 'admin',
-	password = 'password',
+	port = 7350,
+	username = 'defaultkey',
+	password = '',
 	engine = love2d
 })
 
 local co = coroutine.create(function()
+
 	-- authenticate
-	local result = nakama.authenticate_device(client, '11000000-0000-0000-0000-000000000000', nil, true)
+	local result = nakama.authenticate_device(client, '00000000-0000-0000-0000-000000000000', nil, true, 'ropoko')
 
 	print('result', result)
 
