@@ -7,11 +7,12 @@ local http = require('socket.http')
 local b64 = require('lib.base64')
 local json = require('lib.json')
 
-local log = require "lib.nakama.util.log"
-local uri = require "lib.nakama.util.uri"
-local uuid = require "lib.nakama.util.uuid"
+local log = require("lib.nakama.util.log")
+local uri = require("lib.nakama.util.uri")
+local uuid = require("lib.nakama.util.uuid")
 
-local websocket = require "lib.websocket"
+local websocket = require("lib.websocket")
+local https = require('https')
 
 local uri_encode_component = uri.encode_component
 
@@ -48,38 +49,41 @@ make_http_request = function(url, method, callback, headers, post_data, options,
 		callback(nil)
 		return
 	end
-	http.request(url, method, function(self, id, result)
-		if cancellation_token and cancellation_token.cancelled then
-			callback(nil)
-			return
-		end
-		log(result.response)
-		local ok, decoded = pcall(json.decode, result.response)
-		-- return result if everything is ok
-		if ok and result.status >= 200 and result.status <= 299 then
-			result.response = decoded
-			callback(result.response)
-			return
-		end
 
-		-- return the error if there are no more retries
-		if retry_count > #retry_intervals then
-			if not ok then
-				result.response = { error = true, message = "Unable to decode response" }
-			else
-				result.response = { error = decoded.error or true, message = decoded.message, code = decoded.code }
-			end
-			callback(result.response)
-			return
-		end
+	local _, response = https.request(
+		url,
+		{
+				method = method,
+				headers = headers,
+				data = post_data and post_data or nil
+				-- sink = ltn12.sink.table(function(response_chunks, err)
+				-- 		if err then
+				-- 				-- Handle error
+				-- 				callback({error = true, message = err})
+				-- 				return
+				-- 		end
 
-		-- retry!
-		-- local retry_interval = retry_intervals[retry_count]
-		-- timer.delay(retry_interval, false, function()
-		-- 	make_http_request(url, method, callback, headers, post_data, options, retry_intervals, retry_count + 1, cancellation_token)
-		-- end)
-	end, headers, post_data, options)
+				-- 		local response = table.concat(response_chunks)
+				-- 		local ok, decoded = pcall(json.decode, response)
 
+				-- 		if ok and result.status >= 200 and result.status <= 299 then
+				-- 				callback(decoded)
+				-- 		elseif retry_count > #retry_intervals then
+				-- 				if not ok then
+				-- 						callback({error = true, message = "Unable to decode response"})
+				-- 				else
+				-- 						callback({error = decoded.error or true, message = decoded.message, code = decoded.code})
+				-- 				end
+				-- 		else
+				-- 				-- Retry
+				-- 				local retry_interval = retry_intervals[retry_count]
+				-- 				love.timer.sleep(retry_interval)
+				-- 				make_http_request(url, method, callback, headers, post_data, options, retry_intervals, retry_count + 1, cancellation_token)
+				-- 		end
+				-- end)
+		})
+
+	print(response)
 end
 
 
