@@ -3,7 +3,6 @@
 	custom tweaks for integration with Love2D
 ]]
 
-local http = require('socket.http')
 local b64 = require('lib.base64')
 local json = require('lib.json')
 
@@ -12,6 +11,8 @@ local uri = require("lib.nakama.util.uri")
 local uuid = require("lib.nakama.util.uuid")
 
 local websocket = require("lib.websocket")
+local ws_client = websocket.client.sync({ timeout = 1 })
+
 local https = require('https')
 
 local uri_encode_component = uri.encode_component
@@ -50,40 +51,30 @@ make_http_request = function(url, method, callback, headers, post_data, options,
 		return
 	end
 
-	local _, response = https.request(
+	local status_code, response = https.request(
 		url,
 		{
-				method = method,
-				headers = headers,
-				data = post_data and post_data or nil
-				-- sink = ltn12.sink.table(function(response_chunks, err)
-				-- 		if err then
-				-- 				-- Handle error
-				-- 				callback({error = true, message = err})
-				-- 				return
-				-- 		end
-
-				-- 		local response = table.concat(response_chunks)
-				-- 		local ok, decoded = pcall(json.decode, response)
-
-				-- 		if ok and result.status >= 200 and result.status <= 299 then
-				-- 				callback(decoded)
-				-- 		elseif retry_count > #retry_intervals then
-				-- 				if not ok then
-				-- 						callback({error = true, message = "Unable to decode response"})
-				-- 				else
-				-- 						callback({error = decoded.error or true, message = decoded.message, code = decoded.code})
-				-- 				end
-				-- 		else
-				-- 				-- Retry
-				-- 				local retry_interval = retry_intervals[retry_count]
-				-- 				love.timer.sleep(retry_interval)
-				-- 				make_http_request(url, method, callback, headers, post_data, options, retry_intervals, retry_count + 1, cancellation_token)
-				-- 		end
-				-- end)
+			method = method,
+			headers = headers,
+			data = post_data and post_data or nil
 		})
 
-	print(response)
+		local ok, decoded = pcall(json.decode, response)
+
+		if status_code >= 200 and status_code <= 299 then
+			callback(decoded)
+		elseif retry_count > #retry_intervals then
+				if not ok then
+						callback({ error = true, message = "Unable to decode response" })
+				else
+						callback({error = decoded.error or true, message = decoded.message, code = decoded.code})
+				end
+		else
+			-- Retry
+			local retry_interval = retry_intervals[retry_count]
+			love.timer.sleep(retry_interval)
+			make_http_request(url, method, callback, headers, post_data, options, retry_intervals, retry_count + 1, cancellation_token)
+		end
 end
 
 
@@ -176,28 +167,34 @@ function M.socket_connect(socket, callback)
 	local url = ("%s://%s:%d/ws?token=%s"):format(socket.scheme, socket.config.host, socket.config.port, uri.encode_component(socket.config.bearer_token))
 	--const url = `${scheme}${this.host}:${this.port}/ws?lang=en&status=${encodeURIComponent(createStatus.toString())}&token=${encodeURIComponent(session.token)}`;
 
-	log(url)
+	-- print(url)
 
-	local params = {
-		protocol = nil,
-		headers = nil,
-		timeout = (socket.config.timeout or 0) * 1000,
-	}
-	socket.connection = websocket.connect(url, params, function(self, conn, data)
-		if data.event == websocket.EVENT_CONNECTED then
-			log("EVENT_CONNECTED")
-			callback(true)
-		elseif data.event == websocket.EVENT_DISCONNECTED then
-			log("EVENT_DISCONNECTED: ", data.message)
-			if socket.on_disconnect then socket.on_disconnect() end
-		elseif data.event == websocket.EVENT_ERROR then
-			log("EVENT_ERROR: ", data.message or data.error)
-			callback(false, data.message or data.error)
-		elseif data.event == websocket.EVENT_MESSAGE then
-			log("EVENT_MESSAGE: ", data.message)
-			on_message(socket, data.message)
-		end
-	end)
+	-- log(url)
+
+	-- local params = {
+	-- 	protocol = nil,
+	-- 	headers = nil,
+	-- 	timeout = (socket.config.timeout or 0) * 1000,
+	-- }
+
+
+	local ok,err = ws_client:connect(url, socket.config.port)
+
+	-- TODO: rewrite with the new websocket lib
+	-- 	if data.event == websocket.EVENT_CONNECTED then
+	-- 		log("EVENT_CONNECTED")
+	-- 		callback(true)
+	-- 	elseif data.event == websocket.EVENT_DISCONNECTED then
+	-- 		log("EVENT_DISCONNECTED: ", data.message)
+	-- 		if socket.on_disconnect then socket.on_disconnect() end
+	-- 	elseif data.event == websocket.EVENT_ERROR then
+	-- 		log("EVENT_ERROR: ", data.message or data.error)
+	-- 		callback(false, data.message or data.error)
+	-- 	elseif data.event == websocket.EVENT_MESSAGE then
+	-- 		log("EVENT_MESSAGE: ", data.message)
+	-- 		on_message(socket, data.message)
+	-- 	end
+	-- end)
 end
 
 --- Send a socket message.
@@ -220,7 +217,8 @@ function M.socket_send(socket, message, callback)
 	local options = {
 		type = websocket.DATA_TYPE_TEXT
 	}
-	websocket.send(socket.connection, data, options)
+
+	ws_client:send(socket.connection, data, options)
 end
 
 return M

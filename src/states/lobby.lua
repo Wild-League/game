@@ -1,9 +1,10 @@
 local Suit = require('lib.suit')
 local Layout = require('src.helpers.layout')
 local nakama = require('lib.nakama.nakama')
+local socket = require('lib.nakama.socket')
 local love2d = require('lib.nakama.engine.love2d')
 local https = require('https')
-local socket = require('socket')
+-- local socket = require('socket')
 
 local Lobby = {
 	server = {}
@@ -20,21 +21,21 @@ local client = nakama.create_client({
 local co = coroutine.create(function()
 
 	-- authenticate
-	local result = nakama.authenticate_device(client, '00000000-0000-0000-0000-000000000000', nil, true, 'ropoko')
-
-	print('result', result)
+	local result = nakama.authenticate_device(client, '0424aea1-0662-4087-81f5-4ee1582fabdd', nil, true, 'ropoko')
 
 	if result then
 		nakama.set_bearer_token(client, result.token)
 	end
 
-	Lobby.server = nakama.create_socket(client)
-	print('server', Lobby.server)
+	local sock = nakama.create_socket(client)
 
-	local ok,err = nakama.socket_connect(Lobby.server)
-	print('ok: ', ok, 'err: ', err)
+	local ok, err = socket.connect(sock)
+
+	print('res', ok, err)
 
 	-- Lobby.server:connect()
+
+	-- Lobby.server.match_create('match 1')
 end)
 
 coroutine.resume(co)
