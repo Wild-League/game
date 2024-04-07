@@ -29,13 +29,11 @@ local co = coroutine.create(function()
 
 	local sock = nakama.create_socket(client)
 
-	local ok, err = socket.connect(sock)
+	local ok, _ = socket.connect(sock)
 
-	print('res', ok, err)
-
-	-- Lobby.server:connect()
-
-	-- Lobby.server.match_create('match 1')
+	if ok then
+		socket.match_create(sock, 'match-1')
+	end
 end)
 
 coroutine.resume(co)

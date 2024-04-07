@@ -11,7 +11,7 @@ local uri = require("lib.nakama.util.uri")
 local uuid = require("lib.nakama.util.uuid")
 
 local websocket = require("lib.websocket")
-local ws_client = websocket.client.sync({ timeout = 1 })
+local ws_client = {}
 
 local https = require('https')
 
@@ -165,20 +165,17 @@ function M.socket_connect(socket, callback)
 	assert(callback)
 
 	local url = ("%s://%s:%d/ws?token=%s"):format(socket.scheme, socket.config.host, socket.config.port, uri.encode_component(socket.config.bearer_token))
-	--const url = `${scheme}${this.host}:${this.port}/ws?lang=en&status=${encodeURIComponent(createStatus.toString())}&token=${encodeURIComponent(session.token)}`;
 
-	-- print(url)
+	ws_client = websocket.client.sync({ timeout = 1000 })
 
-	-- log(url)
+	local ok, _ = ws_client:connect(url, socket.config.port)
 
-	-- local params = {
-	-- 	protocol = nil,
-	-- 	headers = nil,
-	-- 	timeout = (socket.config.timeout or 0) * 1000,
-	-- }
+	if ok then
+		log("EVENT_CONNECTED")
 
-
-	local ok,err = ws_client:connect(url, socket.config.port)
+		socket.connection = ws_client.sock
+		callback(true)
+	end
 
 	-- TODO: rewrite with the new websocket lib
 	-- 	if data.event == websocket.EVENT_CONNECTED then
@@ -204,21 +201,23 @@ end
 function M.socket_send(socket, message, callback)
 	assert(socket and socket.connection, "You must provide a socket")
 	assert(message, "You must provide a message to send")
+
 	socket.cid = socket.cid + 1
 	message.cid = tostring(socket.cid)
 	socket.requests[message.cid] = callback
 
 	local data = json.encode(message)
 	-- Fix encoding of match_create and status_update messages to send {} instead of []
+
 	if message.match_create ~= nil or message.status_update ~= nil then
 		data = string.gsub(data, "%[%]", "{}")
 	end
 
-	local options = {
-		type = websocket.DATA_TYPE_TEXT
-	}
+	-- local options = {
+	-- 	type = websocket.TEXT
+	-- }
 
-	ws_client:send(socket.connection, data, options)
+	ws_client:send(data)
 end
 
 return M
