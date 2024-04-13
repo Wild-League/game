@@ -10,8 +10,7 @@ local log = require("lib.nakama.util.log")
 local uri = require("lib.nakama.util.uri")
 local uuid = require("lib.nakama.util.uuid")
 
-local websocket = require("lib.websocket")
-local ws_client = {}
+local Ws = require('src.network.websocket')
 
 local https = require('https')
 
@@ -164,34 +163,31 @@ function M.socket_connect(socket, callback)
 	assert(socket)
 	assert(callback)
 
-	local url = ("%s://%s:%d/ws?token=%s"):format(socket.scheme, socket.config.host, socket.config.port, uri.encode_component(socket.config.bearer_token))
 
-	ws_client = websocket.client.sync({ timeout = 1000 })
+	local ws = Ws:connect('localhost', 7350, ('/ws?token=%s'):format(uri.encode_component(socket.config.bearer_token)))
 
-	local ok, _ = ws_client:connect(url, socket.config.port)
-
-	if ok then
+	if ws then
 		log("EVENT_CONNECTED")
-
-		socket.connection = ws_client.sock
+		socket.connection = ws
 		callback(true)
-	end
 
-	-- TODO: rewrite with the new websocket lib
-	-- 	if data.event == websocket.EVENT_CONNECTED then
-	-- 		log("EVENT_CONNECTED")
-	-- 		callback(true)
-	-- 	elseif data.event == websocket.EVENT_DISCONNECTED then
-	-- 		log("EVENT_DISCONNECTED: ", data.message)
-	-- 		if socket.on_disconnect then socket.on_disconnect() end
-	-- 	elseif data.event == websocket.EVENT_ERROR then
-	-- 		log("EVENT_ERROR: ", data.message or data.error)
-	-- 		callback(false, data.message or data.error)
-	-- 	elseif data.event == websocket.EVENT_MESSAGE then
-	-- 		log("EVENT_MESSAGE: ", data.message)
-	-- 		on_message(socket, data.message)
-	-- 	end
-	-- end)
+		function ws:onmessage(message)
+			print('ws message', message)
+
+			log("EVENT_MESSAGE: ", message)
+			on_message(socket, message)
+		end
+
+		function ws:onclose()
+			log("EVENT_DISCONNECTED")
+			if socket.on_disconnect then socket.on_disconnect() end
+		end
+
+		function ws:onerror(error)
+			log("EVENT_ERROR: ", error)
+			callback(false, error)
+		end
+	end
 end
 
 --- Send a socket message.
@@ -217,7 +213,10 @@ function M.socket_send(socket, message, callback)
 	-- 	type = websocket.TEXT
 	-- }
 
-	ws_client:send(data)
+	if Ws then
+		print('sending', data)
+		Ws:send(data)
+	end
 end
 
 return M
