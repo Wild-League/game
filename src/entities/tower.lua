@@ -37,7 +37,7 @@ local positions = {
 	}
 }
 
-function Tower:new(side, position)
+function Tower:load(side, position)
 	if side ~= 'left' and side ~= 'right' then
 		error('Invalid side for Tower')
 	end

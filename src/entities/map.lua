@@ -1,6 +1,7 @@
 local Layout = require('src.helpers.layout')
 local sti = require("lib.sti")
 
+-- 1344 x 768
 local Map = {
 	-- indicates the max value in x to each side
 	left_side = {
@@ -17,6 +18,8 @@ local Map = {
 function Map:load()
 	self.map = sti('assets/world.lua')
 end
+
+function Map:update(dt) end
 
 function Map:draw()
 	self.map:draw()
@@ -42,9 +45,9 @@ function Map:block_left_side()
 end
 
 -- TODO: should be used to draw buildings (except tower)
-function Map:buildings()
-	local center = Layout:center(100, 100)
-	love.graphics.ellipse("line", center.width + 50, center.height + 50, 100, 100)
-end
+-- function Map:buildings()
+-- 	local center = Layout:center(100, 100)
+-- 	love.graphics.ellipse("line", center.width + 50, center.height + 50, 100, 100)
+-- end
 
 return Map

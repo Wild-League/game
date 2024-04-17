@@ -226,7 +226,7 @@ function M.match_create(socket, name, callback)
 	assert(name == nil or _G.type(name) == 'string')
 	local message = {
 		match_create = {
-			name = name,
+			name = name
 		}
 	}
 	return socket_send(socket, message, callback)

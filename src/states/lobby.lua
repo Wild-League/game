@@ -7,7 +7,7 @@ local https = require('https')
 -- local socket = require('socket')
 
 local Lobby = {
-	server = {}
+	connection = {}
 }
 
 local client = nakama.create_client({
@@ -18,36 +18,44 @@ local client = nakama.create_client({
 	engine = love2d
 })
 
+-- love.math.setRandomSeed(os.time())
+
 local co = coroutine.create(function()
+	-- local n = love.math.random(1, 100)
 
 	-- authenticate
-	local result = nakama.authenticate_device(client, '0424aea1-0662-4087-81f5-4ee1582fabdd', nil, true, 'ropoko')
+	local result = nakama.authenticate_email(client, 'ropoko2@gmail.com', '12345678', nil, true, 'ropoko2')
+	-- local result = nakama.authenticate_device(client, '00000000-0000-0000-0000-000000000000', nil, true, 'ropoko_'..n)
 
 	if result then
 		nakama.set_bearer_token(client, result.token)
 	end
 
-	local sock = nakama.create_socket(client)
-
-	local ok, _ = socket.connect(sock)
-
-	if ok then
-		socket.match_create(sock, 'match-1')
-	end
+	Lobby.connection = nakama.create_socket(client)
+	socket.connect(Lobby.connection)
 end)
 
 coroutine.resume(co)
 
--- sock.match_create(sock, 'first match')
--- local ok,err = nakama.socket_connect(sock)
+socket.on_matchmaker_matched(Lobby.connection, function(matched)
+	local match_id = matched.matchmaker_matched.ticket
+	local token = matched.matchmaker_matched.token
 
--- print('ok: ', ok, 'err: ', err)
+	socket.match_create(Lobby.connection, 'new-match', function(match)
+		print('match created')
 
--- server:connect()
+		for key, value in pairs(match.match) do
+			print(key, value)
+		end
+	end)
+	-- socket.match_join(Lobby.connection, match_id, token, nil, function(a)
+	-- end)
+end)
 
 function Lobby:load() end
 
-function Lobby:update() end
+function Lobby:update()
+end
 
 function Lobby:draw()
 	love.graphics.setBackgroundColor(10/255,16/255,115/255)
@@ -61,7 +69,11 @@ function Lobby:draw()
 	Suit.Label('Search for a match or play against a friend', center.width - 70, 160)
 
 	if play_button.hit then
-		self.server.match_create('new match')
+		local c = coroutine.create(function()
+			print('searching match')
+			socket.matchmaker_add(Lobby.connection, 2, 2, nil)
+		end)
+		coroutine.resume(c)
 	end
 end
 
