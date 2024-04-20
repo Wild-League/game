@@ -2507,7 +2507,7 @@ end
 function M.rpc_func(client, id_str, payload, http_key_str, callback, retry_policy, cancellation_token)
 	assert(client, "You must provide a client")
 
-	assert(body and type(body) == "string", "Argument 'body' must be of type 'string'")
+	assert(payload and type(payload) == "string", "Argument 'payload' must be of type 'string'")
 
 	local url_path = "/v2/rpc/{id}"
 	url_path = url_path:gsub("{id}", uri_encode(id_str))
@@ -2516,7 +2516,7 @@ function M.rpc_func(client, id_str, payload, http_key_str, callback, retry_polic
 	query_params["httpKey"] = http_key_str
 
 	local post_data = nil
-	post_data = json.encode(body)
+	post_data = json.encode(payload)
 
 	return http(client, callback, url_path, query_params, "POST", post_data, retry_policy, cancellation_token, function(result)
 		if not result.error and api_rpc then

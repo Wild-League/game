@@ -3,8 +3,6 @@ local Layout = require('src.helpers.layout')
 local nakama = require('lib.nakama.nakama')
 local socket = require('lib.nakama.socket')
 local love2d = require('lib.nakama.engine.love2d')
-local https = require('https')
--- local socket = require('socket')
 
 local Lobby = {
 	connection = {}
@@ -18,14 +16,9 @@ local client = nakama.create_client({
 	engine = love2d
 })
 
--- love.math.setRandomSeed(os.time())
-
 local co = coroutine.create(function()
-	-- local n = love.math.random(1, 100)
-
 	-- authenticate
 	local result = nakama.authenticate_email(client, 'ropoko2@gmail.com', '12345678', nil, true, 'ropoko2')
-	-- local result = nakama.authenticate_device(client, '00000000-0000-0000-0000-000000000000', nil, true, 'ropoko_'..n)
 
 	if result then
 		nakama.set_bearer_token(client, result.token)
@@ -37,20 +30,7 @@ end)
 
 coroutine.resume(co)
 
-socket.on_matchmaker_matched(Lobby.connection, function(matched)
-	local match_id = matched.matchmaker_matched.ticket
-	local token = matched.matchmaker_matched.token
-
-	socket.match_create(Lobby.connection, 'new-match', function(match)
-		print('match created')
-
-		for key, value in pairs(match.match) do
-			print(key, value)
-		end
-	end)
-	-- socket.match_join(Lobby.connection, match_id, token, nil, function(a)
-	-- end)
-end)
+socket.on_matchmaker_matched(Lobby.connection, function(matched) end)
 
 function Lobby:load() end
 
