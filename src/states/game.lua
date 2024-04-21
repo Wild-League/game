@@ -8,9 +8,6 @@ local Deck = require('src.entities.deck')
 local Timer = require('src.helpers.timer')
 local Card = require('src.entities.card')
 
--- local Udp = require('src.network.udp')
--- local Events = require('src.network.events')
-
 local Game = {
 	all_objects = {},
 	my_objects = {},
@@ -23,11 +20,10 @@ local Game = {
 	ping = 0
 }
 
--- Map:load()
 -- Game:load_towers()
 
 function Game:load()
-
+	Map:load()
 	-- Deck:load()
 	-- Game.deck = Deck.deck_selected
 end
@@ -35,10 +31,6 @@ end
 function Game:update(dt)
 	Map:update(dt)
 	self.t = self.t + dt
-
-	-- repeat
-	-- 	local data = self:handle_received_data()
-	-- until not data
 
 	self.all_objects = Utils.merge_tables(self.my_objects, self.enemy_objects)
 
@@ -53,73 +45,6 @@ function Game:update(dt)
 			card.char_y = y
 		end
 	end
-
-
-	for _, obj in pairs(self.all_objects) do
-		-- remove from list if off-screen
-		-- if (obj.char_x < -50 or obj.char_x > (love.graphics.getWidth() + 50)) then
-		-- 	self.all_objects[key] = nil
-		-- 	break
-		-- end
-
-		obj.update(obj, dt)
-	end
-
-	-- for key, obj in pairs(self.my_objects) do
-	-- 	if obj.type ~= 'tower' then
-	-- 		if obj.current_life <= 0 then
-	-- 			obj.current_action = 'death'
-
-	-- 			Udp:send({ event=Events.Object, identifier=key, obj={
-	-- 				key = key,
-	-- 				char_x = obj.char_x,
-	-- 				char_y = obj.char_y,
-	-- 				current_life = obj.current_life,
-	-- 				current_action = obj.current_action,
-	-- 			} })
-	-- 			break
-	-- 		end
-
-	-- 		for _, enemy in pairs(self.enemy_objects) do
-	-- 			if Utils.circle_rect_collision(obj.char_x, obj.char_y, obj.attack_range, enemy.char_x, enemy.char_y, enemy.w, enemy.h) then
-	-- 				obj.current_action = 'attack'
-
-	-- 				if self.t > self.update_interval then
-	-- 					self.last_timestamp = os.time()
-
-	-- 					Udp:send({ event=Events.Object, identifier=key, obj={
-	-- 						key = key,
-	-- 						char_x = obj.char_x,
-	-- 						char_y = obj.char_y,
-	-- 						current_action = obj.current_action,
-	-- 					} })
-
-	-- 					self.t = 0
-	-- 				end
-
-	-- 				break
-	-- 			end
-
-	-- 			if Utils.circle_rect_collision(obj.char_x, obj.char_y, obj.perception_range, enemy.char_x, enemy.char_y, enemy.w, enemy.h) then
-	-- 				obj.handle_chars_around(obj, enemy)
-	-- 				obj.current_action = 'follow'
-
-	-- 				if self.t > self.update_interval then
-	-- 					self.last_timestamp = os.time()
-
-	-- 					Udp:send({ event=Events.Object, identifier=key, obj={
-	-- 						key = key,
-	-- 						char_x = obj.char_x,
-	-- 						char_y = obj.char_y,
-	-- 						current_action = obj.current_action,
-	-- 					} })
-
-	-- 					self.t = 0
-	-- 				end
-	-- 			end
-	-- 		end
-	-- 	end
-	-- end
 end
 
 function Game:draw()
@@ -151,90 +76,10 @@ end
 
 -- private functions ---------
 
--- function Game:handle_received_data()
--- 	local data = Udp:receive_data()
-
--- 	if data then
--- 		if data.timestamp then
--- 			self.ping = os.time() - self.last_timestamp
--- 		end
-
--- 		if data.event == Events.EnemyObject then
--- 			if self.enemy_objects[data.identifier] then
--- 				if data.obj.current_action == 'dead' then
--- 					self.enemy_objects[data.identifier] = nil
--- 					self.all_objects = Utils.merge_tables(self.my_objects, self.enemy_objects)
--- 					return
--- 				end
--- 				self.enemy_objects[data.identifier].key = data.obj.key
--- 				self.enemy_objects[data.identifier].char_x = data.obj.char_x
--- 				self.enemy_objects[data.identifier].char_y = data.obj.char_y
--- 				self.enemy_objects[data.identifier].current_action = data.obj.current_action
--- 			else
--- 				self.enemy_objects[data.identifier] = Card:new(
--- 					true,
--- 					data.obj.name,
--- 					data.obj.type,
--- 					data.obj.cooldown,
--- 					data.obj.damage,
--- 					data.obj.life,
--- 					data.obj.speed,
--- 					data.obj.attack_range,
--- 					data.obj.width,
--- 					data.obj.height
--- 				)
--- 			end
-
--- 			self.enemy_objects[data.identifier].key = data.obj.key
--- 			self.enemy_objects[data.identifier].char_x = data.obj.char_x
--- 			self.enemy_objects[data.identifier].char_y = data.obj.char_y
--- 		end
-
--- 		if data.event == Events.Object and self.my_objects[data.identifier] then
--- 			self.my_objects[data.identifier].key = data.obj.key
--- 			self.my_objects[data.identifier].current_life = data.obj.current_life
--- 		end
-
--- 		if data.event == Events.Tower then
--- 			self.my_objects[data.identifier].current_life = data.obj.current_life
--- 		end
-
--- 		if data.event == Events.EnemyTower then
--- 			if not self.enemy_objects[data.identifier] then
--- 				self.enemy_objects[data.identifier] = Tower:new('left', data.obj.position)
--- 				self.enemy_objects[data.identifier].key = data.obj.key
--- 				self.enemy_objects[data.identifier].current_life = data.obj.current_life
--- 			else
--- 				self.enemy_objects[data.identifier].current_life = data.obj.current_life
--- 			end
--- 		end
--- 	end
--- end
-
 function Game:load_towers()
 	local tower1 = Tower:load('left', 'top')
 
 	local tower2 = Tower:load('left', 'bottom')
-
-	-- local tower3 = Tower:new('right', 'top')
-	-- self.my_objects[tostring(tower3)] = tower3
-	-- self.my_objects[tostring(tower3)].key = tostring(tower3)
-
-	-- Udp:send({ identifier = tostring(tower3), event = Events.Tower, obj = {
-	-- 	key = tostring(tower3),
-	-- 	current_life = tower3.current_life,
-	-- 	position = 'top'
-	-- } })
-
-	-- local tower4 = Tower:new('right', 'bottom')
-	-- self.my_objects[tostring(tower4)] = tower4
-	-- self.my_objects[tostring(tower4)].key = tostring(tower4)
-
-	-- Udp:send({ identifier = tostring(tower4), event = Events.Tower, obj = {
-	-- 	key = tostring(tower4),
-	-- 	current_life = tower4.current_life,
-	-- 	position = 'bottom'
-	-- } })
 end
 
 function Game:preview_char(card,x,y)

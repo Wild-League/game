@@ -18,7 +18,7 @@ local client = nakama.create_client({
 
 local co = coroutine.create(function()
 	-- authenticate
-	local result = nakama.authenticate_email(client, 'ropoko2@gmail.com', '12345678', nil, true, 'ropoko2')
+	local result = nakama.authenticate_email(client, 'ropoko@gmail.com', '12345678', { level = "1" }, true, 'ropoko')
 
 	if result then
 		nakama.set_bearer_token(client, result.token)
@@ -30,7 +30,9 @@ end)
 
 coroutine.resume(co)
 
-socket.on_matchmaker_matched(Lobby.connection, function(matched) end)
+socket.on_matchmaker_matched(Lobby.connection, function()
+	CONTEXT:change('game')
+end)
 
 function Lobby:load() end
 
