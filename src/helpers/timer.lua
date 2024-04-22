@@ -1,8 +1,23 @@
+local Suit = require('lib.suit')
+
 local Timer = {
-	timer = 0
+	timer = 0,
+	time_to_show = 0
 }
 
-function Timer:match(dt)
+function Timer:new()
+	local timer = {
+		timer = 0,
+		time_to_show = 0
+	}
+
+	setmetatable(timer, self)
+	self.__index = self
+
+	return timer
+end
+
+function Timer:update(dt)
 	self.timer = self.timer + dt
 
 	local seconds = tostring(math.floor(self.timer % 60))
@@ -15,9 +30,11 @@ function Timer:match(dt)
 		minutes = '0'..minutes
 	end
 
-	local time = minutes..':'..seconds
+	self.time_to_show = minutes..':'..seconds
+end
 
-	return time
+function Timer:draw(x, y, w, h)
+	Suit.Label(self.time_to_show, x, y, w, h)
 end
 
 return Timer

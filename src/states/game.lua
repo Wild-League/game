@@ -17,13 +17,15 @@ local Game = {
 	update_interval = 0.1,
 
 	last_timestamp = 0,
-	ping = 0
+	ping = 0,
+
+	timer = Timer:new()
 }
 
 -- Game:load_towers()
 
+Map:load()
 function Game:load()
-	Map:load()
 	-- Deck:load()
 	-- Game.deck = Deck.deck_selected
 end
@@ -36,7 +38,7 @@ function Game:update(dt)
 
 	Deck:update(dt)
 
-	Game:timer(dt)
+	self.timer:update(dt)
 
 	for _,card in pairs(self.deck) do
 		if card.selected then
@@ -52,7 +54,7 @@ function Game:draw()
 
 	Deck:draw()
 
-	Game:timer_background()
+	self:draw_timer()
 
 	for _, card in pairs(self.deck) do
 		if card.selected then
@@ -94,17 +96,16 @@ function Game:preview_char(card,x,y)
 	love.graphics.setColor(1,1,1)
 end
 
-function Game:timer(dt)
-	local new_center = Layout:center(100, 100)
-	love.graphics.setColor(1,1,1)
-	Suit.Label(Timer:match(dt), new_center.width, 35, 100, 0)
-	love.graphics.setColor(1,1,1)
-end
-
-function Game:timer_background()
-	local new_center = Layout:center(100, 100)
+function Game:draw_timer()
+	local center_background = Layout:center(100, 100)
 	love.graphics.setColor(0,0,0, 0.8)
-	love.graphics.rectangle('fill', new_center.width, 10, 100, 50)
+	love.graphics.rectangle('fill', center_background.width, 10, 100, 50)
+	love.graphics.setColor(1,1,1)
+
+	local center_timer = Layout:center(100, 100)
+
+	love.graphics.setColor(1,1,1)
+	self.timer:draw(center_timer.width, 35, 100, 0)
 	love.graphics.setColor(1,1,1)
 end
 
