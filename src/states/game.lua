@@ -9,16 +9,6 @@ local Timer = require('src.helpers.timer')
 local Card = require('src.entities.card')
 
 local Game = {
-	all_objects = {},
-	my_objects = {},
-	enemy_objects = {},
-	deck = {},
-	t = 0,
-	update_interval = 0.1,
-
-	last_timestamp = 0,
-	ping = 0,
-
 	timer = Timer:new()
 }
 
@@ -32,21 +22,10 @@ end
 
 function Game:update(dt)
 	Map:update(dt)
-	self.t = self.t + dt
-
-	self.all_objects = Utils.merge_tables(self.my_objects, self.enemy_objects)
 
 	Deck:update(dt)
 
 	self.timer:update(dt)
-
-	for _,card in pairs(self.deck) do
-		if card.selected then
-			local x, y = love.mouse.getPosition()
-			card.char_x = x
-			card.char_y = y
-		end
-	end
 end
 
 function Game:draw()
@@ -55,25 +34,6 @@ function Game:draw()
 	Deck:draw()
 
 	self:draw_timer()
-
-	for _, card in pairs(self.deck) do
-		if card.selected then
-			Map:block_left_side()
-
-			-- because the char is walking from right -> left (by now)
-			if card.char_x <= Map.left_side.w then
-				card.char_x = Map.left_side.w
-			end
-
-			Game:preview_char(card, card.char_x + card.img_preview:getWidth() / 2, card.char_y + card.img_preview:getHeight() / 2)
-		end
-	end
-
-	for key, obj in pairs(self.all_objects) do
-		obj.char_x, obj.char_y = obj.draw(obj, obj.current_life, obj.char_x, obj.char_y, self.enemy_objects[key])
-	end
-
-	love.graphics.print(tostring(self.ping), 10, 10, 0, 1, 1, 0, 0, 0, 0)
 end
 
 -- private functions ---------
@@ -84,17 +44,17 @@ function Game:load_towers()
 	local tower2 = Tower:load('left', 'bottom')
 end
 
-function Game:preview_char(card,x,y)
-	-- attack range
-	love.graphics.ellipse("line", x, y, card.attack_range, card.attack_range)
-	-- perception range
-	love.graphics.ellipse("line", x, y, card.perception_range, card.perception_range)
+-- function Game:preview_char(card,x,y)
+-- 	-- attack range
+-- 	love.graphics.ellipse("line", x, y, card.attack_range, card.attack_range)
+-- 	-- perception range
+-- 	love.graphics.ellipse("line", x, y, card.perception_range, card.perception_range)
 
-	-- represents the char preview
-	love.graphics.setColor(0.2,0.2,0.7,0.5)
-	love.graphics.draw(card.img_preview, card.char_x, card.char_y)
-	love.graphics.setColor(1,1,1)
-end
+-- 	-- represents the char preview
+-- 	love.graphics.setColor(0.2,0.2,0.7,0.5)
+-- 	love.graphics.draw(card.img_preview, card.char_x, card.char_y)
+-- 	love.graphics.setColor(1,1,1)
+-- end
 
 function Game:draw_timer()
 	local center_background = Layout:center(100, 100)
