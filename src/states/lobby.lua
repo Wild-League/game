@@ -8,7 +8,9 @@ local json = require('lib.json')
 local Constants = require('src.constants')
 
 local Lobby = {
-	connection = {}
+	connection = {},
+	matchmake_state = 'idle',
+	matchmake_ticket = nil
 }
 
 local client = nakama.create_client({
@@ -70,7 +72,8 @@ function Lobby:draw()
 
 	local center = Layout:center(300, 30)
 
-	local play_button = Suit.Button('Search Match', center.width, center.height, 300, 40)
+	local text = self.matchmake_state == 'searching' and 'Cancel' or 'Search Match'
+	local play_button = Suit.Button(text, center.width, center.height, 300, 40)
 
 	Suit.Label('Welcome to our alpha v0.0.1 ', center.width, 100)
 	Suit.Label('For now, you can only play with 3 cards', center.width - 50, 130)
@@ -78,8 +81,15 @@ function Lobby:draw()
 
 	if play_button.hit then
 		local c = coroutine.create(function()
-			print('searching match')
-			socket.matchmaker_add(Lobby.connection, 2, 2, nil)
+			if self.matchmake_state == 'searching' then
+				self.matchmake_state = 'idle'
+				socket.matchmaker_remove(self.connection, self.matchmake_ticket)
+			else
+				self.matchmake_state = 'searching'
+				socket.matchmaker_add(self.connection, 2, 2, nil, nil, nil, nil, function(matchmake)
+					self.matchmake_ticket = matchmake.matchmaker_ticket.ticket
+				end)
+			end
 		end)
 		coroutine.resume(c)
 	end
