@@ -1,5 +1,5 @@
 local Base = {
-	current = 'dev',
+	current = 'prod',
 
 	dev = {
 		base_url = 'http://localhost:8000/v1/'

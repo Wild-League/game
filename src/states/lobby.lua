@@ -3,12 +3,16 @@ local Layout = require('src.helpers.layout')
 local nakama = require('lib.nakama.nakama')
 local socket = require('lib.nakama.socket')
 local love2d = require('lib.nakama.engine.love2d')
+local Deck = require('src.api.deck')
+local json = require('lib.json')
 
 local Lobby = {
-	connection = {}
+	connection = {},
+	client = {},
+	user_id = ""
 }
 
-local client = nakama.create_client({
+Lobby.client = nakama.create_client({
 	host = 'localhost',
 	port = 7350,
 	username = 'defaultkey',
@@ -16,28 +20,49 @@ local client = nakama.create_client({
 	engine = love2d
 })
 
+-- TODO: move to load
 local co = coroutine.create(function()
 	-- authenticate
-	local result = nakama.authenticate_email(client, 'ropoko@gmail.com', '12345678', { level = "1" }, true, 'ropoko')
+	local result = nakama.authenticate_email(Lobby.client, 'ropoko@gmail.com', '12345678', { level = "1" }, true, 'ropoko')
 
 	if result then
-		nakama.set_bearer_token(client, result.token)
+		Lobby.user_id = result.user_id
+		nakama.set_bearer_token(Lobby.client, result.token)
 	end
 
-	Lobby.connection = nakama.create_socket(client)
+	Lobby.connection = nakama.create_socket(Lobby.client)
 	socket.connect(Lobby.connection)
 end)
 
 coroutine.resume(co)
 
-socket.on_matchmaker_matched(Lobby.connection, function()
+local selected_deck = Deck:get('1')
+
+socket.on_matchmaker_matched(Lobby.connection, function(match)
 	CONTEXT:change('game')
+
+	coroutine.resume(coroutine.create(function()
+		local objects = {
+			{
+				collection = 'selected_deck',
+				key = 'selected_deck',
+				value = json.encode(selected_deck),
+				permissionRead = 1,
+				permissionWrite = 1,
+				version = ""
+			}
+		}
+
+		nakama.write_storage_objects(Lobby.client, objects)
+	end))
+
+	-- local match_id = match.on_matchmaker_matched.match_id
+	-- socket.match_data_send(Lobby.connection, match_id, { message = 'hello' })
 end)
 
 function Lobby:load() end
 
-function Lobby:update()
-end
+function Lobby:update() end
 
 function Lobby:draw()
 	love.graphics.setBackgroundColor(10/255,16/255,115/255)

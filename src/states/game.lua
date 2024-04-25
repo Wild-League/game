@@ -14,8 +14,8 @@ local Game = {
 
 -- Game:load_towers()
 
-Map:load()
 function Game:load()
+	Map:load()
 	-- Deck:load()
 	-- Game.deck = Deck.deck_selected
 end
