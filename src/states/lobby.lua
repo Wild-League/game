@@ -6,11 +6,13 @@ local love2d = require('lib.nakama.engine.love2d')
 local Deck = require('src.api.deck')
 local json = require('lib.json')
 local Constants = require('src.constants')
+local Timer = require('src.helpers.timer')
 
 local Lobby = {
 	connection = {},
 	matchmake_state = 'idle',
-	matchmake_ticket = nil
+	matchmake_ticket = nil,
+	timer = Timer:new()
 }
 
 local client = nakama.create_client({
@@ -65,7 +67,9 @@ end)
 
 function Lobby:load() end
 
-function Lobby:update() end
+function Lobby:update(dt)
+	self.timer:update(dt)
+end
 
 function Lobby:draw()
 	love.graphics.setBackgroundColor(10/255,16/255,115/255)
@@ -75,6 +79,11 @@ function Lobby:draw()
 	local text = self.matchmake_state == 'searching' and 'Cancel' or 'Search Match'
 	local play_button = Suit.Button(text, center.width, center.height, 300, 40)
 
+	if self.matchmake_state == 'searching' then
+		self.timer:draw(center.width, center.height + 50, 300, 40)
+		Suit.Label('searching players ...', center.width + 50, center.height + 90)
+	end
+
 	Suit.Label('Welcome to our alpha v0.0.1 ', center.width, 100)
 	Suit.Label('For now, you can only play with 3 cards', center.width - 50, 130)
 	Suit.Label('Search for a match or play against a friend', center.width - 70, 160)
@@ -83,6 +92,7 @@ function Lobby:draw()
 		local c = coroutine.create(function()
 			if self.matchmake_state == 'searching' then
 				self.matchmake_state = 'idle'
+				self.timer:reset()
 				socket.matchmaker_remove(self.connection, self.matchmake_ticket)
 			else
 				self.matchmake_state = 'searching'

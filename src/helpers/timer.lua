@@ -37,4 +37,9 @@ function Timer:draw(x, y, w, h)
 	Suit.Label(self.time_to_show, x, y, w, h)
 end
 
+function Timer:reset()
+	self.timer = 0
+	self.time_to_show = 0
+end
+
 return Timer
