@@ -1,23 +1,35 @@
-local Suit = require('lib.suit')
 local Layout = require('src.helpers.layout')
-local Utils = require('src.helpers.utils')
-
 local Map = require('src.entities.map')
 local Tower = require('src.entities.tower')
 local Deck = require('src.entities.deck')
 local Timer = require('src.helpers.timer')
-local Card = require('src.entities.card')
+local Constants = require('src.constants')
+local nakama = require('lib.nakama.nakama')
+local json = require('lib.json')
 
 local Game = {
-	timer = Timer:new()
+	timer = Timer:new(),
+	selected_deck = nil
 }
-
--- Game:load_towers()
 
 function Game:load()
 	Map:load()
-	-- Deck:load()
-	-- Game.deck = Deck.deck_selected
+
+	coroutine.resume(coroutine.create(function()
+		local objects = {
+			{
+				collection = 'selected_deck',
+				key = 'selected_deck',
+				userId = Constants.USER_ID
+			}
+		}
+
+		local result = nakama.read_storage_objects(Constants.NAKAMA_CLIENT, objects)
+
+		if result then
+			self.selected_deck = json.decode(result.objects[1].value)
+		end
+	end))
 end
 
 function Game:update(dt)

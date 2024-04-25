@@ -5,14 +5,13 @@ local socket = require('lib.nakama.socket')
 local love2d = require('lib.nakama.engine.love2d')
 local Deck = require('src.api.deck')
 local json = require('lib.json')
+local Constants = require('src.constants')
 
 local Lobby = {
-	connection = {},
-	client = {},
-	user_id = ""
+	connection = {}
 }
 
-Lobby.client = nakama.create_client({
+local client = nakama.create_client({
 	host = 'localhost',
 	port = 7350,
 	username = 'defaultkey',
@@ -20,17 +19,19 @@ Lobby.client = nakama.create_client({
 	engine = love2d
 })
 
+Constants.NAKAMA_CLIENT = client
+
 -- TODO: move to load
 local co = coroutine.create(function()
 	-- authenticate
-	local result = nakama.authenticate_email(Lobby.client, 'ropoko@gmail.com', '12345678', { level = "1" }, true, 'ropoko')
+	local result = nakama.authenticate_email(client, 'ropoko@gmail.com', '12345678', { level = "1" }, true, 'ropoko')
 
 	if result then
-		Lobby.user_id = result.user_id
-		nakama.set_bearer_token(Lobby.client, result.token)
+		Constants.USER_ID = result.user_id
+		nakama.set_bearer_token(client, result.token)
 	end
 
-	Lobby.connection = nakama.create_socket(Lobby.client)
+	Lobby.connection = nakama.create_socket(client)
 	socket.connect(Lobby.connection)
 end)
 
@@ -53,7 +54,7 @@ socket.on_matchmaker_matched(Lobby.connection, function(match)
 			}
 		}
 
-		nakama.write_storage_objects(Lobby.client, objects)
+		nakama.write_storage_objects(client, objects)
 	end))
 
 	-- local match_id = match.on_matchmaker_matched.match_id

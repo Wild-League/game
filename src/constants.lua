@@ -1,7 +1,10 @@
 local Constants = {
 	LOGGED_USER = {},
 	ACCESS_TOKEN = '',
-	UDP = {}
+	UDP = {},
+
+	NAKAMA_CLIENT = {},
+	USER_ID = ''
 }
 
 setmetatable(Constants, {
