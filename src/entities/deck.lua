@@ -3,43 +3,43 @@ local Udp = require('src.network.udp')
 local Events = require('src.network.events')
 local Map = require('src.entities.map')
 local Card = require('src.entities.card')
-local Utils = require('src.helpers.utils')
+local Image = require('src.helpers.image')
 
 local default_card_w = 170
 local default_card_h = 206
 
 local Deck = {
 	default_scale = 0.2,
-
-	-- a table with all cards from a given deck
-	deck_selected = {},
-	enemy_deck = {},
-	enemy_possible_cards = {},
-
 	selectable_cards = 4,
 
-	-- if greather than `selectable_cards`
+	deck_selected = {},
+
+	-- if num cards greather than `selectable_cards`
 	queue_next_cards = {},
+
+	-- the 4 cards that the player can select, with animations defined
+	playable_cards = {},
 }
 
-function Deck:load()
-	for i = 1, #self.deck_selected do
-		local card = self.deck_selected[i]
+function Deck:load(deck_selected)
+	self.deck_selected = deck_selected.cards
 
-		-- TODO: create columns for the images on card table, so we don't need to do this here
-		self.deck_selected[i] = Card:new(
-			false,
-			card.name,
-			card.type,
-			card.cooldown,
-			card.damage,
-			card.life,
-			card.speed,
-			card.attack_range,
-			card.width,
-			card.height
-		)
-	end
+	-- for i = 1, #deck_selected do
+	-- 	local card = deck_selected[i]
+
+	-- 	self.deck_selected[i] = Card:new(
+	-- 		false,
+	-- 		card.name,
+	-- 		card.type,
+	-- 		card.cooldown,
+	-- 		card.damage,
+	-- 		card.life,
+	-- 		card.speed,
+	-- 		card.attack_range,
+	-- 		card.width,
+	-- 		card.height
+	-- 	)
+	-- end
 
 	-- for i = 1, #self.enemy_deck do
 	-- 	local card = self.enemy_deck[i]
@@ -63,21 +63,24 @@ function Deck:load()
 	-- end
 
 	-- if greather than `selectable_cards`, should rotate cards
-	if #self.deck_selected > self.selectable_cards then
+	-- if #self.deck_selected > self.selectable_cards then
 
-		-- get the cards left from deck and make unselectable
-		-- and add to queue
-		for i = self.selectable_cards + 1, #self.deck_selected do
-			self.deck_selected[i].selectable = false
-			table.insert(self.queue_next_cards, self.deck_selected[i])
-		end
+	-- 	-- get the cards left from deck and make unselectable
+	-- 	-- and add to queue
+	-- 	for i = self.selectable_cards + 1, #self.deck_selected do
+	-- 		self.deck_selected[i].selectable = false
+	-- 		table.insert(self.queue_next_cards, self.deck_selected[i])
+	-- 	end
 
-		self.queue_next_cards[1].preview_card = true
-	end
+	-- 	self.queue_next_cards[1].preview_card = true
+	-- end
 end
 
 function Deck:update(dt)
+
+	-- related to UI
 	self:define_positions()
+
 	self:check_cooldown(dt)
 end
 
@@ -85,41 +88,49 @@ function Deck:draw()
 	for i = 1, self.selectable_cards do
 		local card = self.deck_selected[i]
 
+		-- just in case the deck has less than `selectable_cards`
 		if card == nil then return end
 
-		if card.selected then
-			self:highlight_selected_card(card)
-		end
+		-- TODO
+		-- if card.selected then
+		-- 	self:highlight_selected_card(card)
+		-- end
 
-		local mouse_x, mouse_y = love.mouse.getPosition()
+		-- local mouse_x, mouse_y = love.mouse.getPosition()
 
-		if (
-			mouse_x >= card.x and mouse_x <= (card.x + (default_card_w))
-			and mouse_y >= card.y and mouse_y <= (card.y + (default_card_h))
-			and not card.is_card_loading
-		) then
-			love.graphics.draw(card.img, card.x, card.y - 100, 0, self.default_scale, self.default_scale)
-			self:draw_cooldown(card.x, card.y - 100, card.cooldown)
-		else
-			love.graphics.draw(card.img, card.x, card.y, 0, self.default_scale, self.default_scale)
-			self:draw_cooldown(card.x, card.y, card.cooldown)
-		end
+		local img = Image:load_from_url(card.img_card, card.name .. i .. '-.png')
+		love.graphics.draw(img, 100 * i, 100)
 
-		if card.is_card_loading then
-			local x = card.x + (default_card_w) / 2
-			local y = card.y + (default_card_h) / 2
+		-- love.graphics.draw(card.img_card, 100, 100, 0)
 
-			love.graphics.stencil(function()
-				love.graphics.draw(card.img, card.x, card.y, 0, self.default_scale, self.default_scale)
-			end, "replace", 1, false)
+		-- if (
+		-- 	mouse_x >= card.x and mouse_x <= (card.x + (default_card_w))
+		-- 	and mouse_y >= card.y and mouse_y <= (card.y + (default_card_h))
+		-- 	and not card.is_card_loading
+		-- ) then
+		-- 	love.graphics.draw(card.img, card.x, card.y - 100, 0, self.default_scale, self.default_scale)
+		-- 	self:draw_cooldown(card.x, card.y - 100, card.cooldown)
+		-- else
+		-- 	love.graphics.draw(card.img, card.x, card.y, 0, self.default_scale, self.default_scale)
+		-- 	self:draw_cooldown(card.x, card.y, card.cooldown)
+		-- end
 
-			love.graphics.setColor(1, 0, 0, 0.5)
-			love.graphics.setStencilTest('equal', 1)
-			love.graphics.arc("fill", x, y, 130, -math.pi / 2, -math.pi / 2 + (2 * math.pi * (card.current_cooldown / card.cooldown)), 100)
-			love.graphics.setColor(1, 1, 1)
+		-- TODO: move to function draw_card_loading_animation
+		-- if card.is_card_loading then
+		-- 	local x = card.x + (default_card_w) / 2
+		-- 	local y = card.y + (default_card_h) / 2
 
-			love.graphics.setStencilTest()
-		end
+		-- 	love.graphics.stencil(function()
+		-- 		love.graphics.draw(card.img, card.x, card.y, 0, self.default_scale, self.default_scale)
+		-- 	end, "replace", 1, false)
+
+		-- 	love.graphics.setColor(1, 0, 0, 0.5)
+		-- 	love.graphics.setStencilTest('equal', 1)
+		-- 	love.graphics.arc("fill", x, y, 130, -math.pi / 2, -math.pi / 2 + (2 * math.pi * (card.current_cooldown / card.cooldown)), 100)
+		-- 	love.graphics.setColor(1, 1, 1)
+
+		-- 	love.graphics.setStencilTest()
+		-- end
 	end
 
 	if #self.queue_next_cards > 0 then

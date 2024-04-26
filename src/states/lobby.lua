@@ -26,8 +26,8 @@ local client = nakama.create_client({
 Constants.NAKAMA_CLIENT = client
 
 -- TODO: move to load
-local co = coroutine.create(function()
-	-- authenticate
+coroutine.resume(coroutine.create(function()
+	-- add user to nakama server
 	local result = nakama.authenticate_email(client, 'ropoko@gmail.com', '12345678', { level = "1" }, true, 'ropoko')
 
 	if result then
@@ -37,9 +37,7 @@ local co = coroutine.create(function()
 
 	Lobby.connection = nakama.create_socket(client)
 	socket.connect(Lobby.connection)
-end)
-
-coroutine.resume(co)
+end))
 
 local selected_deck = Deck:get('1')
 
@@ -60,9 +58,6 @@ socket.on_matchmaker_matched(Lobby.connection, function(match)
 
 		nakama.write_storage_objects(client, objects)
 	end))
-
-	-- local match_id = match.on_matchmaker_matched.match_id
-	-- socket.match_data_send(Lobby.connection, match_id, { message = 'hello' })
 end)
 
 function Lobby:load() end

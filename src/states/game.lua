@@ -8,8 +8,7 @@ local nakama = require('lib.nakama.nakama')
 local json = require('lib.json')
 
 local Game = {
-	timer = Timer:new(),
-	selected_deck = nil
+	timer = Timer:new()
 }
 
 function Game:load()
@@ -27,7 +26,8 @@ function Game:load()
 		local result = nakama.read_storage_objects(Constants.NAKAMA_CLIENT, objects)
 
 		if result then
-			self.selected_deck = json.decode(result.objects[1].value)
+			local selected_deck = json.decode(result.objects[1].value)
+			Deck:load(selected_deck)
 		end
 	end))
 end
