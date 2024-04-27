@@ -8,6 +8,8 @@ function love.load()
 end
 
 function love.update(dt)
+	require("lib.lurker").update()
+
 	Ws:update()
 	CONTEXT:update(dt)
 end
