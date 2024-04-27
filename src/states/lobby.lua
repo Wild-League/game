@@ -85,9 +85,10 @@ function Lobby:draw()
 
 	if play_button.hit then
 		local c = coroutine.create(function()
+			self.timer:reset()
+
 			if self.matchmake_state == 'searching' then
 				self.matchmake_state = 'idle'
-				self.timer:reset()
 				socket.matchmaker_remove(self.connection, self.matchmake_ticket)
 			else
 				self.matchmake_state = 'searching'
