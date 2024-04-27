@@ -1,12 +1,7 @@
 local Layout = require('src.helpers.layout')
-local Udp = require('src.network.udp')
 local Events = require('src.network.events')
 local Map = require('src.entities.map')
 local Card = require('src.entities.card')
-local Image = require('src.helpers.image')
-
-local default_card_w = 170
-local default_card_h = 206
 
 local Deck = {
 	default_scale = 0.2,
@@ -19,65 +14,34 @@ local Deck = {
 
 	-- the 4 cards that the player can select, with animations defined
 	playable_cards = {},
+
+	-- only one card can be selected at a time
+	card_selected = nil
 }
 
 function Deck:load(deck_selected)
+	-- initiliaze cards
+	for index, card in ipairs(deck_selected.cards) do
+		deck_selected.cards[index] = Card:new(card)
+	end
+
 	self.deck_selected = deck_selected.cards
 
-	-- for i = 1, #deck_selected do
-	-- 	local card = deck_selected[i]
-
-	-- 	self.deck_selected[i] = Card:new(
-	-- 		false,
-	-- 		card.name,
-	-- 		card.type,
-	-- 		card.cooldown,
-	-- 		card.damage,
-	-- 		card.life,
-	-- 		card.speed,
-	-- 		card.attack_range,
-	-- 		card.width,
-	-- 		card.height
-	-- 	)
-	-- end
-
-	-- for i = 1, #self.enemy_deck do
-	-- 	local card = self.enemy_deck[i]
-
-	-- 	-- TODO: create columns for the images on card table, so we don't need to do this here
-	-- 	local new_card = Card:new(
-	-- 		true,
-	-- 		card.name,
-	-- 		card.type,
-	-- 		card.cooldown,
-	-- 		card.damage,
-	-- 		card.life,
-	-- 		card.speed,
-	-- 		card.attack_range,
-	-- 		card.width,
-	-- 		card.height
-	-- 	)
-
-	-- 	self.enemy_possible_cards[card.name] = new_card
-	-- 	self.enemy_deck[i] = new_card
-	-- end
-
 	-- if greather than `selectable_cards`, should rotate cards
-	-- if #self.deck_selected > self.selectable_cards then
+	if #self.deck_selected > self.selectable_cards then
 
-	-- 	-- get the cards left from deck and make unselectable
-	-- 	-- and add to queue
-	-- 	for i = self.selectable_cards + 1, #self.deck_selected do
-	-- 		self.deck_selected[i].selectable = false
-	-- 		table.insert(self.queue_next_cards, self.deck_selected[i])
-	-- 	end
+		-- get the cards left from deck and make unselectable
+		-- and add to queue
+		for i = self.selectable_cards + 1, #self.deck_selected do
+			self.deck_selected[i].selectable = false
+			table.insert(self.queue_next_cards, self.deck_selected[i])
+		end
 
-	-- 	self.queue_next_cards[1].preview_card = true
-	-- end
+		self.queue_next_cards[1].preview_card = true
+	end
 end
 
 function Deck:update(dt)
-
 	-- related to UI
 	self:define_positions()
 
@@ -85,52 +49,21 @@ function Deck:update(dt)
 end
 
 function Deck:draw()
+	if self.card_selected then
+		self:highlight_selected_card(self.card_selected)
+	end
+
 	for i = 1, self.selectable_cards do
 		local card = self.deck_selected[i]
 
 		-- just in case the deck has less than `selectable_cards`
 		if card == nil then return end
 
-		-- TODO
-		-- if card.selected then
-		-- 	self:highlight_selected_card(card)
-		-- end
+		love.graphics.draw(card.img_card, card.x, card.y)
 
-		-- local mouse_x, mouse_y = love.mouse.getPosition()
-
-		local img = Image:load_from_url(card.img_card, card.name .. i .. '-.png')
-		love.graphics.draw(img, 100 * i, 100)
-
-		-- love.graphics.draw(card.img_card, 100, 100, 0)
-
-		-- if (
-		-- 	mouse_x >= card.x and mouse_x <= (card.x + (default_card_w))
-		-- 	and mouse_y >= card.y and mouse_y <= (card.y + (default_card_h))
-		-- 	and not card.is_card_loading
-		-- ) then
-		-- 	love.graphics.draw(card.img, card.x, card.y - 100, 0, self.default_scale, self.default_scale)
-		-- 	self:draw_cooldown(card.x, card.y - 100, card.cooldown)
-		-- else
-		-- 	love.graphics.draw(card.img, card.x, card.y, 0, self.default_scale, self.default_scale)
-		-- 	self:draw_cooldown(card.x, card.y, card.cooldown)
-		-- end
-
-		-- TODO: move to function draw_card_loading_animation
-		-- if card.is_card_loading then
-		-- 	local x = card.x + (default_card_w) / 2
-		-- 	local y = card.y + (default_card_h) / 2
-
-		-- 	love.graphics.stencil(function()
-		-- 		love.graphics.draw(card.img, card.x, card.y, 0, self.default_scale, self.default_scale)
-		-- 	end, "replace", 1, false)
-
-		-- 	love.graphics.setColor(1, 0, 0, 0.5)
-		-- 	love.graphics.setStencilTest('equal', 1)
-		-- 	love.graphics.arc("fill", x, y, 130, -math.pi / 2, -math.pi / 2 + (2 * math.pi * (card.current_cooldown / card.cooldown)), 100)
-		-- 	love.graphics.setColor(1, 1, 1)
-
-		-- 	love.graphics.setStencilTest()
-		-- end
+		if card.is_card_loading then
+			card:draw_loading_animation()
+		end
 	end
 
 	if #self.queue_next_cards > 0 then
@@ -139,25 +72,23 @@ function Deck:draw()
 end
 
 function Deck:define_positions()
-	local deck = self.deck_selected
-
-	-- local position = Layout:down_right(196, 206) -- card sizes
+	-- TODO: remove magical numbers
 	local position = Layout:down_right(196, 56)
 
 	-- assign default positions
 	for i = 1, self.selectable_cards do
-		local card = deck[i]
+		local card = self.deck_selected[i]
 
 		-- for cases when the deck has less than 4 cards
 		if card == nil then return end
 
 		card.x = position.width - (i * 200)
-		card.y = position.height
+		card.y = position.height - 50 -- padding
 	end
 
 	-- default position for preview card
 	-- if more than 4 cards, should show the preview card
-	if #deck > 4 then
+	if #self.deck_selected > 4 then
 		-- get preview card
 		self.queue_next_cards[1].x = position.width
 		self.queue_next_cards[1].y = position.height + 35
@@ -173,22 +104,7 @@ end
 
 function Deck:highlight_selected_card(card)
 	love.graphics.setColor(1,0,0)
-	love.graphics.rectangle("fill", card.x - 4, card.y - 4, (default_card_w) + 8, (default_card_h) + 8)
-	love.graphics.setColor(1,1,1)
-end
-
-function Deck:unselect_all_cards()
-	for i = 1, #self.deck_selected do
-		local card = self.deck_selected[i]
-		card.selected = false
-	end
-end
-
-function Deck:draw_cooldown(x, y, cooldown)
-	love.graphics.setColor(1,1,1)
-	love.graphics.circle('fill', x + 10, y + 10, 25)
-	love.graphics.setColor(0,0,0)
-	love.graphics.print(tostring(math.floor(cooldown)), x, y, 0, 1.2)
+	love.graphics.rectangle("fill", card.x - 4, card.y - 4, card.img_card:getWidth() + 8, card.img_card:getHeight() + 8)
 	love.graphics.setColor(1,1,1)
 end
 
@@ -256,90 +172,49 @@ function Deck:check_cooldown(dt)
 	end
 end
 
-function love.mousepressed(x,y,button)
+function love.mousepressed(x, y, button)
+	-- That's a global function, thats why we need to check the context
+	-- TODO: find a better way to do that
 	if CONTEXT.current ~= 'game' then return end
 
 	-- left click
-	if button == 1 then
-		for _,card in pairs(Deck.deck_selected) do
-			-- click on card?
-			if (
-				x >= card.x and x <= (card.x + default_card_w)
-				and y >= card.y and y <= (card.y + default_card_h)
-			) then
-				if not card.is_card_loading then
-					if card.selected then
-						card.selected = false
-					else
-						Deck:unselect_all_cards()
-						card.selected = true
-					end
-					break
+	if button ~= 1 then return end
+
+	for _, card in pairs(Deck.deck_selected) do
+		-- click on card?
+		if (
+			x >= card.x and x <= (card.x + card.img_card:getWidth())
+			and y >= card.y and y <= (card.y + card.img_card:getHeight())
+		) then
+			if not card.is_card_loading then
+				if Deck.card_selected == card then
+					Deck.card_selected = nil
+				else
+					Deck.card_selected = card
 				end
-			else
-				-- this is the selected card?
-				if card.selected then
-					-- click on map?
-					if not (x >= card.x and x <= (card.x + default_card_w))
-						and not (y >= card.y and y <= (card.y + default_card_h)) then
+				break
+			end
+		else
+			-- this is the selected card?
+			if Deck.card_selected == card then
+				-- click on map?
+				if not (x >= card.x and x <= (card.x + card.img_card:getWidth()))
+					and not (y >= card.y and y <= (card.y + card.img_card:getHeight())) then
 
-						card.char_x = x
-						card.char_y = y
+					card.char_x = x
+					card.char_y = y
 
-						if card.char_x <= Map.left_side.w then
-							card.char_x = Map.left_side.w
-						end
-
-						card.is_card_loading = true
-
-						local Game = require('src.states.game')
-
-						-- insert a copy, so we can insert the same card more than once.
-						local new_card = Card:new(
-							false,
-							card.name,
-							card.type,
-							card.cooldown,
-							card.damage,
-							card.life,
-							card.speed,
-							card.attack_range,
-							card.img_preview:getWidth() or 60,
-							card.img_preview:getHeight() or 60
-						)
-
-						new_card.char_x = card.char_x
-						new_card.char_y = card.char_y
-
-						local key = tostring(new_card)
-
-						Game.my_objects[key] = new_card
-
-						Udp:send({ event=Events.Object, identifier=key, obj={
-							key = key,
-							name = new_card.name,
-							type = new_card.type,
-							damage = new_card.damage,
-							cooldown = new_card.cooldown,
-							speed = new_card.speed,
-							attack_range = new_card.attack_range,
-							life = new_card.life,
-							char_x = new_card.char_x,
-							char_y = new_card.char_y,
-							current_action = new_card.current_action,
-							current_life = new_card.current_life,
-							width = new_card.img_preview:getWidth() or 60,
-							height = new_card.img_preview:getHeight() or 60
-						} })
-
-						card.selected = false
-
-						card.current_cooldown = card.cooldown
-
-						Deck.deck_selected = Deck:rotate_deck(card)
-
-						break
+					if card.char_x <= Map.left_side.w then
+						card.char_x = Map.left_side.w
 					end
+
+					card.is_card_loading = true
+					card:reset_cooldown()
+
+					Deck.card_selected = nil
+					Deck.deck_selected = Deck:rotate_deck(card)
+
+					break
 				end
 			end
 		end

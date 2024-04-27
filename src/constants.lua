@@ -4,7 +4,9 @@ local Constants = {
 	UDP = {},
 
 	NAKAMA_CLIENT = {},
-	USER_ID = ''
+	USER_ID = '',
+
+	IN_GAME_LOADED_ASSETS = {}
 }
 
 setmetatable(Constants, {

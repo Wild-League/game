@@ -1,9 +1,10 @@
+local Image = require('src.helpers.image')
 local Char = require('src.entities.cards.char')
 local Spell = require('src.entities.cards.spell')
+local Constants = require('src.constants')
+local Utils = require('src.helpers.utils')
 
-local Card = {}
-
-local default_props = {
+local Card = {
 	x = 0,
 	y = 0,
 	char_x = 0,
@@ -17,41 +18,64 @@ local default_props = {
 	frame_height = 0
 }
 
-function Card:new(enemy, name, type, cooldown, damage, life, speed, attack_range, width, height)
-	local card = {}
+local Card_Types = {
+	CHAR = 'char',
+	SPELL = 'spell'
+}
 
-	if type == 'spell' then
-		card = Spell:new(name, type, cooldown, damage, life, speed, attack_range, width, height)
+function Card:new(card)
+	if card.type == Card_Types.CHAR then
+		local t = Utils.merge_tables(self, Char)
+
+		setmetatable(card, t)
+		t.__index = t
 	end
 
-	if type == 'char' then
-		card = Char:new(enemy, name, type, cooldown, damage, life, speed, attack_range, width, height)
+	if card.type == Card_Types.SPELL then
+		local t = Utils.merge_tables(self, Spell)
+
+		setmetatable(card, t)
+		t.__index = t
 	end
 
-	for key, value in pairs(default_props) do
-		card[key] = value
-	end
+	card = self:load_images(card)
 
-	card.update = function(card_, dt)
-		return card_.actions[card_.current_action].update(dt)
-	end
+	return card
+end
 
-	card.draw = function(card_, current_life, x, y)
-		return card_.actions[card_.current_action].draw(x,y, current_life, enemy)
+function Card:load_images(card)
+	Constants.IN_GAME_LOADED_ASSETS[card.name] = {}
+
+	for key, value in pairs(card) do
+		if string.sub(key, 1, 4) == "img_" and value ~= nil then
+			local img = Image:load_from_url(value, card.name .. '-' .. key .. '-.png')
+			card[key] = img
+
+			Constants.IN_GAME_LOADED_ASSETS[card.name][key] = img
+		end
 	end
 
 	return card
 end
 
--- only showed on preview
-function Card:perception_range()
-	return self.attack_range * 2
+function Card:draw_loading_animation()
+	local x = self.x + self.img_card:getWidth() / 2
+	local y = self.y + self.img_card:getHeight() / 2
+
+	love.graphics.stencil(function()
+		love.graphics.draw(self.img_card, self.x, self.y, 0, self.default_scale, self.default_scale)
+	end, "replace", 1, false)
+
+	love.graphics.setColor(1, 0, 0, 0.5)
+	love.graphics.setStencilTest('equal', 1)
+	love.graphics.arc("fill", x, y, 130, -math.pi / 2, -math.pi / 2 + (2 * math.pi * (self.current_cooldown / self.cooldown)), 100)
+	love.graphics.setColor(1, 1, 1)
+
+	love.graphics.setStencilTest()
 end
 
-function Card:show_name(x, y)
-	love.graphics.print(self.name, x, y + 30)
+function Card:reset_cooldown()
+	self.current_cooldown = self.cooldown
 end
-
-Card.__index = Card
 
 return Card

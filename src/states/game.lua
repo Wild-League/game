@@ -8,7 +8,8 @@ local nakama = require('lib.nakama.nakama')
 local json = require('lib.json')
 
 local Game = {
-	timer = Timer:new()
+	timer = Timer:new(),
+	card_selected = nil
 }
 
 function Game:load()
@@ -36,6 +37,7 @@ function Game:update(dt)
 	Map:update(dt)
 
 	Deck:update(dt)
+	self.card_selected = Deck.card_selected
 
 	self.timer:update(dt)
 end
@@ -44,6 +46,11 @@ function Game:draw()
 	Map:draw()
 
 	Deck:draw()
+
+	if self.card_selected then
+		-- print(self.card_selected.preview)
+		self.card_selected:preview(love.mouse.getX(), love.mouse.getY())
+	end
 
 	self:draw_timer()
 end
@@ -55,18 +62,6 @@ function Game:load_towers()
 
 	local tower2 = Tower:load('left', 'bottom')
 end
-
--- function Game:preview_char(card,x,y)
--- 	-- attack range
--- 	love.graphics.ellipse("line", x, y, card.attack_range, card.attack_range)
--- 	-- perception range
--- 	love.graphics.ellipse("line", x, y, card.perception_range, card.perception_range)
-
--- 	-- represents the char preview
--- 	love.graphics.setColor(0.2,0.2,0.7,0.5)
--- 	love.graphics.draw(card.img_preview, card.char_x, card.char_y)
--- 	love.graphics.setColor(1,1,1)
--- end
 
 function Game:draw_timer()
 	local center_background = Layout:center(100, 100)

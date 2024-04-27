@@ -1,8 +1,4 @@
 local anim8 = require('lib.anim8')
-local Image = require('src.helpers.image')
-
-local Udp = require('src.network.udp')
-local Events = require('src.network.events')
 
 local Char = {
 	-- some actions may use the same animation. e.g: walk | follow
@@ -13,7 +9,9 @@ local Char = {
 	},
 	current_action = 'walk',
 	current_life = 0,
+
 	chars_around = {},
+
 	nearest_enemy = {
 		char_x = 0,
 		char_y = 0,
@@ -21,217 +19,106 @@ local Char = {
 	}
 }
 
-function Char:new(enemy, name, type, cooldown, damage, life, speed, attack_range, width, height)
-	local char = {
-		name = name,
-		type = type,
-		cooldown = cooldown,
-		damage = damage,
-		life = life,
-		current_life = life,
-		speed = speed,
-		attack_range = attack_range,
-		perception_range = attack_range * 2,
-		frame_width = width,
-		frame_height = height,
-		actions = {},
-		animations = {},
-		enemy = enemy
-	}
+-- function Char.handle_chars_around(char, enemy)
+-- 	char.chars_around[enemy.key] = enemy
+-- 	char.chars_around[enemy.key].key = enemy.key
+-- end
 
-	char = self:load_images(char, enemy)
-	char = self:load_animations(char)
-	char = self:load_actions(char)
+-- function Char:load_actions(char)
+-- 	char.actions = {
+-- 		walk = {
+-- 			update = function(dt)
+-- 				char.animations['walk']:update(dt)
+-- 			end,
+-- 			draw = function(x, y, current_life, enemy)
+-- 				char:lifebar(x,y, current_life)
 
-	setmetatable(char, self)
-	self.__index = self
+-- 				if enemy then
+-- 					x = x + char.speed
+-- 				else
+-- 					x = x - char.speed
+-- 				end
 
-	return char
-end
+-- 				char.animations['walk']:draw(char.img_walk, x, y)
+-- 				return x, y
+-- 			end
+-- 		},
+-- 		follow = {
+-- 			update = function(dt)
+-- 				char.nearest_enemy = char:get_nearest_enemy(char, char.chars_around)
 
-function Char.handle_chars_around(char, enemy)
-	char.chars_around[enemy.key] = enemy
-	char.chars_around[enemy.key].key = enemy.key
-end
+-- 				char.animations['walk']:update(dt)
+-- 			end,
+-- 			draw = function(x,y, current_life)
+-- 				char:lifebar(x,y, current_life)
 
-function Char:load_actions(char)
-	char.actions = {
-		walk = {
-			update = function(dt)
-				char.animations['walk']:update(dt)
-			end,
-			draw = function(x, y, current_life, enemy)
-				char:lifebar(x,y, current_life)
+-- 				local dx = char.nearest_enemy.char_x - x
+-- 				local dy = char.nearest_enemy.char_y - y
 
-				if enemy then
-					x = x + char.speed
-				else
-					x = x - char.speed
-				end
+-- 				local distance = math.sqrt(dx*dx + dy*dy)
 
-				char.animations['walk']:draw(char.img_walk, x, y)
-				return x, y
-			end
-		},
-		follow = {
-			update = function(dt)
-				char.nearest_enemy = char:get_nearest_enemy(char, char.chars_around)
+-- 				if distance > 1 then
+-- 					local angle = math.atan2(dy, dx)
+-- 					x = x + char.speed * math.cos(angle)
+-- 					y = y + char.speed * math.sin(angle)
+-- 				end
 
-				char.animations['walk']:update(dt)
-			end,
-			draw = function(x,y, current_life)
-				char:lifebar(x,y, current_life)
+-- 				char.animations['walk']:draw(char.img_walk, x, y)
+-- 				return x,y
+-- 			end
+-- 		},
+-- 		attack = {
+-- 			update = function(dt)
+-- 				char.animations['attack']:update(dt)
+-- 			end,
+-- 			draw = function(x,y, current_life)
+-- 				char:lifebar(x,y, current_life)
 
-				local dx = char.nearest_enemy.char_x - x
-				local dy = char.nearest_enemy.char_y - y
+-- 				char.nearest_enemy = char:get_nearest_enemy(char, char.chars_around)
 
-				local distance = math.sqrt(dx*dx + dy*dy)
+-- 				char.animations['attack']:draw(char.img_attack,x,y)
+-- 				return x,y
+-- 			end
+-- 		},
+-- 		death = {
+-- 			update = function(dt)
+-- 				char.animations['death']:update(dt)
+-- 			end,
+-- 			draw = function(x,y, _)
+-- 				char.animations['death']:draw(char.img_death,x,y)
+-- 				return x,y
+-- 			end
+-- 		}
+-- 	}
 
-				if distance > 1 then
-					local angle = math.atan2(dy, dx)
-					x = x + char.speed * math.cos(angle)
-					y = y + char.speed * math.sin(angle)
-				end
+-- 	return char
+-- end
 
-				char.animations['walk']:draw(char.img_walk, x, y)
-				return x,y
-			end
-		},
-		attack = {
-			update = function(dt)
-				char.animations['attack']:update(dt)
-			end,
-			draw = function(x,y, current_life)
-				char:lifebar(x,y, current_life)
+-- function Char:get_nearest_enemy(char, around)
+-- 	for _,v in pairs(around) do
+-- 		local distance_x = v.char_x - char.char_x
+-- 		local distance_y = v.char_y - char.char_y
 
-				char.nearest_enemy = char:get_nearest_enemy(char, char.chars_around)
+-- 		if (distance_x >= (char.nearest_enemy.char_x - char.char_x))
+-- 			and (distance_y >= (char.nearest_enemy.char_y - char.char_y)) then
+-- 			return v
+-- 		end
+-- 	end
+-- end
 
-				char.animations['attack']:draw(char.img_attack,x,y)
-				return x,y
-			end
-		},
-		death = {
-			update = function(dt)
-				char.animations['death']:update(dt)
-			end,
-			draw = function(x,y, _)
-				char.animations['death']:draw(char.img_death,x,y)
-				return x,y
-			end
-		}
-	}
+function Char:preview(x, y)
+	-- -- attack range
+	-- love.graphics.ellipse("line", x, y, card.attack_range, card.attack_range)
+	-- -- perception range
+	-- love.graphics.ellipse("line", x, y, card.perception_range, card.perception_range)
 
-	return char
-end
+	local center_x = x - self.img_preview:getWidth() / 2
+	local center_y = y - self.img_preview:getHeight() / 2
 
-function Char:get_nearest_enemy(char, around)
-	for _,v in pairs(around) do
-		local distance_x = v.char_x - char.char_x
-		local distance_y = v.char_y - char.char_y
-
-		if (distance_x >= (char.nearest_enemy.char_x - char.char_x))
-			and (distance_y >= (char.nearest_enemy.char_y - char.char_y)) then
-			return v
-		end
-	end
-end
-
-function Char:load_animations(char)
-	for _, value in pairs(self.possible_animations) do
-		char.animations[value] = {}
-
-		local number_frames = math.floor(char['img_'..value]:getWidth() / char.frame_width)
-
-		local grid = anim8.newGrid(char.frame_width, char.frame_height, char['img_'..value]:getWidth(), char['img_'..value]:getHeight())
-
-		local animation = {}
-
-		if value == 'attack' then
-			animation = anim8.newAnimation(grid('1-'..number_frames, 1), char.speed/10, function()
-				if char.enemy then return end
-
-				if char.nearest_enemy.current_life > 0 then
-					char.nearest_enemy.current_life = char.nearest_enemy.current_life - char.damage
-
-					if char.nearest_enemy.type == 'tower' then
-						Udp:send({ identifier=char.nearest_enemy.key, event=Events.EnemyTower, obj={
-							key = char.nearest_enemy.key,
-							current_life = char.nearest_enemy.current_life
-						} })
-					else
-						Udp:send({ identifier=char.nearest_enemy.key, event=Events.EnemyObject, obj={
-							key = char.nearest_enemy.key,
-							name = char.nearest_enemy.name,
-							current_life = char.nearest_enemy.current_life
-						} })
-					end
-
-				else
-					char.nearest_enemy = {
-						char_x = 0,
-						char_y = 0,
-						current_life = 0
-					}
-
-					char.current_action = 'walk'
-					char.chars_around = {}
-
-					local key = tostring(char)
-
-					Udp:send({ identifier=key, event=Events.Object, obj={
-						key = key,
-						current_action = 'walk',
-						char_x = char.char_x,
-						char_y = char.char_y
-					} })
-				end
-			end)
-		elseif value == 'death' then
-			animation = anim8.newAnimation(grid('1-'..number_frames, 1), char.speed/10, function()
-				local Game = require('src.states.game')
-
-				local key = tostring(char)
-
-				if char.enemy then
-					Game.enemy_objects[key] = nil
-
-					Udp:send({ identifier=key, event=Events.EnemyObject, obj={
-						key = key,
-						current_action = 'dead'
-					} })
-				else
-					Game.my_objects[key] = nil
-
-					Udp:send({ identifier=key, event=Events.Object, obj={
-						key = key,
-						current_action = 'dead'
-					} })
-				end
-
-			end)
-		else
-			-- walk
-			animation = anim8.newAnimation(grid('1-'..number_frames, 1), char.speed/10)
-		end
-
-		char.animations[value] = animation
-	end
-
-	return char
-end
-
-function Char:load_images(card, enemy)
-	local name = card.name
-
-	local side = enemy and 'right' or 'left'
-
-	card.img = Image:load_from_url('http://localhost:9000/cards/'.. string.lower(name) ..'/card.png', name..'.png')
-	card.img_preview = Image:load_from_url('http://localhost:9000/cards/'.. string.lower(name) ..'/preview.png', name..'.png')
-	card.img_attack = Image:load_from_url('http://localhost:9000/cards/'.. string.lower(name) ..'/attack-'..side..'.png', name..'.png')
-	card.img_death = Image:load_from_url('http://localhost:9000/cards/'.. string.lower(name) ..'/death-'..side..'.png', name..'.png')
-	card.img_walk = Image:load_from_url('http://localhost:9000/cards/'.. string.lower(name) ..'/walk-'..side..'.png', name..'.png')
-
-	return card
+	-- represents the char preview
+	love.graphics.setColor(0.2,0.2,0.7,0.5)
+	love.graphics.draw(self.img_preview, center_x, center_y)
+	love.graphics.setColor(1,1,1)
 end
 
 function Char:lifebar(x,y, current_life)
