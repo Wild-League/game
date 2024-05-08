@@ -58,4 +58,11 @@ function Layout:up_right(obj_width, obj_height)
 	return down_left
 end
 
+function Layout.centerRectOnScreen(w, h)
+    local x = math.floor((love.graphics.getWidth() - w) / 2)
+    local y = math.floor((love.graphics.getHeight() - h) / 2)
+
+    return x, y
+end
+
 return Layout

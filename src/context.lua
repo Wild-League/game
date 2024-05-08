@@ -14,10 +14,10 @@ local Context = {
 		lobby = Lobby,
 		queue = Queue,
 		loading_game = LoadingGame,
-		game = Game
+		game = Game,
 	},
 
-	current = 'lobby',
+	current = 'initial',
 
 	update = function(self, dt)
 		return self.states[self.current]:update(dt)
