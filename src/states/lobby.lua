@@ -28,7 +28,7 @@ Constants.NAKAMA_CLIENT = client
 -- TODO: move to load
 coroutine.resume(coroutine.create(function()
 	-- add user to nakama server
-	local result = nakama.authenticate_email(client, 'ropoko@gmail.com', '12345678', { level = "1" }, true, 'ropoko')
+	local result = nakama.authenticate_email(client, 'ropoko2@gmail.com', '12345678', { level = "1" }, true, 'ropoko2')
 
 	if result then
 		Constants.USER_ID = result.user_id

@@ -19,6 +19,10 @@ local Context = {
 
 	current = 'initial',
 
+	load = function(self, dt)
+		return self.states[self.current]:load()
+	end,
+
 	update = function(self, dt)
 		return self.states[self.current]:update(dt)
 	end,

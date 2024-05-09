@@ -4,6 +4,9 @@ local Spell = require('src.entities.cards.spell')
 local Constants = require('src.constants')
 local Utils = require('src.helpers.utils')
 
+-- TODO: define actions for each card type
+-- TODO: conigure animations for each action
+-- -- TODO: check `frame_width` and `frame_height`
 local Card = {
 	x = 0,
 	y = 0,

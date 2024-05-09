@@ -2,10 +2,12 @@ local Base = {
 	current = 'prod',
 
 	dev = {
-		base_url = 'http://localhost:8000/v1/'
+		world_url = 'http://localhost:8000/v1/',
+		host_url = 'https://host-api.wildleague.org/v1/'
 	},
 	prod = {
-		base_url = 'https://api.wildleague.org/v1/'
+		world_url = 'https://api.wildleague.org/v1/',
+		host_url = 'https://host-api.wildleague.org/v1/'
 	}
 }
 

@@ -5,6 +5,7 @@ local Ws = require('src.network.websocket')
 function love.load()
 	-- initialize the global state manager
 	CONTEXT = Context;
+	CONTEXT:load()
 end
 
 function love.update(dt)
