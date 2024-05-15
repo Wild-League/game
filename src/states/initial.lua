@@ -3,23 +3,28 @@ local Suit = require('lib.suit')
 local Layout = require('src.helpers.layout')
 local Instance = require('src.api.instance')
 local Images = require('src.ui.images')
+local ImageHelper = require('src.helpers.image')
 local Fonts = require('src.ui.fonts')
 local Host = require('src.api.host')
 
 local Initial = {
 	instance_input = 'https://wildleague.org',
 	is_instance_valid = true,
-	server_options = {}
+	server_options = {},
+	current_background = Images.background_cloud,
+	list_worlds = nil
 }
 
 function Initial:load()
 	love.graphics.setFont(Fonts.jura(24))
 
-	local worlds = Host:get_worlds().body
+	self.list_worlds = Host:get_worlds().body
 
-	for _, value in pairs(worlds) do
+	for _, value in pairs(self.list_worlds) do
 		table.insert(self.server_options, { text = value.name, value = value.url })
 	end
+
+	self:load_background_image(self.server_options[1])
 
 	self.ui = yui.Ui:new({
 		x = 500,
@@ -37,6 +42,7 @@ function Initial:load()
 				choices = self.server_options,
 				onChange = function(option)
 					self.instance_input = self.server_options[option.index]
+					Initial:load_background_image(self.server_options[option.index])
 				end
 			}),
 
@@ -62,6 +68,14 @@ function Initial:load()
 						self.is_instance_valid = false
 					end
 				end
+			}),
+
+			yui.Button({
+				w = 350, h = 50,
+				image = love.graphics.newImage('assets/tower.png'),
+				onHit = function ()
+					print('hit')
+				end
 			})
 		}
 	})
@@ -72,7 +86,7 @@ function Initial:update(dt)
 end
 
 function Initial:draw()
-	love.graphics.draw(Images.background_cloud, 0, 0, 0, love.graphics.getWidth() / Images.background_cloud:getWidth(), love.graphics.getHeight() / Images.background_cloud:getHeight())
+	love.graphics.draw(self.current_background, 0, 0, 0, love.graphics.getWidth() / self.current_background:getWidth(), love.graphics.getHeight() / self.current_background:getHeight())
 
 	self.ui:draw()
 
@@ -84,6 +98,23 @@ function Initial:draw()
 	love.graphics.scale(default_scale)
 	love.graphics.draw(Images.logo_text, 0, 0)
 	love.graphics.pop()
+end
+
+function Initial:load_background_image(url_server)
+	local world = nil
+
+	for _, w in pairs(self.list_worlds) do
+		if w.url == url_server.value then
+			world = w
+			break
+		end
+	end
+
+	local background = world.background
+		and ImageHelper:load_from_url(world.background, 'background')
+		or Images.background_cloud
+
+	self.current_background = background
 end
 
 return Initial
