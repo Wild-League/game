@@ -28,7 +28,7 @@ function Initial:load()
 		yui.Rows {
 			yui.Label({
 				w = 350, h = 100,
-				text = 'Enter the server you want to join!',
+				text = 'Choose the server you want to join!',
 				theme = { color = { normal = { fg = { 1, 1, 1 } } }}
 			}),
 
