@@ -110,11 +110,13 @@ function Initial:load_background_image(url_server)
 		end
 	end
 
-	local background = world.background
+	if world then
+		local background = world.background
 		and ImageHelper:load_from_url(world.background, 'background')
 		or Images.background_cloud
 
-	self.current_background = background
+		self.current_background = background
+	end
 end
 
 return Initial
