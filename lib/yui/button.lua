@@ -6,12 +6,10 @@
 --
 --
 -- Button widget receives the following callbacks: @{yui.Widget.WidgetCallbacks|onEnter}(), @{yui.Widget.WidgetCallbacks|onHit}(), @{yui.Widget.WidgetCallbacks|onLeave}().
-
-
 local BASE = (...):gsub('button$', '')
 
-local Widget = require(BASE..'widget')
-local core = require(BASE..'core')
+local Widget = require(BASE .. 'widget')
+local core = require(BASE .. 'core')
 
 local shadowtext = require 'lib.yui.lib.gear.shadowtext'
 local T = require('lib.yui.lib.moonspeak').translate
@@ -32,7 +30,6 @@ Button.__index = Button
 -- @field notranslate (boolean) don't translate text
 -- @table ButtonAttributes
 
-
 --- Button constructor
 -- @param args (@{ButtonAttributes}) widget attributes
 function Button:new(args)
@@ -42,10 +39,10 @@ function Button:new(args)
     self.align = self.align or 'center'
     self.valign = self.valign or 'center'
     self.active = false
-		self.image = self.image or nil
-    if not self.notranslate then
-        self.text = T(self.text)
-    end
+    self.image = self.image or nil
+    self.drawBox = self.drawBox or false
+
+    if not self.notranslate then self.text = T(self.text) end
     return self
 end
 
@@ -58,35 +55,34 @@ local function hit(button)
     end
 end
 
-function Button:onPointerInput(_,_, clicked)
+function Button:onPointerInput(_, _, clicked)
     self:grabFocus()
     if clicked then hit(self) end
 end
 
-function Button:onActionInput(action)
-    if action.confirm then hit(self) end
-end
+function Button:onActionInput(action) if action.confirm then hit(self) end end
 
 function Button:draw()
-    local x,y,w,h = self.x,self.y,self.w,self.h
+    local x, y, w, h = self.x, self.y, self.w, self.h
     local color, font, cornerRadius = core.themeForWidget(self)
     local c = core.colorForWidgetState(self, color)
 
-		if self.image then
-			love.graphics.draw(self.image, x, y)
+    if self.image then
+        love.graphics.draw(self.image, x, y)
 
-			if self:isFocused() then
-				love.graphics.setColor(1, 1, 1, 0.5)
-				love.graphics.rectangle('fill', x, y, self.image:getWidth(), self.image:getHeight())
-				love.graphics.setColor(1, 1, 1)
-			end
-		else
-			core.drawBox(x,y,w,h, c, cornerRadius)
-			love.graphics.setColor(c.fg)
-			love.graphics.setFont(font)
-			y = y + core.verticalOffsetForAlign(self.valign, font, h)
-			shadowtext.printf(self.text, x+2, y, w-4, self.align)
-		end
+        if self:isFocused() and self.drawBox == true then
+            love.graphics.setColor(1, 1, 1, 0.5)
+            love.graphics.rectangle('fill', x, y, self.image:getWidth(),
+                                    self.image:getHeight())
+            love.graphics.setColor(1, 1, 1)
+        end
+    else
+        core.drawBox(x, y, w, h, c, cornerRadius)
+        love.graphics.setColor(c.fg)
+        love.graphics.setFont(font)
+        y = y + core.verticalOffsetForAlign(self.valign, font, h)
+        shadowtext.printf(self.text, x + 2, y, w - 4, self.align)
+    end
 end
 
 return Button
