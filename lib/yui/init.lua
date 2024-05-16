@@ -9,19 +9,19 @@
 -- global @{yui.theme} (still accessible from @{yui.Ui}).
 -- Refer to each module documentation.
 
-local BASE = (...)..'.'
+local BASE = (...) .. '.'
 
 return {
-    Button = require(BASE..'button'),
-    Checkbox = require(BASE..'checkbox'),
-    Choice = require(BASE..'choice'),
-    Columns = require(BASE..'columns'),
-    Input = require(BASE..'input'),
-    Label = require(BASE..'label'),
-    Layout = require(BASE..'layout'),
-    Rows = require(BASE..'rows'),
-    Slider = require(BASE..'slider'),
-    Spacer = require(BASE..'spacer'),
-    Ui = require(BASE..'ui'),
-    Widget = require(BASE..'widget'),
+    Button = require(BASE .. 'button'),
+    Checkbox = require(BASE .. 'checkbox'),
+    Choice = require(BASE .. 'choice'),
+    Columns = require(BASE .. 'columns'),
+    Input = require(BASE .. 'input'),
+    Label = require(BASE .. 'label'),
+    Layout = require(BASE .. 'layout'),
+    Rows = require(BASE .. 'rows'),
+    Slider = require(BASE .. 'slider'),
+    Spacer = require(BASE .. 'spacer'),
+    Ui = require(BASE .. 'ui'),
+    Widget = require(BASE .. 'widget'),
 }

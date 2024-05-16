@@ -40,7 +40,9 @@ function Button:new(args)
     self.valign = self.valign or 'center'
     self.active = false
     self.image = self.image or nil
-    self.drawBox = self.drawBox or false
+    self.use_image_as_background = self.use_image_as_background or false
+    self.scale = self.scale or 1
+    self.mode = self.mode or "fill"
 
     if not self.notranslate then self.text = T(self.text) end
     return self
@@ -62,26 +64,31 @@ end
 
 function Button:onActionInput(action) if action.confirm then hit(self) end end
 
+local i = 0
+
 function Button:draw()
     local x, y, w, h = self.x, self.y, self.w, self.h
     local color, font, cornerRadius = core.themeForWidget(self)
     local c = core.colorForWidgetState(self, color)
 
     if self.image then
-        love.graphics.draw(self.image, x, y)
+        love.graphics.draw(self.image, x, y, 0, self.scale, self.scale);
 
-        if self:isFocused() and self.drawBox == true then
+        if (self:isFocused() and self.drawBox == true) or
+            self.use_image_as_background == false then
             love.graphics.setColor(1, 1, 1, 0.5)
-            love.graphics.rectangle('fill', x, y, self.image:getWidth(),
-                                    self.image:getHeight())
+            love.graphics.rectangle(self.mode, x / self.scale, y / self.scale,
+                                    self.image:getWidth() * self.scale,
+                                    self.image:getHeight() * self.scale)
             love.graphics.setColor(1, 1, 1)
         end
     else
-        core.drawBox(x, y, w, h, c, cornerRadius)
+        core.drawBox(x / self.scale, y / self.scale, w * self.scale,
+                     h * self.scale, c, cornerRadius)
         love.graphics.setColor(c.fg)
         love.graphics.setFont(font)
-        y = y + core.verticalOffsetForAlign(self.valign, font, h)
-        shadowtext.printf(self.text, x + 2, y, w - 4, self.align)
+        y = y + core.verticalOffsetForAlign(self.valign, font, h * self.scale)
+        shadowtext.printf(self.text, x + 2, y, (w - 4) * self.scale, self.align)
     end
 end
 

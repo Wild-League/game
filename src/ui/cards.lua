@@ -2,20 +2,23 @@ local yui = require("lib.yui")
 local img = require("src.helpers.image")
 
 local Card = {
-    cardBottomPadding = 20,
-    cardSidePadding = 20,
-    cardHeight = 200,
-    cardWidth = 200
+    card_bottom_padding = 20,
+    card_side_padding = 20,
+    card_height = 96,
+    card_width = 64,
+    card_scale = 1.25
 };
 
 function Card:new(card)
 
     return yui.Button {
-        w = self.cardWidth,
-        h = self.cardHeight,
+        w = self.card_width,
+        h = self.card_height,
         image = img:load_from_url(card.img_card, 'preview'),
-        drawBox = true,
+        use_image_as_background = true,
+        scale = self.card_scale,
         theme = nil,
+        mode = "line",
         onHit = function() print(card.name) end,
 
         yui.Label({

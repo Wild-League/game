@@ -6,8 +6,8 @@
 
 local BASE = (...):gsub('label$', '')
 
-local Widget = require(BASE..'widget')
-local core = require(BASE..'core')
+local Widget = require(BASE .. 'widget')
+local core = require(BASE .. 'core')
 
 local shadowtext = require 'lib.yui.lib.gear.shadowtext'
 local T = require('lib.yui.lib.moonspeak').translate
@@ -36,18 +36,19 @@ function Label:new(args)
     self.text = self.notranslate and self.text or T(self.text)
     self.align = self.align or 'center'
     self.valign = self.valign or 'center'
+    self.size = self.size or 12
     return self
 end
 
 function Label:draw()
-    local x,y,w,h = self.x,self.y,self.w,self.h
+    local x, y, w, h = self.x, self.y, self.w, self.h
     local color, font, _ = core.themeForWidget(self)
 
     y = y + core.verticalOffsetForAlign(self.valign, font, h)
 
     love.graphics.setColor(color.normal.fg)
-    love.graphics.setFont(font)
-    shadowtext.printf(self.text, x+2, y, w-4, self.align)
+    love.graphics.setFont(font, self.size)
+    shadowtext.printf(self.text, x + 2, y, w - 4, self.align)
 end
 
 return Label

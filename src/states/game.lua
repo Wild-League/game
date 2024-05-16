@@ -78,15 +78,15 @@ function Game:load()
         end
     end))
 
+    -- TODO change for Deck:load() to list the cards
     for index, card in pairs(deck) do
         self.ui[index] = yui.Ui:new({
-            x = love.graphics.getWidth() - (Card.cardWidth * index) -
-                (index * Card.cardSidePadding),
-            y = love.graphics.getHeight() - Card.cardHeight -
-                Card.cardBottomPadding,
-            w = Card.cardHeight,
+            x = (love.graphics.getWidth() / 2) - (Card.card_width * index) -
+                (index * Card.card_side_padding),
+            y = love.graphics.getHeight() - Card.card_height * 2,
+            w = Card.card_height,
             h = Card.cardwi,
-            yui.Rows {Card:new(card)}
+            Card:new(card)
 
         })
 
