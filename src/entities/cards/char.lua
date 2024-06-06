@@ -2,11 +2,11 @@ local anim8 = require('lib.anim8')
 
 local Char = {
 	-- some actions may use the same animation. e.g: walk | follow
-	possible_animations = {
-		'walk',
-		'attack',
-		'death'
-	},
+	-- possible_animations = {
+	-- 	'walk',
+	-- 	'attack',
+	-- 	'death'
+	-- },
 	current_action = 'walk',
 	current_life = 0,
 
@@ -16,6 +16,12 @@ local Char = {
 		char_x = 0,
 		char_y = 0,
 		current_life = 0
+	},
+
+	animations = {
+		walk = {},
+		attack = {},
+		death = {}
 	}
 }
 
@@ -105,6 +111,10 @@ local Char = {
 -- 		end
 -- 	end
 -- end
+
+function Char:walk(x, y)
+
+end
 
 function Char:preview(x, y)
 	-- -- attack range

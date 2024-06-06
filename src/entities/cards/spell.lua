@@ -1,6 +1,10 @@
 local Spell = {
 	current_action = 'attack',
-	actions = {}
+	actions = {},
+
+	animations = {
+		attack = {},
+	}
 }
 
 function Spell:preview(x, y)

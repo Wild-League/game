@@ -1,5 +1,4 @@
 local Layout = require('src.helpers.layout')
-local Events = require('src.network.events')
 local Map = require('src.entities.map')
 local Card = require('src.entities.card')
 
@@ -16,7 +15,7 @@ local Deck = {
 	playable_cards = {},
 
 	-- only one card can be selected at a time
-	card_selected = nil
+	card_selected = nil,
 }
 
 function Deck:load(deck_selected)

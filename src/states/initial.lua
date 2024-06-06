@@ -4,7 +4,6 @@ local Layout = require('src.helpers.layout')
 local Instance = require('src.api.instance')
 local Images = require('src.ui.images')
 local ImageHelper = require('src.helpers.image')
-local Fonts = require('src.ui.fonts')
 local Host = require('src.api.host')
 
 local Initial = {
@@ -16,8 +15,6 @@ local Initial = {
 }
 
 function Initial:load()
-	love.graphics.setFont(Fonts.jura(24))
-
 	self.list_worlds = Host:get_worlds().body
 
 	for _, value in pairs(self.list_worlds) do
@@ -41,7 +38,7 @@ function Initial:load()
 				w = 350, h = 50,
 				choices = self.server_options,
 				onChange = function(option)
-					self.instance_input = self.server_options[option.index]
+					self.instance_input = self.server_options[option.index].value
 					Initial:load_background_image(self.server_options[option.index])
 				end
 			}),
@@ -56,6 +53,10 @@ function Initial:load()
 				theme = { color = { normal = { fg = { 1, 1, 0 } } }},
 			}),
 
+			yui.Spacer({
+				w = 350, h = 50
+			}),
+
 			yui.Button({
 				w = 350, h = 50,
 				text = 'Enter',
@@ -67,14 +68,6 @@ function Initial:load()
 					else
 						self.is_instance_valid = false
 					end
-				end
-			}),
-
-			yui.Button({
-				w = 350, h = 50,
-				image = love.graphics.newImage('assets/tower.png'),
-				onHit = function ()
-					print('hit')
 				end
 			})
 		}

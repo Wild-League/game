@@ -3,10 +3,11 @@ local Char = require('src.entities.cards.char')
 local Spell = require('src.entities.cards.spell')
 local Constants = require('src.constants')
 local Utils = require('src.helpers.utils')
+local Animation = require('src.helpers.animation')
 
 -- TODO: define actions for each card type
 -- TODO: conigure animations for each action
--- -- TODO: check `frame_width` and `frame_height`
+-- TODO: check `frame_width` and `frame_height`
 local Card = {
 	x = 0,
 	y = 0,
@@ -17,8 +18,8 @@ local Card = {
 	selectable = false,
 	preview_card = false,
 	is_card_loading = false,
-	frame_width = 0,
-	frame_height = 0
+	-- frame_width = 0,
+	-- frame_height = 0
 }
 
 local Card_Types = {
@@ -42,6 +43,7 @@ function Card:new(card)
 	end
 
 	card = self:load_images(card)
+	card = self:load_animations(card)
 
 	return card
 end
@@ -56,6 +58,14 @@ function Card:load_images(card)
 
 			Constants.IN_GAME_LOADED_ASSETS[card.name][key] = img
 		end
+	end
+
+	return card
+end
+
+function Card:load_animations(card)
+	for key, _ in pairs(card.animations) do
+		card.animations[key] = Animation:new(card, key, card.frame_width, card.frame_height)
 	end
 
 	return card
