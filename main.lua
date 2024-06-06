@@ -1,8 +1,11 @@
 local Suit = require('lib.suit')
+local Fonts = require('src.ui.fonts')
 local Context = require('src.context')
 local Ws = require('src.network.websocket')
 
 function love.load()
+	love.graphics.setFont(Fonts.jura(24))
+
 	-- initialize the global state manager
 	CONTEXT = Context;
 	CONTEXT:load()
