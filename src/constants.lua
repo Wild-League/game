@@ -5,8 +5,9 @@ local Constants = {
 
 	NAKAMA_CLIENT = {},
 	USER_ID = '',
-
-	IN_GAME_LOADED_ASSETS = {}
+	ENEMY_ID = '',
+	MATCH_ID = '',
+	SOCKET_CONNECTION = {}
 }
 
 setmetatable(Constants, {

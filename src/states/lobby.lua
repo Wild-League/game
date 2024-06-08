@@ -9,58 +9,62 @@ local Constants = require('src.constants')
 local Timer = require('src.helpers.timer')
 
 local Lobby = {
-	connection = {},
 	matchmake_state = 'idle',
 	matchmake_ticket = nil,
 	timer = Timer:new()
 }
 
-local client = nakama.create_client({
-	host = 'localhost',
-	port = 7350,
-	username = 'defaultkey',
-	password = '',
-	engine = love2d
-})
+function Lobby:load()
+	local client = nakama.create_client({
+		host = 'localhost',
+		port = 7350,
+		username = 'defaultkey',
+		password = '',
+		engine = love2d
+	})
 
-Constants.NAKAMA_CLIENT = client
-
--- TODO: move to load
-coroutine.resume(coroutine.create(function()
-	-- add user to nakama server
-	local result = nakama.authenticate_email(client, 'ropoko2@gmail.com', '12345678', { level = "1" }, true, 'ropoko2')
-
-	if result then
-		Constants.USER_ID = result.user_id
-		nakama.set_bearer_token(client, result.token)
-	end
-
-	Lobby.connection = nakama.create_socket(client)
-	socket.connect(Lobby.connection)
-end))
-
-local selected_deck = Deck:get('1')
-
-socket.on_matchmaker_matched(Lobby.connection, function(match)
-	CONTEXT:change('game')
+	Constants.NAKAMA_CLIENT = client
 
 	coroutine.resume(coroutine.create(function()
-		local objects = {
-			{
-				collection = 'selected_deck',
-				key = 'selected_deck',
-				value = json.encode(selected_deck),
-				permissionRead = 1,
-				permissionWrite = 1,
-				version = ""
-			}
-		}
+		-- add user to nakama server
+		local result = nakama.authenticate_email(client, 'ropoko2@gmail.com', '12345678', { level = "1" }, true, 'ropoko2')
 
-		nakama.write_storage_objects(client, objects)
+		if result then
+			Constants.USER_ID = result.user_id
+			nakama.set_bearer_token(client, result.token)
+		end
+
+		Constants.SOCKET_CONNECTION = nakama.create_socket(client)
+		socket.connect(Constants.SOCKET_CONNECTION)
 	end))
-end)
 
-function Lobby:load() end
+	-- TODO: add real code
+	local selected_deck = Deck:get('1')
+
+	socket.on_matchmaker_matched(Constants.SOCKET_CONNECTION, function(match)
+		CONTEXT:change('game')
+
+		Constants.MATCH_ID = match.matchmaker_matched.match_id
+		Constants.ENEMY_ID = self:get_enemy_user_id(match.matchmaker_matched.users)
+
+		coroutine.resume(coroutine.create(function()
+			local objects = {
+				{
+					collection = 'selected_deck',
+					key = 'selected_deck',
+					value = json.encode(selected_deck),
+					permissionRead = 2,
+					permissionWrite = 1,
+					version = ""
+				}
+			}
+
+			nakama.write_storage_objects(client, objects, function ()
+				socket.match_join(Constants.SOCKET_CONNECTION, Constants.MATCH_ID)
+			end)
+		end))
+	end)
+end
 
 function Lobby:update(dt)
 	self.timer:update(dt)
@@ -89,15 +93,23 @@ function Lobby:draw()
 
 			if self.matchmake_state == 'searching' then
 				self.matchmake_state = 'idle'
-				socket.matchmaker_remove(self.connection, self.matchmake_ticket)
+				socket.matchmaker_remove(Constants.SOCKET_CONNECTION, self.matchmake_ticket)
 			else
 				self.matchmake_state = 'searching'
-				socket.matchmaker_add(self.connection, 2, 2, nil, nil, nil, nil, function(matchmake)
+				socket.matchmaker_add(Constants.SOCKET_CONNECTION, 2, 2, nil, nil, nil, nil, function(matchmake)
 					self.matchmake_ticket = matchmake.matchmaker_ticket.ticket
 				end)
 			end
 		end)
 		coroutine.resume(c)
+	end
+end
+
+function Lobby:get_enemy_user_id(users)
+	for _, user in pairs(users) do
+		if user.presence.user_id ~= Constants.USER_ID then
+			return user.user_id
+		end
 	end
 end
 

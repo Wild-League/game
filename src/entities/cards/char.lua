@@ -1,22 +1,14 @@
-local anim8 = require('lib.anim8')
-
 local Char = {
-	-- some actions may use the same animation. e.g: walk | follow
-	-- possible_animations = {
-	-- 	'walk',
-	-- 	'attack',
-	-- 	'death'
-	-- },
 	current_action = 'walk',
 	current_life = 0,
 
-	chars_around = {},
+	-- chars_around = {},
 
-	nearest_enemy = {
-		char_x = 0,
-		char_y = 0,
-		current_life = 0
-	},
+	-- nearest_enemy = {
+	-- 	char_x = 0,
+	-- 	char_y = 0,
+	-- 	current_life = 0
+	-- },
 
 	animations = {
 		walk = {},
@@ -112,10 +104,6 @@ local Char = {
 -- 	end
 -- end
 
-function Char:walk(x, y)
-
-end
-
 function Char:preview(x, y)
 	-- -- attack range
 	-- love.graphics.ellipse("line", x, y, card.attack_range, card.attack_range)
@@ -125,7 +113,6 @@ function Char:preview(x, y)
 	local center_x = x - self.img_preview:getWidth() / 2
 	local center_y = y - self.img_preview:getHeight() / 2
 
-	-- represents the char preview
 	love.graphics.setColor(0.2,0.2,0.7,0.5)
 	love.graphics.draw(self.img_preview, center_x, center_y)
 	love.graphics.setColor(1,1,1)
@@ -136,6 +123,14 @@ function Char:lifebar(x,y, current_life)
 	love.graphics.rectangle("line", x - 10, y - 10, self.life, 5)
 	love.graphics.rectangle("fill", x - 10, y - 10, current_life, 5)
 	love.graphics.setColor(255,255,255)
+end
+
+function Char:update(dt)
+	self.animations[self.current_action]:update(dt)
+end
+
+function Char:draw()
+	self.animations[self.current_action]:draw(self['img_'..self.current_action], self.char_x, self.char_y)
 end
 
 return Char

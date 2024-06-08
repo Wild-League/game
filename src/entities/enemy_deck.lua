@@ -5,10 +5,8 @@ local Constants = require('src.constants')
 local socket = require('lib.nakama.socket')
 local MatchEvents = require('src.config.match_events')
 local json = require('lib.json')
-local Utils = require('src.helpers.utils')
-local uuid = require('lib.uuid')
 
-local Deck = {
+local EnemyDeck = {
 	default_scale = 0.2,
 	selectable_cards = 4,
 
@@ -24,11 +22,13 @@ local Deck = {
 	card_selected = nil,
 }
 
-function Deck:load(deck_selected)
+function EnemyDeck:load(deck_selected)
 	-- initiliaze cards
-	for _, card in ipairs(deck_selected.cards) do
-		table.insert(self.deck_selected, Card:new(card))
+	for index, card in ipairs(deck_selected.cards) do
+		deck_selected.cards[index] = Card:new(card)
 	end
+
+	self.deck_selected = deck_selected.cards
 
 	-- if greather than `selectable_cards`, should rotate cards
 	if #self.deck_selected > self.selectable_cards then
@@ -44,14 +44,14 @@ function Deck:load(deck_selected)
 	end
 end
 
-function Deck:update(dt)
+function EnemyDeck:update(dt)
 	-- related to UI
 	self:define_positions()
 
 	self:check_cooldown(dt)
 end
 
-function Deck:draw()
+function EnemyDeck:draw()
 	if self.card_selected then
 		self:highlight_selected_card(self.card_selected)
 	end
@@ -74,7 +74,7 @@ function Deck:draw()
 	end
 end
 
-function Deck:define_positions()
+function EnemyDeck:define_positions()
 	-- TODO: remove magical numbers
 	local position = Layout:down_right(196, 56)
 
@@ -101,17 +101,17 @@ function Deck:define_positions()
 end
 
 -- the next card on queue
-function Deck:draw_preview_card()
-	love.graphics.draw(self.queue_next_cards[1].img_card, self.queue_next_cards[1].x, self.queue_next_cards[1].y, 0, 0.65 * self.default_scale, 0.65 * self.default_scale)
+function EnemyDeck:draw_preview_card()
+	love.graphics.draw(self.queue_next_cards[1].img, self.queue_next_cards[1].x, self.queue_next_cards[1].y, 0, 0.65 * self.default_scale, 0.65 * self.default_scale)
 end
 
-function Deck:highlight_selected_card(card)
+function EnemyDeck:highlight_selected_card(card)
 	love.graphics.setColor(1,0,0)
 	love.graphics.rectangle("fill", card.x - 4, card.y - 4, card.img_card:getWidth() + 8, card.img_card:getHeight() + 8)
 	love.graphics.setColor(1,1,1)
 end
 
-function Deck:set_queue_next_cards(deck)
+function EnemyDeck:set_queue_next_cards(deck)
 	if #deck == 0 then return end
 
 	self.queue_next_cards = {}
@@ -125,15 +125,14 @@ end
 
 -- add the just spawned card to the end of the queue_next_cards
 -- and the first one in the queue to the deck
-function Deck:rotate_deck(card)
+function EnemyDeck:rotate_deck(card)
 	if #self.deck_selected <= 4 then
 		return self.deck_selected
 	end
 
 	self.queue_next_cards[1].preview_card = false
 	self.queue_next_cards[1].selectable = true
-
-	local card_to_add = self.queue_next_cards[1]
+	local new_card = self.queue_next_cards[1]
 
 	local new_deck = self.deck_selected
 
@@ -142,11 +141,11 @@ function Deck:rotate_deck(card)
 		local next_card = new_deck[i + 1]
 
 		if curr_card.name == card.name then
-			new_deck[i] = card_to_add
+			new_deck[i] = new_card
 		end
 
 		if next_card ~= nil then
-			if next_card.name == card_to_add.name then
+			if next_card.name == new_card.name then
 				table.remove(new_deck, i + 1)
 			end
 		end
@@ -163,7 +162,7 @@ end
 -- used for check cooldown timer each second
 -- local countdown_timer = 1
 
-function Deck:check_cooldown(dt)
+function EnemyDeck:check_cooldown(dt)
 	for i = 1, #self.deck_selected do
 		local card = self.deck_selected[i]
 		if card.is_card_loading then
@@ -176,75 +175,4 @@ function Deck:check_cooldown(dt)
 	end
 end
 
-function love.mousepressed(x, y, button)
-	-- That's a global function, thats why we need to check the context
-	-- TODO: find a better way to do that
-	if CONTEXT.current ~= 'game' then return end
-
-	-- right click
-	if button ~= 1 then return end
-
-	for _, card in pairs(Deck.deck_selected) do
-		-- click on card?
-		if (
-			x >= card.x and x <= (card.x + card.img_card:getWidth())
-			and y >= card.y and y <= (card.y + card.img_card:getHeight())
-		) then
-			if not card.is_card_loading then
-				if Deck.card_selected == card then
-					Deck.card_selected = nil
-				else
-					Deck.card_selected = card
-				end
-				break
-			end
-		else
-			-- this is the selected card?
-			if Deck.card_selected == card then
-				-- click on map?
-				if not (x >= card.x and x <= (card.x + card.img_card:getWidth()))
-					and not (y >= card.y and y <= (card.y + card.img_card:getHeight())) then
-
-					card.char_x = x
-					card.char_y = y
-
-					-- map limit
-					if card.char_x <= Map.left_side.w then
-						card.char_x = Map.left_side.w
-					end
-
-					card.is_card_loading = true
-					card:reset_cooldown()
-
-					local payload_card = {
-						card_id = uuid:generate(),
-						card_name = card.name,
-						x = card.char_x,
-						y = card.char_y,
-						action = card.current_action
-					}
-
-					local Game = require('src.states.game')
-					Game.cards[payload_card.card_id] = Utils.copy_table(card)
-
-					coroutine.resume(coroutine.create(function()
-						socket.match_data_send(
-							Constants.SOCKET_CONNECTION,
-							Constants.MATCH_ID,
-							MatchEvents.spawn_card,
-							json.encode(payload_card),
-							nil
-						)
-					end))
-
-					Deck.card_selected = nil
-					Deck.deck_selected = Deck:rotate_deck(card)
-
-					break
-				end
-			end
-		end
-	end
-end
-
-return Deck
+return EnemyDeck
