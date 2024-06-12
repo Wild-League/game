@@ -225,7 +225,8 @@ function love.mousepressed(x, y, button)
 					}
 
 					local Game = require('src.states.game')
-					Game.cards[payload_card.card_id] = Utils.copy_table(card)
+					card.card_id = payload_card.card_id
+					Game.cards[Constants.USER_ID][payload_card.card_id] = Utils.copy_table(card)
 
 					coroutine.resume(coroutine.create(function()
 						socket.match_data_send(

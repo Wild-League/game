@@ -25,9 +25,12 @@ function Lobby:load()
 
 	Constants.NAKAMA_CLIENT = client
 
+	-- TODO: add real code
+	local selected_deck = Deck:get('1')
+
 	coroutine.resume(coroutine.create(function()
 		-- add user to nakama server
-		local result = nakama.authenticate_email(client, 'ropoko2@gmail.com', '12345678', { level = "1" }, true, 'ropoko2')
+		local result = nakama.authenticate_email(client, 'ropoko@gmail.com', '12345678', { level = "1" }, true, 'ropoko')
 
 		if result then
 			Constants.USER_ID = result.user_id
@@ -38,12 +41,7 @@ function Lobby:load()
 		socket.connect(Constants.SOCKET_CONNECTION)
 	end))
 
-	-- TODO: add real code
-	local selected_deck = Deck:get('1')
-
 	socket.on_matchmaker_matched(Constants.SOCKET_CONNECTION, function(match)
-		CONTEXT:change('game')
-
 		Constants.MATCH_ID = match.matchmaker_matched.match_id
 		Constants.ENEMY_ID = self:get_enemy_user_id(match.matchmaker_matched.users)
 
@@ -60,7 +58,9 @@ function Lobby:load()
 			}
 
 			nakama.write_storage_objects(client, objects, function ()
-				socket.match_join(Constants.SOCKET_CONNECTION, Constants.MATCH_ID)
+				socket.match_join(Constants.SOCKET_CONNECTION, Constants.MATCH_ID, nil, nil, function()
+					CONTEXT:change('game')
+				end)
 			end)
 		end))
 	end)
@@ -88,7 +88,7 @@ function Lobby:draw()
 	Suit.Label('Search for a match or play against a friend', center.width - 70, 160)
 
 	if play_button.hit then
-		local c = coroutine.create(function()
+		coroutine.resume(coroutine.create(function()
 			self.timer:reset()
 
 			if self.matchmake_state == 'searching' then
@@ -100,15 +100,14 @@ function Lobby:draw()
 					self.matchmake_ticket = matchmake.matchmaker_ticket.ticket
 				end)
 			end
-		end)
-		coroutine.resume(c)
+		end))
 	end
 end
 
 function Lobby:get_enemy_user_id(users)
 	for _, user in pairs(users) do
 		if user.presence.user_id ~= Constants.USER_ID then
-			return user.user_id
+			return user.presence.user_id
 		end
 	end
 end

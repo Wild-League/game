@@ -13,7 +13,8 @@ local Card = {
 	selected = false,
 	selectable = false,
 	preview_card = false,
-	is_card_loading = false
+	is_card_loading = false,
+	perception_range = 0
 }
 
 local Card_Types = {
@@ -21,8 +22,8 @@ local Card_Types = {
 	SPELL = 'spell'
 }
 
-
 function Card:new(card, enemy)
+	self.perception_range = card.attack_range * 2
 	self.enemy = enemy or false
 
 	if card.type == Card_Types.CHAR then

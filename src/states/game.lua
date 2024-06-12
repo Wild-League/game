@@ -15,7 +15,7 @@ local json = require('lib.json')
 local Game = {
 	timer = Timer:new(),
 	cards = {},
-	enemy_cards = {}
+	-- enemy_cards = {}
 }
 
 function Game:load()
@@ -24,6 +24,9 @@ function Game:load()
 	socket.on_match_data(Constants.SOCKET_CONNECTION, function(data)
 		self:handle_received_data(data)
 	end)
+
+	self.cards[Constants.USER_ID] = {}
+	self.cards[Constants.ENEMY_ID] = {}
 
 	coroutine.resume(coroutine.create(function()
 		local objects = {
@@ -48,7 +51,7 @@ function Game:load()
 			{
 				collection = 'selected_deck',
 				key = 'selected_deck',
-				userId = '54ef1560-ba9b-465d-a5eb-835c7c154534' -- Constants.ENEMY_ID
+				userId = Constants.ENEMY_ID
 			}
 		}
 
@@ -68,12 +71,13 @@ function Game:update(dt)
 
 	self.timer:update(dt)
 
-	for _, card in pairs(self.cards) do
+	for _, card in pairs(self.cards[Constants.USER_ID]) do
 		card:update(dt)
+		card:get_enemies_in_range(self.cards[Constants.ENEMY_ID])
 	end
 
-	for _, card in pairs(self.enemy_cards) do
-		card:update(dt)
+	for _, enemy_card in pairs(self.cards[Constants.ENEMY_ID]) do
+		enemy_card:update(dt)
 	end
 end
 
@@ -82,11 +86,11 @@ function Game:draw()
 
 	Deck:draw()
 
-	for _, card in pairs(self.cards) do
+	for _, card in pairs(self.cards[Constants.USER_ID]) do
 		card:draw()
 	end
 
-	for _, card in pairs(self.enemy_cards) do
+	for _, card in pairs(self.cards[Constants.ENEMY_ID]) do
 		card:draw()
 	end
 
@@ -126,22 +130,27 @@ function Game:handle_received_data(message)
 end
 
 function Game:handle_opcode_event(opcode, user_id, data)
-	if opcode == MatchEvents.card_spawn then
-		if Constants.USER_ID ~= user_id then
-			-- mirroring enemy cards
-			local enemy_card = self:get_enemy_card(data.card_name)
-			enemy_card.char_x = love.graphics.getWidth() - data.x
-			enemy_card.char_y = data.y
+	if user_id == Constants.USER_ID then return end
 
-			self.enemy_cards[data.card_id] = enemy_card
-		end
+	if opcode == MatchEvents.card_spawn then
+		-- mirroring enemy cards
+		local enemy_card = self:get_enemy_card(data.card_name)
+		enemy_card.char_x = love.graphics.getWidth() - data.x
+		enemy_card.char_y = data.y
+
+		self.cards[user_id][data.card_id] = Utils.copy_table(enemy_card)
+	end
+
+	if opcode == MatchEvents.card_action then
+		print('hey changing action', opcode, user_id, data.card_id, data.action)
+		self.cards[user_id][data.card_id].current_action = data.action
 	end
 end
 
 function Game:get_enemy_card(card_name)
 	for _, value in pairs(EnemyDeck.deck) do
 		if value.name == card_name then
-			return Utils.copy_table(value)
+			return value
 		end
 	end
 end
