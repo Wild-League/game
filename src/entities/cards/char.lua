@@ -2,6 +2,8 @@ local Char = {
 	current_action = 'walk',
 	current_life = 0,
 
+	last_x = 0,
+
 	-- chars_around = {},
 
 	-- nearest_enemy = {
@@ -125,12 +127,28 @@ function Char:lifebar(x,y, current_life)
 	love.graphics.setColor(255,255,255)
 end
 
+
+function Char:get_action(current_action)
+	if current_action == 'walk' then
+		local new_position = self.enemy
+			and self.char_x + self.speed
+			or self.char_x - self.speed
+
+		self.char_x = new_position
+	end
+end
+
 function Char:update(dt)
 	self.animations[self.current_action]:update(dt)
 end
 
 function Char:draw()
-	self.animations[self.current_action]:draw(self['img_'..self.current_action], self.char_x, self.char_y)
+	local scale_x = self.last_x > self.char_x and 1 or -1
+	self.last_x = self.char_x
+
+	self.animations[self.current_action]:draw(self['img_'..self.current_action], self.char_x, self.char_y, 0, scale_x, 1)
+
+	self:get_action(self.current_action)
 end
 
 return Char

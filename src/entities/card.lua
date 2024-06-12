@@ -21,7 +21,10 @@ local Card_Types = {
 	SPELL = 'spell'
 }
 
-function Card:new(card)
+
+function Card:new(card, enemy)
+	self.enemy = enemy or false
+
 	if card.type == Card_Types.CHAR then
 		local t = Utils.merge_tables(self, Char)
 
@@ -35,7 +38,6 @@ function Card:new(card)
 		setmetatable(card, t)
 		t.__index = t
 	end
-
 
 	card = self:load_images(card)
 	card = self:load_animations(card)
