@@ -34,6 +34,10 @@ function Initial:load()
 				theme = { color = { normal = { fg = { 1, 1, 1 } } }}
 			}),
 
+			yui.Spacer({
+				w = 350, h = 50
+			}),
+
 			yui.Choice({
 				w = 350, h = 50,
 				choices = self.server_options,
@@ -51,10 +55,6 @@ function Initial:load()
 				w = 350, h = 50,
 				text = self.is_instance_valid and '' or 'Invalid wildleague instance!',
 				theme = { color = { normal = { fg = { 1, 1, 0 } } }},
-			}),
-
-			yui.Spacer({
-				w = 350, h = 50
 			}),
 
 			yui.Button({
