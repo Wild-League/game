@@ -4,6 +4,7 @@ local Card = require('src.entities.card')
 local Constants = require('src.constants')
 local socket = require('lib.nakama.socket')
 local MatchEvents = require('src.config.match_events')
+local Images = require('src.ui.images')
 local json = require('lib.json')
 local Utils = require('src.helpers.utils')
 local uuid = require('lib.uuid')
@@ -51,7 +52,35 @@ function Deck:update(dt)
 	self:check_cooldown(dt)
 end
 
+function Deck:draw_background()
+	love.graphics.clear(1,1,1)
+
+	local window_w, window_h = love.graphics.getDimensions()
+	local image_w, image_h = 40, 40
+
+	local tiles_x = math.ceil(window_w / image_w)
+	local tiles_y = math.ceil(window_h / image_h)
+
+	love.graphics.setScissor(0, window_h - 163, window_w, 163)
+
+	for x = 0, tiles_x - 1 do
+		for y = 0, tiles_y - 1 do
+			if (x + y) % 2 == 0 then
+				love.graphics.setColor(32/255, 32/255, 32/255)
+			else
+				love.graphics.setColor(48/255, 48/255, 48/255)
+			end
+			love.graphics.rectangle('fill', x * image_w, y * image_h, image_w, image_h)
+			love.graphics.setColor(1, 1, 1)
+		end
+	end
+
+	love.graphics.setScissor()
+end
+
 function Deck:draw()
+	self:draw_background()
+
 	if self.card_selected then
 		self:highlight_selected_card(self.card_selected)
 	end

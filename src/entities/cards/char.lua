@@ -139,21 +139,23 @@ function Char:check_attack_range()
 	)
 
 	if attack_range_collision then
-		self.current_action = 'attack'
+		if self.current_action ~= 'attack' then
+			self.current_action = 'attack'
 
-		coroutine.resume(coroutine.create(function()
-			-- maybe I should create a function to send the data so I can add a proper timeout to it?
-			socket.match_data_send(
-				Constants.SOCKET_CONNECTION,
-				Constants.MATCH_ID,
-				MatchEvents.card_action,
-				json.encode({
-					card_id = self.card_id,
-					action = self.current_action
-				}),
-				nil
-			)
-		end))
+			coroutine.resume(coroutine.create(function()
+				-- maybe I should create a function to send the data so I can add a proper timeout to it?
+				socket.match_data_send(
+					Constants.SOCKET_CONNECTION,
+					Constants.MATCH_ID,
+					MatchEvents.card_action,
+					json.encode({
+						card_id = self.card_id,
+						action = self.current_action
+					}),
+					nil
+				)
+			end))
+		end
 	end
 end
 

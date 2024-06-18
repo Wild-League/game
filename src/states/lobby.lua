@@ -88,6 +88,8 @@ function Lobby:draw()
 	Suit.Label('Search for a match or play against a friend', center.width - 70, 160)
 
 	if play_button.hit then
+		CONTEXT:change('game')
+		return
 		coroutine.resume(coroutine.create(function()
 			self.timer:reset()
 

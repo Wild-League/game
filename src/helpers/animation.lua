@@ -9,7 +9,15 @@ function Animation:new(card, action)
 
 	local grid = anim8.newGrid(card.frame_width, card.frame_height, action_image:getWidth(), action_image:getHeight())
 
-	return anim8.newAnimation(grid('1-'..number_frames, 1), card.speed/10)
+	return anim8.newAnimation(grid('1-'..number_frames, 1), card.speed/10, function()
+		if action == 'attack' then
+			--- --
+		end
+
+		if action == 'death' then
+			--- ---
+		end
+	end)
 end
 
 return Animation

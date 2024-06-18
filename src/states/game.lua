@@ -10,30 +10,38 @@ local Constants = require('src.constants')
 local Utils = require('src.helpers.utils')
 local nakama = require('lib.nakama.nakama')
 local socket = require('lib.nakama.socket')
+local PlayerStatus = require('src.ui.player-status')
 local json = require('lib.json')
 
 local Game = {
 	timer = Timer:new(),
 	cards = {},
 	-- enemy_cards = {}
+
+	me_status = PlayerStatus:new('2d618372-1220-49b3-b22e-00f6ca0c12a5'),
+	enemy_status = PlayerStatus:new('2d618372-1220-49b3-b22e-00f6ca0c12a5')
 }
 
 function Game:load()
+	local cursor = love.mouse.newCursor('assets/cursor.png', 0, 0)
+	love.mouse.setCursor(cursor)
+
 	Map:load()
 
-	socket.on_match_data(Constants.SOCKET_CONNECTION, function(data)
-		self:handle_received_data(data)
-	end)
+	-- socket.on_match_data(Constants.SOCKET_CONNECTION, function(data)
+	-- 	self:handle_received_data(data)
+	-- end)
 
+	Constants.USER_ID = '2d618372-1220-49b3-b22e-00f6ca0c12a5'
 	self.cards[Constants.USER_ID] = {}
-	self.cards[Constants.ENEMY_ID] = {}
+	-- self.cards[Constants.ENEMY_ID] = {}
 
 	coroutine.resume(coroutine.create(function()
 		local objects = {
 			{
 				collection = 'selected_deck',
 				key = 'selected_deck',
-				userId = Constants.USER_ID
+				userId = '2d618372-1220-49b3-b22e-00f6ca0c12a5' -- Constants.USER_ID
 			}
 		}
 
@@ -46,28 +54,29 @@ function Game:load()
 	end))
 
 	-- get enemy deck
-	coroutine.resume(coroutine.create(function()
-		local objects = {
-			{
-				collection = 'selected_deck',
-				key = 'selected_deck',
-				userId = Constants.ENEMY_ID
-			}
-		}
+	-- coroutine.resume(coroutine.create(function()
+	-- 	local objects = {
+	-- 		{
+	-- 			collection = 'selected_deck',
+	-- 			key = 'selected_deck',
+	-- 			userId = Constants.ENEMY_ID
+	-- 		}
+	-- 	}
 
-		local result = nakama.read_storage_objects(Constants.NAKAMA_CLIENT, objects)
+	-- 	local result = nakama.read_storage_objects(Constants.NAKAMA_CLIENT, objects)
 
-		if result then
-			local selected_deck = json.decode(result.objects[1].value)
-			EnemyDeck:load(selected_deck)
-		end
-	end))
+	-- 	if result then
+	-- 		local selected_deck = json.decode(result.objects[1].value)
+	-- 		EnemyDeck:load(selected_deck)
+	-- 	end
+	-- end))
 end
 
 function Game:update(dt)
 	Map:update(dt)
 
 	Deck:update(dt)
+	self:update_player_status()
 
 	self.timer:update(dt)
 
@@ -76,23 +85,24 @@ function Game:update(dt)
 		card:get_enemies_in_range(self.cards[Constants.ENEMY_ID])
 	end
 
-	for _, enemy_card in pairs(self.cards[Constants.ENEMY_ID]) do
-		enemy_card:update(dt)
-	end
+	-- for _, enemy_card in pairs(self.cards[Constants.ENEMY_ID]) do
+	-- 	enemy_card:update(dt)
+	-- end
 end
 
 function Game:draw()
 	Map:draw()
 
 	Deck:draw()
+	self:draw_player_status()
 
 	for _, card in pairs(self.cards[Constants.USER_ID]) do
 		card:draw()
 	end
 
-	for _, card in pairs(self.cards[Constants.ENEMY_ID]) do
-		card:draw()
-	end
+	-- for _, card in pairs(self.cards[Constants.ENEMY_ID]) do
+	-- 	card:draw()
+	-- end
 
 	if Deck.card_selected then
 		Deck.card_selected:preview(love.mouse.getX(), love.mouse.getY())
@@ -109,11 +119,6 @@ function Game:load_towers()
 end
 
 function Game:draw_timer()
-	local center_background = Layout:center(100, 100)
-	love.graphics.setColor(0, 0, 0, 0.8)
-	love.graphics.rectangle('fill', center_background.width, 10, 100, 50)
-	love.graphics.setColor(1, 1, 1)
-
 	local center_timer = Layout:center(100, 100)
 
 	love.graphics.setColor(1, 1, 1)
@@ -153,6 +158,16 @@ function Game:get_enemy_card(card_name)
 			return value
 		end
 	end
+end
+
+function Game:update_player_status()
+	self.me_status:update()
+	self.enemy_status:update()
+end
+
+function Game:draw_player_status()
+	self.me_status:draw()
+	self.enemy_status:draw()
 end
 
 return Game

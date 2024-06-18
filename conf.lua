@@ -1,6 +1,6 @@
 function love.conf(t)
     t.window.title = 'Wild League'
-    t.window.resizable = false
+    t.window.resizable = true
     t.window.width = 1344
     t.window.height = 756
     t.window.minwidth = 800
