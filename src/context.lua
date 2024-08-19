@@ -17,7 +17,7 @@ local Context = {
 		game = Game,
 	},
 
-	current = 'lobby',
+	current = 'game',
 
 	load = function(self, dt)
 		return self.states[self.current]:load()

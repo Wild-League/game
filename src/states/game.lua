@@ -108,7 +108,7 @@ function Game:draw()
 		Deck.card_selected:preview(love.mouse.getX(), love.mouse.getY())
 	end
 
-	self:draw_timer()
+	-- self:draw_timer()
 end
 
 -- private functions ---------
@@ -166,8 +166,8 @@ function Game:update_player_status()
 end
 
 function Game:draw_player_status()
-	self.me_status:draw()
-	self.enemy_status:draw()
+	-- self.me_status:draw()
+	-- self.enemy_status:draw()
 end
 
 return Game

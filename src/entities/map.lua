@@ -29,7 +29,8 @@ function Map:draw()
 	local scale_x = love.graphics.getWidth() / self.original_width
 	local scale_y = love.graphics.getHeight() / self.original_height
 
-	self.map:draw(nil, nil, scale_x, scale_y - 0.2)
+	-- self.map:draw(nil, nil, scale_x, scale_y - 0.2)
+	self.map:draw()
 end
 
 function Map:sides()

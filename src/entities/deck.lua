@@ -79,7 +79,7 @@ function Deck:draw_background()
 end
 
 function Deck:draw()
-	self:draw_background()
+	-- self:draw_background()
 
 	if self.card_selected then
 		self:highlight_selected_card(self.card_selected)
