@@ -17,11 +17,12 @@ local Assets = {
 	-- 	WALKING = love.graphics.newImage('assets/dino/walk.png'),
 	-- 	CARD = love.graphics.newImage('assets/dino/card.png')
 	-- }
+	TOWER = love.graphics.newImage('assets/tower.png'),
 }
 
 setmetatable(Assets, {
-	__index = function(key)
-		error(string.format('the assets: "%s" is not set in assets', key))
+	__index = function(_, key)
+			error(string.format('the assets: "%s" is not set in assets', key))
 	end
 })
 

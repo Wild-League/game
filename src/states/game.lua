@@ -1,4 +1,3 @@
--- local yui = require('lib.yui')
 local Layout = require('src.helpers.layout')
 local Map = require('src.entities.map')
 local Tower = require('src.entities.tower')
@@ -12,6 +11,7 @@ local nakama = require('lib.nakama.nakama')
 local socket = require('lib.nakama.socket')
 local PlayerStatus = require('src.ui.player-status')
 local json = require('lib.json')
+local Assets = require('src.assets')
 
 local Game = {
 	timer = Timer:new(),
@@ -23,10 +23,14 @@ local Game = {
 }
 
 function Game:load()
+    -- Carregar a imagem da torre
+    Assets.TOWER = love.graphics.newImage('assets/tower.png')
+
 	local cursor = love.mouse.newCursor('assets/cursor.png', 0, 0)
 	love.mouse.setCursor(cursor)
 
 	Map:load()
+	self:load_towers()
 
 	-- socket.on_match_data(Constants.SOCKET_CONNECTION, function(data)
 	-- 	self:handle_received_data(data)
@@ -108,6 +112,9 @@ function Game:draw()
 		Deck.card_selected:preview(love.mouse.getX(), love.mouse.getY())
 	end
 
+	-- Desenhar as torres
+	self:draw_towers()
+
 	-- self:draw_timer()
 end
 
@@ -116,6 +123,16 @@ end
 function Game:load_towers()
 	local tower1 = Tower:load('left', 'top')
 	local tower2 = Tower:load('left', 'bottom')
+	local tower3 = Tower:load('right', 'top')
+	local tower4 = Tower:load('right', 'bottom')
+
+	self.towers = {tower1, tower2, tower3, tower4}
+end
+
+function Game:draw_towers()
+	for _, tower in ipairs(self.towers) do
+		tower:draw(tower.current_life)
+	end
 end
 
 function Game:draw_timer()

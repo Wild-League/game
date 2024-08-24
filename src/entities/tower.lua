@@ -8,11 +8,11 @@ local default_props = {
 	life = 100,
 	current_life = 100,
 
-	w = 10, -- Assets.TOWER_LEFT:getWidth(),
-	h = 10, -- Assets.TOWER_LEFT:getHeight()
+	w = 10, -- Assets.TOWER:getWidth(),
+	h = 10, -- Assets.TOWER:getHeight()
 }
 
-local center = { width = 50, height = 50 } -- Layout:center(Assets.TOWER_LEFT:getWidth(), Assets.TOWER_LEFT:getHeight())
+local center = { width = 50, height = 50 } -- Layout:center(Assets.TOWER:getWidth(), Assets.TOWER:getHeight())
 
 local positions = {
 	left = {
@@ -55,7 +55,7 @@ function Tower:load(side, position)
 	tower.char_x = positions[side][position].x
 	tower.char_y = positions[side][position].y
 
-	tower.img = side == 'left' and Assets.TOWER_LEFT or Assets.TOWER_RIGHT
+	tower.img = Assets.TOWER
 
 	tower.update = function(tower_, dt)
 		return Tower.update(tower_, dt)
