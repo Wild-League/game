@@ -13,6 +13,7 @@ local PlayerStatus = require('src.ui.player-status')
 local json = require('lib.json')
 local Assets = require('src.assets')
 
+--DEFINE PROPRIEDADES INICIAIS
 local Game = {
 	timer = Timer:new(),
 	cards = {},
@@ -22,6 +23,7 @@ local Game = {
 	enemy_status = PlayerStatus:new('2d618372-1220-49b3-b22e-00f6ca0c12a5')
 }
 
+--CARREGA A IMAGEM DA TORRE, PERSONALIZA O CURSOR, CARREGA O MAPA E AS TORRES
 function Game:load()
     -- Carregar a imagem da torre
     Assets.TOWER = love.graphics.newImage('assets/tower.png')
@@ -76,6 +78,8 @@ function Game:load()
 	-- end))
 end
 
+
+--ATUALIZA O JOGO (MAPA, DECK, STATUS DO JOGADOR, CARTAS)
 function Game:update(dt)
 	Map:update(dt)
 
@@ -94,6 +98,8 @@ function Game:update(dt)
 	-- end
 end
 
+
+--DESENHA O JOGO A CADA QUADRO (MAPA, DECK, STATUS DO JOGADOR, CARTAS)
 function Game:draw()
 	Map:draw()
 
@@ -120,11 +126,18 @@ end
 
 -- private functions ---------
 
+
+--CARREGA AS TORRES NAS QUATROS POSIÇÕES DO MAPA (CANTOS)
 function Game:load_towers()
 	local tower1 = Tower:load('left', 'top')
 	local tower2 = Tower:load('left', 'bottom')
 	local tower3 = Tower:load('right', 'top')
 	local tower4 = Tower:load('right', 'bottom')
+
+	print('Tower 1:', tower1.char_x, tower1.char_y)
+	print('Tower 2:', tower2.char_x, tower2.char_y)
+	print('Tower 3:', tower3.char_x, tower3.char_y)
+	print('Tower 4:', tower4.char_x, tower4.char_y)
 
 	self.towers = {tower1, tower2, tower3, tower4}
 end
