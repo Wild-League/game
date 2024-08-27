@@ -80,11 +80,11 @@ end
 
 function Tower.draw(tower_, current_life)
     love.graphics.draw(tower_.img, tower_.char_x, tower_.char_y)
-    Tower:lifebar(tower_.char_x + tower_.w / 4, tower_.char_y + tower_.h / 1.4, current_life)
+    Tower:lifebar(tower_.char_x + tower_.w / 70, tower_.char_y + tower_.h / 1, current_life)
 end
 
 function Tower:lifebar(x, y, current_life)
-    love.graphics.setColor(255/255, 29/255, 29/255)
+    love.graphics.setColor(0/255, 255/255, 0/255)
     love.graphics.rectangle("line", x, y, 100, 5)
     love.graphics.rectangle("fill", x, y, current_life, 5)
     love.graphics.setColor(255, 255, 255)
