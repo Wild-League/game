@@ -8,7 +8,8 @@ local default_props = {
     life = 100,
     current_life = 100,
     w = Assets.TOWER:getWidth(),
-    h = Assets.TOWER:getHeight()
+    h = Assets.TOWER:getHeight(),
+    scale_x = 1 --Escala usada para espelhar a torre
 }
 
 function Tower:load(side, position)
@@ -30,22 +31,26 @@ function Tower:load(side, position)
     local positions = {
         left = {
             top = {
-                x = center.width - 500, -- Ajustado para centralizar corretamente
-                y = center.height - 200
+                x = center.width - 470,
+                y = center.height - 180,
+                scale_x = -1
             },
             bottom = {
-                x = center.width - 500,
-                y = center.height + 150
+                x = center.width - 470,
+                y = center.height + 200,
+                scale_x = -1
             }
         },
         right = {
             top = {
-                x = center.width + 420,
-                y = center.height - 200
+                x = center.width + 470,
+                y = center.height - 180,
+                scale_x = 1 -- Normal
             },
             bottom = {
-                x = center.width + 420,
-                y = center.height + 150
+                x = center.width + 470,
+                y = center.height + 200,
+                scale_x = 1
             }
         }
     }
@@ -59,6 +64,7 @@ function Tower:load(side, position)
     tower.char_x = positions[side][position].x
     tower.char_y = positions[side][position].y
     tower.img = Assets.TOWER
+    tower.scale_x = positions[side][position].scale_x
 
     tower.update = function(tower_, dt)
         return Tower.update(tower_, dt)
@@ -77,10 +83,12 @@ end
 function Tower:update(dt)
     -- Lógica de atualização da torre (se necessário)
 end
-
 function Tower.draw(tower_, current_life)
-    love.graphics.draw(tower_.img, tower_.char_x, tower_.char_y)
-    Tower:lifebar(tower_.char_x + tower_.w / 70, tower_.char_y + tower_.h / 1, current_life)
+    love.graphics.draw(tower_.img, tower_.char_x, tower_.char_y, 0, tower_.scale_x, 1, tower_.w / 2, tower_.h / 2)
+
+    local lifebar_x = tower_.char_x - (100 / 2)  -- Centraliza a lifebar com o tamanho da tower no eixo X
+    local lifebar_y = tower_.char_y - tower_.h / 2 - 10  -- Coloca a lifebar logo acima da tower
+    Tower:lifebar(lifebar_x, lifebar_y, current_life)
 end
 
 function Tower:lifebar(x, y, current_life)
