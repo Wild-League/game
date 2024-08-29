@@ -9,7 +9,8 @@ local default_props = {
     current_life = 100,
     w = Assets.TOWER:getWidth(),
     h = Assets.TOWER:getHeight(),
-    scale_x = 1 --Escala usada para espelhar a torre
+    scale_x = 1.5,
+    scale_y = 1.5
 }
 
 function Tower:load(side, position)
@@ -33,24 +34,28 @@ function Tower:load(side, position)
             top = {
                 x = center.width - 470,
                 y = center.height - 180,
-                scale_x = -1
+                scale_x = -1.5,
+                scale_y = 1.5
             },
             bottom = {
                 x = center.width - 470,
                 y = center.height + 200,
-                scale_x = -1
+                scale_x = -1.5,
+                scale_y = 1.5
             }
         },
         right = {
             top = {
                 x = center.width + 470,
                 y = center.height - 180,
-                scale_x = 1 -- Normal
+                scale_x = 1.5,
+                scale_y = 1.5
             },
             bottom = {
                 x = center.width + 470,
                 y = center.height + 200,
-                scale_x = 1
+                scale_x = 1.5,
+                scale_y = 1.5
             }
         }
     }
@@ -65,6 +70,7 @@ function Tower:load(side, position)
     tower.char_y = positions[side][position].y
     tower.img = Assets.TOWER
     tower.scale_x = positions[side][position].scale_x
+    tower.scale_y = positions[side][position].scale_y
 
     tower.update = function(tower_, dt)
         return Tower.update(tower_, dt)
@@ -83,11 +89,12 @@ end
 function Tower:update(dt)
     -- Lógica de atualização da torre (se necessário)
 end
+
 function Tower.draw(tower_, current_life)
-    love.graphics.draw(tower_.img, tower_.char_x, tower_.char_y, 0, tower_.scale_x, 1, tower_.w / 2, tower_.h / 2)
+    love.graphics.draw(tower_.img, tower_.char_x, tower_.char_y, 0, tower_.scale_x, tower_.scale_y, tower_.w / 2, tower_.h / 2)
 
     local lifebar_x = tower_.char_x - (100 / 2)  -- Centraliza a lifebar com o tamanho da tower no eixo X
-    local lifebar_y = tower_.char_y - tower_.h / 2 - 10  -- Coloca a lifebar logo acima da tower
+    local lifebar_y = tower_.char_y - tower_.h / 2 * tower_.scale_y - 10  -- Coloca a lifebar logo acima da tower ajustada
     Tower:lifebar(lifebar_x, lifebar_y, current_life)
 end
 
