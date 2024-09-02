@@ -10,7 +10,8 @@ local default_props = {
     w = Assets.TOWER:getWidth(),
     h = Assets.TOWER:getHeight(),
     scale_x = 1,
-    color = {0/255, 255/255, 0/255}
+    scale_y = 1,
+    side = 'left'
 }
 
 function Tower:load(side, position)
@@ -22,40 +23,34 @@ function Tower:load(side, position)
         error('Invalid position for Tower')
     end
 
-
     local center = {
         width = love.graphics.getWidth() / 2,
         height = love.graphics.getHeight() / 2
     }
-
 
     local positions = {
         left = {
             top = {
                 x = center.width - 470,
                 y = center.height - 180,
-                scale_x = -1,
-                color = {0/255, 255/255, 0/255} -- green
+                scale_x = -1
             },
             bottom = {
                 x = center.width - 470,
                 y = center.height + 200,
-                scale_x = -1,
-                color = {0/255, 255/255, 0/255} -- green
+                scale_x = -1
             }
         },
         right = {
             top = {
                 x = center.width + 470,
                 y = center.height - 180,
-                scale_x = 1,
-                color = {255/255, 0/255, 0/255} -- red
+                scale_x = 1 -- Normal
             },
             bottom = {
                 x = center.width + 470,
                 y = center.height + 200,
-                scale_x = 1,
-                color = {255/255, 0/255, 0/255} -- red
+                scale_x = 1
             }
         }
     }
@@ -70,7 +65,7 @@ function Tower:load(side, position)
     tower.char_y = positions[side][position].y
     tower.img = Assets.TOWER
     tower.scale_x = positions[side][position].scale_x
-    tower.color = positions[side][position].color
+    tower.side = side
 
     tower.update = function(tower_, dt)
         return Tower.update(tower_, dt)
@@ -91,15 +86,23 @@ function Tower:update(dt)
 end
 
 function Tower.draw(tower_, current_life)
-    love.graphics.draw(tower_.img, tower_.char_x, tower_.char_y, 0, tower_.scale_x, 1, tower_.w / 2, tower_.h / 2)
+    love.graphics.draw(tower_.img, tower_.char_x, tower_.char_y, 0, tower_.scale_x, tower_.scale_y, tower_.w / 2, tower_.h / 2)
 
     local lifebar_x = tower_.char_x - (100 / 2)
-    local lifebar_y = tower_.char_y - tower_.h / 2 - 10
-    Tower:lifebar(lifebar_x, lifebar_y, current_life, tower_.color)
+    local lifebar_y = tower_.char_y - tower_.h * tower_.scale_y / 2 - 10
+    Tower:lifebar(lifebar_x, lifebar_y, current_life, tower_.side)
 end
 
-function Tower:lifebar(x, y, current_life, color)
-    love.graphics.setColor(color)
+function Tower:lifebar(x, y, current_life, side)
+    if side == 'left' then
+        love.graphics.setColor(0/255, 255/255, 0/255)
+
+
+    else
+        love.graphics.setColor(255/255, 0/255, 0/255)
+    end
+
+    -- Desenhar a lifebar
     love.graphics.rectangle("line", x, y, 100, 5)
     love.graphics.rectangle("fill", x, y, current_life, 5)
     love.graphics.setColor(255, 255, 255)
