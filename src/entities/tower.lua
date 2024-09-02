@@ -12,6 +12,7 @@ local default_props = {
     scale_x = 1,
     scale_y = 1,
     side = 'left'
+
 }
 
 function Tower:load(side, position)
@@ -28,29 +29,36 @@ function Tower:load(side, position)
         height = love.graphics.getHeight() / 2
     }
 
+    local red = {255/255, 0/255, 0/255}
+    local green = {0/255, 255/255, 0/255}
+
     local positions = {
         left = {
             top = {
                 x = center.width - 470,
                 y = center.height - 180,
-                scale_x = -1
+                scale_x = -1,
+                color = red
             },
             bottom = {
                 x = center.width - 470,
                 y = center.height + 200,
-                scale_x = -1
+                scale_x = -1,
+                color = red
             }
         },
         right = {
             top = {
                 x = center.width + 470,
                 y = center.height - 180,
-                scale_x = 1 -- Normal
+                scale_x = 1 ,
+                color = green
             },
             bottom = {
                 x = center.width + 470,
                 y = center.height + 200,
-                scale_x = 1
+                scale_x = 1,
+                color = green
             }
         }
     }
@@ -63,6 +71,7 @@ function Tower:load(side, position)
 
     tower.char_x = positions[side][position].x
     tower.char_y = positions[side][position].y
+    tower.color = positions[side][position].color
     tower.img = Assets.TOWER
     tower.scale_x = positions[side][position].scale_x
     tower.side = side
@@ -90,17 +99,12 @@ function Tower.draw(tower_, current_life)
 
     local lifebar_x = tower_.char_x - (100 / 2)
     local lifebar_y = tower_.char_y - tower_.h * tower_.scale_y / 2 - 10
-    Tower:lifebar(lifebar_x, lifebar_y, current_life, tower_.side)
+    Tower:lifebar(lifebar_x, lifebar_y, current_life, tower_.side,tower_.color)
 end
 
-function Tower:lifebar(x, y, current_life, side)
-    if side == 'left' then
-        love.graphics.setColor(0/255, 255/255, 0/255)
+function Tower:lifebar(x, y, current_life, side, color)
 
-
-    else
-        love.graphics.setColor(255/255, 0/255, 0/255)
-    end
+    love.graphics.setColor(color)
 
     -- Desenhar a lifebar
     love.graphics.rectangle("line", x, y, 100, 5)
