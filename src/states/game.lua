@@ -32,8 +32,6 @@ function Game:load()
 	love.mouse.setCursor(cursor)
 
 	Map:load()
-	self:load_towers()
-
 	-- socket.on_match_data(Constants.SOCKET_CONNECTION, function(data)
 	-- 	self:handle_received_data(data)
 	-- end)
@@ -41,6 +39,8 @@ function Game:load()
 	Constants.USER_ID = '2d618372-1220-49b3-b22e-00f6ca0c12a5'
 	self.cards[Constants.USER_ID] = {}
 	-- self.cards[Constants.ENEMY_ID] = {}
+
+	self:load_towers()
 
 	coroutine.resume(coroutine.create(function()
 		local objects = {
@@ -131,15 +131,14 @@ end
 function Game:load_towers()
 	local tower1 = Tower:load('left', 'top')
 	local tower2 = Tower:load('left', 'bottom')
+
 	local tower3 = Tower:load('right', 'top')
 	local tower4 = Tower:load('right', 'bottom')
 
-	print('Tower 1:', tower1.char_x, tower1.char_y)
-	print('Tower 2:', tower2.char_x, tower2.char_y)
-	print('Tower 3:', tower3.char_x, tower3.char_y)
-	print('Tower 4:', tower4.char_x, tower4.char_y)
-
-	self.towers = {tower1, tower2, tower3, tower4}
+	table.insert(self.cards[Constants.USER_ID], tower1)
+	table.insert(self.cards[Constants.USER_ID], tower2)
+	table.insert(self.cards[Constants.ENEMY_ID], tower3)
+	table.insert(self.cards[Constants.ENEMY_ID], tower4)
 end
 
 function Game:draw_towers()
