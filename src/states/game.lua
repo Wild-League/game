@@ -1,4 +1,3 @@
--- local yui = require('lib.yui')
 local Layout = require('src.helpers.layout')
 local Map = require('src.entities.map')
 local Tower = require('src.entities.tower')
@@ -12,7 +11,9 @@ local nakama = require('lib.nakama.nakama')
 local socket = require('lib.nakama.socket')
 local PlayerStatus = require('src.ui.player-status')
 local json = require('lib.json')
+local Assets = require('src.assets')
 
+--DEFINE PROPRIEDADES INICIAIS
 local Game = {
 	timer = Timer:new(),
 	cards = {},
@@ -22,12 +23,15 @@ local Game = {
 	enemy_status = PlayerStatus:new('2d618372-1220-49b3-b22e-00f6ca0c12a5')
 }
 
+--CARREGA A IMAGEM DA TORRE, PERSONALIZA O CURSOR, CARREGA O MAPA E AS TORRES
 function Game:load()
+    -- Carregar a imagem da torre
+    Assets.TOWER = love.graphics.newImage('assets/tower.png')
+
 	local cursor = love.mouse.newCursor('assets/cursor.png', 0, 0)
 	love.mouse.setCursor(cursor)
 
 	Map:load()
-
 	-- socket.on_match_data(Constants.SOCKET_CONNECTION, function(data)
 	-- 	self:handle_received_data(data)
 	-- end)
@@ -35,6 +39,8 @@ function Game:load()
 	Constants.USER_ID = '2d618372-1220-49b3-b22e-00f6ca0c12a5'
 	self.cards[Constants.USER_ID] = {}
 	-- self.cards[Constants.ENEMY_ID] = {}
+
+	self:load_towers()
 
 	coroutine.resume(coroutine.create(function()
 		local objects = {
@@ -72,6 +78,8 @@ function Game:load()
 	-- end))
 end
 
+
+--ATUALIZA O JOGO (MAPA, DECK, STATUS DO JOGADOR, CARTAS)
 function Game:update(dt)
 	Map:update(dt)
 
@@ -90,6 +98,8 @@ function Game:update(dt)
 	-- end
 end
 
+
+--DESENHA O JOGO A CADA QUADRO (MAPA, DECK, STATUS DO JOGADOR, CARTAS)
 function Game:draw()
 	Map:draw()
 
@@ -108,14 +118,33 @@ function Game:draw()
 		Deck.card_selected:preview(love.mouse.getX(), love.mouse.getY())
 	end
 
+	-- Desenhar as torres
+	self:draw_towers()
+
 	-- self:draw_timer()
 end
 
 -- private functions ---------
 
+
+--CARREGA AS TORRES NAS QUATROS POSIÇÕES DO MAPA (CANTOS)
 function Game:load_towers()
 	local tower1 = Tower:load('left', 'top')
 	local tower2 = Tower:load('left', 'bottom')
+
+	local tower3 = Tower:load('right', 'top')
+	local tower4 = Tower:load('right', 'bottom')
+
+	table.insert(self.cards[Constants.USER_ID], tower1)
+	table.insert(self.cards[Constants.USER_ID], tower2)
+	table.insert(self.cards[Constants.ENEMY_ID], tower3)
+	table.insert(self.cards[Constants.ENEMY_ID], tower4)
+end
+
+function Game:draw_towers()
+	for _, tower in ipairs(self.towers) do
+		tower:draw(tower.current_life)
+	end
 end
 
 function Game:draw_timer()
