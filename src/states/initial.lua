@@ -1,5 +1,4 @@
 local yui = require('lib.yui')
-local Suit = require('lib.suit')
 local Layout = require('src.helpers.layout')
 local InstanceApi = require('src.api.instance')
 local Images = require('src.ui.images')
@@ -61,11 +60,15 @@ function Initial:load()
 				w = 350, h = 50,
 				text = 'Enter',
 				onHit = function()
+					self.text = 'Loading...'
+
 					local response = InstanceApi:validate(self.instance_input)
 
 					if response.success then
+						self.text = 'Enter'
 						CONTEXT:change('lobby')
 					else
+						self.text = 'Enter'
 						self.is_instance_valid = false
 					end
 				end

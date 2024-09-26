@@ -1,3 +1,4 @@
+local json = require('lib.json')
 local https = require('https')
 local BaseApi = require('src.api.base')
 
@@ -10,12 +11,31 @@ function InstanceApi:validate(url)
 
 	local formatted_url = url .. '/.well-known/nodeinfo/'
 
-	local status = https.request(formatted_url, {
+	local status_server, response_server = https.request(formatted_url, {
 		method = 'GET',
 		headers = headers
 	})
 
-	return BaseApi:Response(status, nil, status == 200)
+	if status_server ~= 200 then
+		return BaseApi:Response(status_server, nil, false)
+	end
+
+	response_server = json.decode(response_server)
+
+	local nodeinfo_href = response_server.links[1].href
+
+	local status, response = https.request(nodeinfo_href, {
+		method = 'GET',
+		headers = headers
+	})
+
+	response = json.decode(response)
+
+	if status == 200 and response.software.name == 'WildLeague' then
+		return BaseApi:Response(status, nil, true)
+	end
+
+	return BaseApi:Response(status, nil, false)
 end
 
 return InstanceApi
