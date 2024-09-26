@@ -3,7 +3,7 @@ local Layout = require('src.helpers.layout')
 local nakama = require('lib.nakama.nakama')
 local socket = require('lib.nakama.socket')
 local love2d = require('lib.nakama.engine.love2d')
-local Deck = require('src.api.deck')
+local DeckApi = require('src.api.deck')
 local json = require('lib.json')
 local Constants = require('src.constants')
 local Timer = require('src.helpers.timer')
@@ -26,7 +26,7 @@ function Lobby:load()
 	Constants.NAKAMA_CLIENT = client
 
 	-- TODO: add real code
-	local selected_deck = Deck:get('1')
+	local selected_deck = DeckApi:get('1')
 
 	coroutine.resume(coroutine.create(function()
 		-- add user to nakama server

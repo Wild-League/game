@@ -1,14 +1,14 @@
 local https = require('https')
 local json = require('lib.json')
-local Routes = require('src.api.routes')
+local RoutesApi = require('src.api.routes')
 local Constants = require('src.constants')
 
-local User = {}
+local UserApi = {}
 
 --[[
 	try to sign in at domain.com/auth/signin
 ]]
-function User:signin(username, password)
+function UserApi:signin(username, password)
 	local body = json.encode({
 		username = username,
 		password = password
@@ -19,7 +19,7 @@ function User:signin(username, password)
 		['Content-Lenght'] = #body
 	}
 
-	local _,response = https.request(Routes.auth..'/signin', {
+	local _,response = https.request(RoutesApi.auth..'/signin', {
 		data = body,
 		method = 'POST',
 		headers = headers
@@ -31,8 +31,8 @@ end
 --[[
 	return the user data
 ]]
-function User:get()
-	local _,response = https.request(Routes.user..'/current', {
+function UserApi:get()
+	local _,response = https.request(RoutesApi.user..'/current', {
 		method = 'GET',
 		headers = { authorization = 'Bearer '..Constants.ACCESS_TOKEN }
 	})
@@ -40,4 +40,4 @@ function User:get()
 	return json.decode(response)
 end
 
-return User
+return UserApi

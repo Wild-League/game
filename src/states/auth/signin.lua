@@ -1,6 +1,6 @@
 local Suit = require('lib.suit')
 local Saver = require('src.helpers.saver')
-local User = require('src.api.user')
+local UserApi = require('src.api.user')
 local Constants = require('src.constants')
 
 local SignIn = {
@@ -34,7 +34,7 @@ function SignIn:draw()
 	end
 
 	if save_nick.hit then
-		local data = User:signin(self.username_input.text, self.password_input.text)
+		local data = UserApi:signin(self.username_input.text, self.password_input.text)
 
 		if data.message then
 			self.message_error = data.message

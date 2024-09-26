@@ -1,9 +1,9 @@
 local https = require('https')
-local Base = require('src.api.base')
+local BaseApi = require('src.api.base')
 
-local Instance = {}
+local InstanceApi = {}
 
-function Instance:validate(url)
+function InstanceApi:validate(url)
 	local headers = {
 		['Content-Type'] = 'application/json'
 	}
@@ -15,7 +15,7 @@ function Instance:validate(url)
 		headers = headers
 	})
 
-	return Base:Response(status, nil, status == 200)
+	return BaseApi:Response(status, nil, status == 200)
 end
 
-return Instance
+return InstanceApi

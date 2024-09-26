@@ -1,4 +1,4 @@
-local Base = {
+local BaseApi = {
 	current = 'prod',
 
 	dev = {
@@ -11,7 +11,7 @@ local Base = {
 	}
 }
 
-function Base:Response(status, body, success)
+function BaseApi:Response(status, body, success)
 	return {
 		status = status,
 		body = body,
@@ -19,4 +19,4 @@ function Base:Response(status, body, success)
 	}
 end
 
-return Base
+return BaseApi

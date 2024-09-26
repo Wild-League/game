@@ -1,10 +1,10 @@
 local yui = require('lib.yui')
 local Suit = require('lib.suit')
 local Layout = require('src.helpers.layout')
-local Instance = require('src.api.instance')
+local InstanceApi = require('src.api.instance')
 local Images = require('src.ui.images')
 local ImageHelper = require('src.helpers.image')
-local Host = require('src.api.host')
+local HostApi = require('src.api.host')
 
 local Initial = {
 	instance_input = 'https://wildleague.org',
@@ -15,7 +15,7 @@ local Initial = {
 }
 
 function Initial:load()
-	self.list_worlds = Host:get_worlds().body
+	self.list_worlds = HostApi:get_worlds().body
 
 	for _, value in pairs(self.list_worlds) do
 		table.insert(self.server_options, { text = value.name, value = value.url })
@@ -61,7 +61,7 @@ function Initial:load()
 				w = 350, h = 50,
 				text = 'Enter',
 				onHit = function()
-					local response = Instance:validate(self.instance_input)
+					local response = InstanceApi:validate(self.instance_input)
 
 					if response.success then
 						CONTEXT:change('lobby')
