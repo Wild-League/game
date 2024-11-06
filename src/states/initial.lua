@@ -4,17 +4,30 @@ local InstanceApi = require('src.api.instance')
 local Images = require('src.ui.images')
 local ImageHelper = require('src.helpers.image')
 local HostApi = require('src.api.host')
+local Constants = require('src.constants')
 
 local Initial = {
-	instance_input = 'https://wildleague.org',
+	instance_input = 'https://wildleague.org', -- default instance
 	is_instance_valid = true,
 	server_options = {},
 	current_background = Images.background_cloud,
 	list_worlds = nil
 }
 
+
 function Initial:load()
 	self.list_worlds = HostApi:get_worlds().body
+
+	for i, world in ipairs(self.list_worlds) do
+		if world.url == 'https://wildleague.org' then
+			if i > 1 then
+				local temp = self.list_worlds[1]
+				self.list_worlds[1] = world
+				self.list_worlds[i] = temp
+			end
+			break
+		end
+	end
 
 	for _, value in pairs(self.list_worlds) do
 		table.insert(self.server_options, { text = value.name, value = value.url })
@@ -62,11 +75,13 @@ function Initial:load()
 				onHit = function()
 					self.text = 'Loading...'
 
-					local response = InstanceApi:validate(self.instance_input)
+					Constants.WORLD_SERVER = self.instance_input
+					Constants.WORLD_SERVER_API = self:get_api_url(self.instance_input)
 
+					local response = InstanceApi:validate(self.instance_input)
 					if response.success then
 						self.text = 'Enter'
-						CONTEXT:change('lobby')
+						CONTEXT:change('auth')
 					else
 						self.text = 'Enter'
 						self.is_instance_valid = false
@@ -77,12 +92,25 @@ function Initial:load()
 	})
 end
 
+function Initial:get_api_url(world_url)
+	for _, world in ipairs(self.list_worlds) do
+		if world.url == world_url then
+			return world.api_url
+		end
+	end
+end
+
 function Initial:update(dt)
 	self.ui:update(dt)
 end
 
 function Initial:draw()
-	love.graphics.draw(self.current_background, 0, 0, 0, love.graphics.getWidth() / self.current_background:getWidth(), love.graphics.getHeight() / self.current_background:getHeight())
+	love.graphics.draw(
+		self.current_background,
+		0, 0, 0,
+		love.graphics.getWidth() / self.current_background:getWidth(),
+		love.graphics.getHeight() / self.current_background:getHeight()
+	)
 
 	self.ui:draw()
 
@@ -108,10 +136,11 @@ function Initial:load_background_image(url_server)
 
 	if world then
 		local background = world.background
-		and ImageHelper:load_from_url(world.background, 'background')
-		or Images.background_cloud
+			and ImageHelper:load_from_url(world.background, 'background')
+			or Images.background_cloud
 
 		self.current_background = background
+		Constants.WORLD_BACKGROUND = background
 	end
 end
 

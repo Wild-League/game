@@ -1,6 +1,6 @@
 local yui = require('lib.yui')
 local Layout = require('src.helpers.layout')
-local Map = require('src.entities.new_map')
+local Map = require('src.entities.map')
 local Tower = require('src.entities.tower')
 local Deck = require('src.entities.deck')
 local MatchEvents = require('src.config.match_events')

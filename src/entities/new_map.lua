@@ -1,4 +1,4 @@
-local Map = {image_width = 0, image_height = 0, scale_x = 1, scale_y = 1, image}
+local Map = {image_width = 0, image_height = 0, scale_x = 1, scale_y = 1 }
 
 local tile_size_const = 32
 local map_scale_const = 1.25

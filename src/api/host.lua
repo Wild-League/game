@@ -9,7 +9,7 @@ function HostApi:get_worlds()
 		['Content-Type'] = 'application/json'
 	}
 
-	local url = BaseApi[BaseApi.current].host_url .. 'worlds'
+	local url = BaseApi:get_resource_url('host') .. 'worlds'
 
 	local status, response = https.request(url, {
 		method = 'GET',

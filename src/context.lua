@@ -1,22 +1,22 @@
 local Initial = require('src.states.initial')
-local SignIn = require('src.states.auth.signin')
-local SignUp = require('src.states.auth.signup')
+local Auth = require('src.states.auth')
 local Game = require('src.states.game')
 local NewGame = require('src.scenes.game')
 local Queue = require('src.states.queue')
 local Lobby = require('src.states.lobby')
 local LoadingGame = require('src.states.loading-game')
+local DeckSelection = require('src.states.deck_selection')
 
 local Context = {
 	states = {
 		initial = Initial,
-		signin = SignIn,
-		signup = SignUp,
+		auth = Auth,
 		lobby = Lobby,
 		queue = Queue,
 		loading_game = LoadingGame,
 		game = Game,
-		newGame = NewGame
+		newGame = NewGame,
+		deck_selection = DeckSelection,
 	},
 
 	current = 'initial',
