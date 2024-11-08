@@ -8,36 +8,36 @@ local LoadingGame = require('src.states.loading-game')
 local DeckSelection = require('src.states.deck_selection')
 
 local Context = {
-    states = {
-        initial = Initial,
-        auth = Auth,
-        lobby = Lobby,
-        queue = Queue,
-        loading_game = LoadingGame,
-        game = Game,
-        newGame = NewGame,
-        deck_selection = DeckSelection
-    },
+	states = {
+		initial = Initial,
+		auth = Auth,
+		lobby = Lobby,
+		queue = Queue,
+		loading_game = LoadingGame,
+		game = Game,
+		newGame = NewGame,
+		deck_selection = DeckSelection
+	},
 
-    current = 'deck_selection',
+	current = 'initial',
 
-    load = function(self, dt) return self.states[self.current]:load() end,
-    update = function(self, dt) return self.states[self.current]:update(dt) end,
+	load = function(self, dt) return self.states[self.current]:load() end,
+	update = function(self, dt) return self.states[self.current]:update(dt) end,
 
-    draw = function(self) return self.states[self.current]:draw() end,
+	draw = function(self) return self.states[self.current]:draw() end,
 
-    change = function(self, ctx)
-        if ctx == nil then error('Context should not be nil') end
+	change = function(self, ctx)
+		if ctx == nil then error('Context should not be nil') end
 
-        local new_ctx = self.states[ctx]
+		local new_ctx = self.states[ctx]
 
-        if new_ctx ~= nil then
-            self.current = ctx
-            self.states[self.current]:load()
-        else
-            error('This context does not exist')
-        end
-    end
+		if new_ctx ~= nil then
+			self.current = ctx
+			self.states[self.current]:load()
+		else
+			error('This context does not exist')
+		end
+	end
 }
 
 return Context

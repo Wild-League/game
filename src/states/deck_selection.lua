@@ -1,5 +1,5 @@
 local DeckApi = require('src.api.deck')
-local FriendsSidebar = require('src.ui.friends-sidebar')
+local FriendListSidebar = require('src.ui.friend-list-sidebar')
 local Suit = require('lib.suit')
 local Fonts = require('src.ui.fonts')
 
@@ -28,7 +28,7 @@ function DeckSelection:draw()
 
     self.card_area(.5, cards)
     self.card_area(3, cards)
-    FriendsSidebar.draw(Suit, Fonts, DeckSelection)
+    FriendListSidebar.draw(Suit, Fonts, DeckSelection)
 
 end
 

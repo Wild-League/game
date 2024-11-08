@@ -72,15 +72,31 @@ function UserApi:get()
 end
 
 function UserApi:add_friend(username)
-	local url = BaseApi:get_resource_url('user') .. '/friend/'
+	local url = BaseApi:get_resource_url('user') .. '/add_friend/'
 
-	local _, response = https.request(url, {
+	local body = json.encode({ username = username })
+
+	local headers = {
+		authorization = 'Bearer '..Constants.ACCESS_TOKEN,
+		['Content-Type'] = 'application/json',
+		['Content-Lenght'] = #body
+	}
+
+	local status, response = https.request(url, {
 		method = 'POST',
-		headers = { authorization = 'Bearer '..Constants.ACCESS_TOKEN },
-		data = json.encode({ username = username })
+		headers = headers,
+		data = body
 	})
 
-	return json.decode(response)
+	if response == '' then
+		return BaseApi:Response(status, nil, status == 200 or status == 201)
+	end
+
+	return BaseApi:Response(
+		status,
+		response == '' and nil or json.decode(response),
+		status == 200 or status == 201
+	)
 end
 
 return UserApi
