@@ -6,13 +6,17 @@ local BaseApi = {
 	dev = {
 		world_api_url = 'http://localhost:8000/v1/',
 		world_url = 'http://localhost:3000/',
-		host_url = 'https://host-api.wildleague.org/v1/'
+		host_url = 'https://host-api.wildleague.org/v1/',
+		multiplayer_server_url = 'localhost',
+		multiplayer_server_port = 7350
 	},
 
 	prod = {
 		world_api_url = Constants.WORLD_SERVER_API .. '/v1/',
 		world_url = Constants.WORLD_SERVER,
-		host_url = 'https://host-api.wildleague.org/v1/'
+		host_url = 'https://host-api.wildleague.org/v1/',
+		multiplayer_server_url = 'localhost',
+		multiplayer_server_port = 7350
 	}
 }
 

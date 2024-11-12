@@ -2,9 +2,22 @@ local json = require('lib.json')
 local UserApi = require('src.api.user')
 local Alert = require('src.ui.alert')
 
-local FriendListSidebar = {}
+local RelationshipType = {
+	Block = 'Block',
+	Friend = 'Friend',
+	FriendRequest = 'FriendRequest',
+	Rejected = 'Rejected'
+}
 
-function FriendListSidebar.draw(suit, fonts, screen)
+local FriendListSidebar = {
+	friends = {}
+}
+
+function FriendListSidebar:load()
+	self.friends = UserApi:get_friends()
+end
+
+function FriendListSidebar:draw(suit, fonts, screen)
 	local sidebar_width = 250
 	local sidebar_x = love.graphics.getWidth() - sidebar_width
 	local sidebar_y = 0
@@ -47,14 +60,32 @@ function FriendListSidebar.draw(suit, fonts, screen)
 
 	local friend_y = button_y + 40
 
-	if #screen.friends > 0 then
-		for i, friend in ipairs(screen.friends) do
-			suit.Label((friend.name or "Friend ") .. i, sidebar_x + 10, friend_y)
-			-- local status_color = friend.online and {0, 1, 0} or {0.5, 0.5, 0.5}
-			-- love.graphics.setColor(unpack(status_color))
-			love.graphics.circle('fill', sidebar_x + sidebar_width - 20, friend_y + 8, 5)
-			love.graphics.setColor(1, 1, 1, 1)
-			friend_y = friend_y + 30
+	if #self.friends > 0 then
+		for i, friend in ipairs(self.friends) do
+			if friend.relationship_type == RelationshipType.FriendRequest then
+				love.graphics.setFont(fonts.jura(15))
+				suit.Label('* wants to be your friend', sidebar_x + 10, friend_y)
+				love.graphics.setFont(fonts.jura(24))
+				suit.Label(friend.requester_username, sidebar_x + 10, friend_y + 15)
+
+				local accept_button = suit.Button('Accept', sidebar_x + 10, i * friend_y + 50, 230, 30)
+				local reject_button = suit.Button('Reject', sidebar_x + 10, i * friend_y + 90, 230, 30)
+
+				if accept_button.hit then
+					UserApi:accept_friend_request(friend.id)
+					self.friends = UserApi:get_friends()
+				end
+
+				if reject_button.hit then
+					UserApi:reject_friend_request(friend.id)
+					self.friends = UserApi:get_friends()
+				end
+			end
+
+			if friend.relationship_type == RelationshipType.Friend then
+				love.graphics.setFont(fonts.jura(20))
+				suit.Label(friend.requester_username, sidebar_x + 10, friend_y)
+			end
 		end
 	else
 		love.graphics.setFont(fonts.jura(15))

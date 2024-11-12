@@ -2,7 +2,10 @@ local Suit = require('lib.suit')
 local Images = require('src.ui.images')
 local Constants = require('src.constants')
 local UserApi = require('src.api.user')
-local json = require('lib.json')
+local nakama = require('lib.nakama.nakama')
+local socket = require('lib.nakama.socket')
+local love2d = require('lib.nakama.engine.love2d')
+local BaseApi = require('src.api.base')
 
 local Auth = {
 	signin_username = { text = 'ropoko' },
@@ -37,6 +40,9 @@ function Auth:update(dt)
 		local data = UserApi:signin(self.signin_username.text, self.signin_password.text)
 		Constants.ACCESS_TOKEN = data.access
 		Constants.REFRESH_TOKEN = data.refresh
+
+		self:auth_multiplayer_server(self.signin_username.text, self.signin_username.text, self.signin_password.text)
+
 		CONTEXT:change('lobby')
 	end
 
@@ -55,6 +61,9 @@ function Auth:update(dt)
 			local signin_data = UserApi:signin(self.signup_username.text, self.signup_password.text)
 			Constants.ACCESS_TOKEN = signin_data.access
 			Constants.REFRESH_TOKEN = signin_data.refresh
+
+			self:auth_multiplayer_server(self.signup_username.text, self.signup_email.text, self.signup_password.text)
+
 			CONTEXT:change('lobby')
 		end
 	end
@@ -70,6 +79,31 @@ function Auth:draw()
 
 	local width = love.graphics.getWidth()
 	love.graphics.line(width/2, 50, width/2, 450)
+end
+
+function Auth:auth_multiplayer_server(username, email, password)
+	local client = nakama.create_client({
+		host = BaseApi[BaseApi.current].multiplayer_server_url,
+		port = BaseApi[BaseApi.current].multiplayer_server_port,
+		username = 'defaultkey',
+		password = '',
+		engine = love2d
+	})
+
+	Constants.NAKAMA_CLIENT = client
+
+	coroutine.resume(coroutine.create(function()
+		-- add user to nakama server
+		local result = nakama.authenticate_email(client, email, password, { level = "1" }, true, username)
+
+		if result then
+			Constants.USER_ID = result.user_id
+			nakama.set_bearer_token(client, result.token)
+		end
+
+		Constants.SOCKET_CONNECTION = nakama.create_socket(client)
+		socket.connect(Constants.SOCKET_CONNECTION)
+	end))
 end
 
 return Auth

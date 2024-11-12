@@ -22,31 +22,12 @@ local Lobby = {
 }
 
 function Lobby:load()
-	local client = nakama.create_client({
-		host = 'localhost',
-		port = 7350,
-		username = 'defaultkey',
-		password = '',
-		engine = love2d
-	})
+	FriendListSidebar:load()
 
-	Constants.NAKAMA_CLIENT = client
+	-- TODO: work on deck builder page
 
 	-- TODO: add real code
 	-- local selected_deck = DeckApi:get('1')
-
-	-- coroutine.resume(coroutine.create(function()
-	-- 	-- add user to nakama server
-	-- 	local result = nakama.authenticate_email(client, 'ropoko@gmail.com', '12345678', { level = "1" }, true, 'ropoko')
-
-	-- 	if result then
-	-- 		Constants.USER_ID = result.user_id
-	-- 		nakama.set_bearer_token(client, result.token)
-	-- 	end
-
-	-- 	Constants.SOCKET_CONNECTION = nakama.create_socket(client)
-	-- 	socket.connect(Constants.SOCKET_CONNECTION)
-	-- end))
 
 	-- socket.on_matchmaker_matched(Constants.SOCKET_CONNECTION, function(match)
 	-- 	Constants.MATCH_ID = match.matchmaker_matched.match_id
@@ -103,7 +84,7 @@ function Lobby:draw()
 	Suit.Label('For now, you can only play with 3 cards', mainX - 50, 130)
 	Suit.Label('Search for a match or play against a friend', mainX - 70, 160)
 
-	FriendListSidebar.draw(Suit, Fonts, Lobby)
+	FriendListSidebar:draw(Suit, Fonts, Lobby)
 
 	Alert:draw()
 

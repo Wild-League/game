@@ -99,4 +99,55 @@ function UserApi:add_friend(username)
 	)
 end
 
+function UserApi:get_friends()
+	local url = BaseApi:get_resource_url('user') .. '/get_friends/'
+
+	local _, response = https.request(url, {
+		method = 'GET',
+		headers = { authorization = 'Bearer '..Constants.ACCESS_TOKEN }
+	})
+
+	return json.decode(response)
+end
+
+function UserApi:accept_friend_request(friend_request_id)
+	local url = BaseApi:get_resource_url('user') .. '/accept_friend_request/'
+
+	local body = json.encode({ friend_request_id = friend_request_id })
+
+	local headers = {
+		authorization = 'Bearer '..Constants.ACCESS_TOKEN,
+		['Content-Type'] = 'application/json',
+		['Content-Lenght'] = #body
+	}
+
+	local _, response = https.request(url, {
+		method = 'POST',
+		headers = headers,
+		data = body
+	})
+
+	return nil
+end
+
+function UserApi:reject_friend_request(friend_request_id)
+	local url = BaseApi:get_resource_url('user') .. '/reject_friend_request/'
+
+	local body = json.encode({ friend_request_id = friend_request_id })
+
+	local headers = {
+		authorization = 'Bearer '..Constants.ACCESS_TOKEN,
+		['Content-Type'] = 'application/json',
+		['Content-Lenght'] = #body
+	}
+
+	local _, response = https.request(url, {
+		method = 'POST',
+		headers = headers,
+		data = body
+	})
+
+	return nil
+end
+
 return UserApi
