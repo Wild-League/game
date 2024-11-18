@@ -1,7 +1,7 @@
 local Constants = require('src.constants')
 
 local BaseApi = {
-	current = 'dev',
+	current = 'prod',
 
 	dev = {
 		world_api_url = 'http://localhost:8000/v1/',
@@ -21,6 +21,11 @@ local BaseApi = {
 }
 
 function BaseApi:get_resource_url(resource)
+	if self.current == 'prod' then
+		self[self.current].world_api_url = Constants.WORLD_SERVER_API .. '/v1/'
+		self[self.current].world_url = Constants.WORLD_SERVER
+	end
+
 	local routes = {
 		nodeinfo = self[self.current].world_api_url .. 'nodeinfo',
 		test = self[self.current].world_api_url .. 'test',
