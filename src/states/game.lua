@@ -23,22 +23,19 @@ local Game = {
 	enemy_status = PlayerStatus:new('2d618372-1220-49b3-b22e-00f6ca0c12a5')
 }
 
---CARREGA A IMAGEM DA TORRE, PERSONALIZA O CURSOR, CARREGA O MAPA E AS TORRES
 function Game:load()
-    -- Carregar a imagem da torre
-    Assets.TOWER = love.graphics.newImage('assets/tower.png')
+	Assets.TOWER = love.graphics.newImage('assets/tower.png')
 
 	local cursor = love.mouse.newCursor('assets/cursor.png', 0, 0)
 	love.mouse.setCursor(cursor)
 
 	Map:load()
-	-- socket.on_match_data(Constants.SOCKET_CONNECTION, function(data)
-	-- 	self:handle_received_data(data)
-	-- end)
+	socket.on_match_data(Constants.SOCKET_CONNECTION, function(data)
+		self:handle_received_data(data)
+	end)
 
-	Constants.USER_ID = '2d618372-1220-49b3-b22e-00f6ca0c12a5'
 	self.cards[Constants.USER_ID] = {}
-	-- self.cards[Constants.ENEMY_ID] = {}
+	self.cards[Constants.ENEMY_ID] = {}
 
 	self:load_towers()
 
@@ -47,7 +44,7 @@ function Game:load()
 			{
 				collection = 'selected_deck',
 				key = 'selected_deck',
-				userId = '2d618372-1220-49b3-b22e-00f6ca0c12a5' -- Constants.USER_ID
+				userId = Constants.USER_ID
 			}
 		}
 

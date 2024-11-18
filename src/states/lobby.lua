@@ -24,34 +24,31 @@ local Lobby = {
 function Lobby:load()
 	FriendListSidebar:load()
 
-	-- TODO: work on deck builder page
+	local selected_deck = DeckApi:get_current_deck()
 
-	-- TODO: add real code
-	-- local selected_deck = DeckApi:get('1')
+	socket.on_matchmaker_matched(Constants.SOCKET_CONNECTION, function(match)
+		Constants.MATCH_ID = match.matchmaker_matched.match_id
+		Constants.ENEMY_ID = self:get_enemy_user_id(match.matchmaker_matched.users)
 
-	-- socket.on_matchmaker_matched(Constants.SOCKET_CONNECTION, function(match)
-	-- 	Constants.MATCH_ID = match.matchmaker_matched.match_id
-	-- 	Constants.ENEMY_ID = self:get_enemy_user_id(match.matchmaker_matched.users)
+		coroutine.resume(coroutine.create(function()
+			local objects = {
+				{
+					collection = 'selected_deck',
+					key = 'selected_deck',
+					value = json.encode(selected_deck),
+					permissionRead = 2,
+					permissionWrite = 1,
+					version = ""
+				}
+			}
 
-	-- 	coroutine.resume(coroutine.create(function()
-	-- 		local objects = {
-	-- 			{
-	-- 				collection = 'selected_deck',
-	-- 				key = 'selected_deck',
-	-- 				value = json.encode(selected_deck),
-	-- 				permissionRead = 2,
-	-- 				permissionWrite = 1,
-	-- 				version = ""
-	-- 			}
-	-- 		}
-
-	-- 		nakama.write_storage_objects(client, objects, function ()
-	-- 			socket.match_join(Constants.SOCKET_CONNECTION, Constants.MATCH_ID, nil, nil, function()
-	-- 				CONTEXT:change('game')
-	-- 			end)
-	-- 		end)
-	-- 	end))
-	-- end)
+			nakama.write_storage_objects(Constants.NAKAMA_CLIENT, objects, function ()
+				socket.match_join(Constants.SOCKET_CONNECTION, Constants.MATCH_ID, nil, nil, function()
+					CONTEXT:change('game')
+				end)
+			end)
+		end))
+	end)
 end
 
 function Lobby:update(dt) self.timer:update(dt) end

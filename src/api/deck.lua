@@ -18,4 +18,17 @@ function DeckApi:get_list()
 	return json.decode(response)
 end
 
+function DeckApi:get_current_deck()
+	local url = BaseApi:get_resource_url('deck') .. '/current/'
+
+	local _, response = https.request(url, {
+		method = 'GET',
+		headers = {
+			Authorization = 'Bearer ' .. Constants.ACCESS_TOKEN,
+		},
+	})
+
+	return json.decode(response)
+end
+
 return DeckApi

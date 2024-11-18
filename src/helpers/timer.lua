@@ -36,12 +36,12 @@ function Timer:update(dt)
 end
 
 function Timer:draw(x, y, w, h)
-	local center_background = Layout:center(100, 100)
-	love.graphics.setColor(0, 0, 0, 0.8)
-	love.graphics.rectangle('fill', center_background.width - 50, 10, 150, 60)
-	love.graphics.setColor(1, 1, 1)
+	-- local center_background = Layout:center(100, 100)
+	-- love.graphics.setColor(0, 0, 0, 0.8)
+	-- love.graphics.rectangle('fill', center_background.width - 50, 10, 150, 60)
+	-- love.graphics.setColor(1, 1, 1)
 
-	love.graphics.draw(Images.sun, x - 50, y - 30, 0, 0.2, 0.2)
+	-- love.graphics.draw(Images.sun, x - 50, y - 30, 0, 0.2, 0.2)
 	Suit.Label(self.time_to_show, x, y + 5, w, h)
 end
 

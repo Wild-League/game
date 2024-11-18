@@ -121,7 +121,7 @@ function UserApi:accept_friend_request(friend_request_id)
 		['Content-Lenght'] = #body
 	}
 
-	local _, response = https.request(url, {
+	local _ = https.request(url, {
 		method = 'POST',
 		headers = headers,
 		data = body
@@ -141,13 +141,24 @@ function UserApi:reject_friend_request(friend_request_id)
 		['Content-Lenght'] = #body
 	}
 
-	local _, response = https.request(url, {
+	local _ = https.request(url, {
 		method = 'POST',
 		headers = headers,
 		data = body
 	})
 
 	return nil
+end
+
+function UserApi:get_me()
+	local url = BaseApi:get_resource_url('user') .. '/me/'
+
+	local _, response = https.request(url, {
+		method = 'GET',
+		headers = { authorization = 'Bearer '..Constants.ACCESS_TOKEN }
+	})
+
+	return json.decode(response)
 end
 
 return UserApi

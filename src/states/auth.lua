@@ -90,13 +90,16 @@ function Auth:auth_multiplayer_server(username, email, password)
 		engine = love2d
 	})
 
+	local me = UserApi:get_me()
+
 	Constants.NAKAMA_CLIENT = client
 
 	coroutine.resume(coroutine.create(function()
-		-- add user to nakama server
-		local result = nakama.authenticate_email(client, email, password, { level = "1" }, true, username)
+		local result = nakama.authenticate_email(client, me.email, password, { level = "1" }, true, username)
+
 
 		if result then
+			print(result.user_id, result.token)
 			Constants.USER_ID = result.user_id
 			nakama.set_bearer_token(client, result.token)
 		end
