@@ -11,7 +11,7 @@ local Images = require('src.ui.images')
 local Fonts = require('src.ui.fonts')
 local FriendListSidebar = require('src.ui.friend-list-sidebar')
 local Alert = require('src.ui.alert')
-
+local HeaderBar = require('src.ui.header-bar')
 local Lobby = {
 	matchmake_state = 'idle',
 	matchmake_ticket = nil,
@@ -23,8 +23,11 @@ local Lobby = {
 
 function Lobby:load()
 	FriendListSidebar:load()
-
 	local selected_deck = DeckApi:get_current_deck()
+	for i, line in ipairs(selected_deck) do
+		print(line)
+		print(i)
+	end
 
 	socket.on_matchmaker_matched(Constants.SOCKET_CONNECTION, function(match)
 		Constants.MATCH_ID = match.matchmaker_matched.match_id
@@ -42,7 +45,7 @@ function Lobby:load()
 				}
 			}
 
-			nakama.write_storage_objects(Constants.NAKAMA_CLIENT, objects, function ()
+			nakama.write_storage_objects(Constants.NAKAMA_CLIENT, objects, function()
 				socket.match_join(Constants.SOCKET_CONNECTION, Constants.MATCH_ID, nil, nil, function()
 					CONTEXT:change('game')
 				end)
@@ -56,15 +59,7 @@ function Lobby:update(dt) self.timer:update(dt) end
 function Lobby:draw()
 	love.graphics.setBackgroundColor(10 / 255, 16 / 255, 115 / 255)
 
-	love.graphics.setColor(0.1, 0.1, 0.1, 0.8)
-	love.graphics.rectangle('fill', 0, 0, love.graphics.getWidth(), 50)
-	love.graphics.setColor(1, 1, 1, 1)
-
-	love.graphics.setFont(Fonts.jura(20))
-	local deck_builder_btn = Suit.Button("Deck Builder", 20, 10, 150, 30)
-	love.graphics.setFont(Fonts.jura(24))
-
-	if deck_builder_btn.hit then CONTEXT:change('deck_selection') end
+	HeaderBar:draw("Deck Builder", 'deck_selection')
 
 	local center = Layout:center(300, 30)
 	local mainX = center.width - 150
@@ -81,7 +76,7 @@ function Lobby:draw()
 	Suit.Label('For now, you can only play with 3 cards', mainX - 50, 130)
 	Suit.Label('Search for a match or play against a friend', mainX - 70, 160)
 
-	FriendListSidebar:draw(Suit, Fonts, Lobby)
+	FriendListSidebar:draw(self)
 
 	Alert:draw()
 
