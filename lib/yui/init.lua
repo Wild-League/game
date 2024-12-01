@@ -12,6 +12,7 @@
 local BASE = (...) .. '.'
 
 return {
+    Card = require(BASE .. 'card'),
     Button = require(BASE .. 'button'),
     Checkbox = require(BASE .. 'checkbox'),
     Choice = require(BASE .. 'choice'),

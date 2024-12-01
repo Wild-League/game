@@ -8,13 +8,14 @@
 
 local BASE = (...):gsub('columns$', '')
 
-local Layout = require(BASE..'layout')
+local Layout = require(BASE .. 'layout')
 
 -- Advance position to next column
 -- given current position, widget dimensions and padding
-local function columnadvance(x,y, ww,_, padding)
+local function columnadvance(x, y, ww, _, padding)
     return x + ww + padding, y
 end
+
 
 local Columns = setmetatable({
     advance = columnadvance,

@@ -24,11 +24,6 @@ local Lobby = {
 function Lobby:load()
 	FriendListSidebar:load()
 	local selected_deck = DeckApi:get_current_deck()
-	for i, line in ipairs(selected_deck) do
-		print(line)
-		print(i)
-	end
-
 	socket.on_matchmaker_matched(Constants.SOCKET_CONNECTION, function(match)
 		Constants.MATCH_ID = match.matchmaker_matched.match_id
 		Constants.ENEMY_ID = self:get_enemy_user_id(match.matchmaker_matched.users)

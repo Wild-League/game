@@ -1,10 +1,12 @@
 local Fonts = require('src.ui.fonts')
 local Suit = require('lib.suit')
 
-local HeaderBar = {}
+local HeaderBar = {
+  height = 50
+}
 function HeaderBar:draw(label, screen)
   love.graphics.setColor(0.1, 0.1, 0.1, 0.8)
-  love.graphics.rectangle('fill', 0, 0, love.graphics.getWidth(), 50)
+  love.graphics.rectangle('fill', 0, 0, love.graphics.getWidth(), self.height)
   love.graphics.setColor(1, 1, 1, 1)
 
   love.graphics.setFont(Fonts.jura(20))
