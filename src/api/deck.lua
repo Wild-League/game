@@ -31,10 +31,32 @@ function DeckApi:get_current_deck()
 end
 
 function DeckApi:get_deck_by_id(id)
-	local url = BaseApi:get_resource_url('deck') .. '/' .. id .. '/'
+	local body = json.encode({
+		id = id
+	})
+
+	local headers = {
+		['Content-Type'] = 'application/json',
+		['Content-Lenght'] = #body
+	}
+
+	local url_change_deck = BaseApi:get_resource_url('deck') .. '/select/'
+
+	local _, response = https.request(url_change_deck, {
+		data = body,
+		method = 'POST',
+		headers = headers
+	})
+
+
+	print('Deck selection response: ', json.decode(response))
+end
+
+function DeckApi:set_selected_deck(id)
+	local url = BaseApi:get_resource_url('deck') .. '/' .. 'select' .. '/'
 
 	local _, response = https.request(url, {
-		method = 'GET',
+		method = 'POST',
 		headers = {
 			Authorization = 'Bearer ' .. Constants.ACCESS_TOKEN,
 		},

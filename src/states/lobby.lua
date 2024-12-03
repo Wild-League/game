@@ -100,4 +100,8 @@ function Lobby:get_enemy_user_id(users)
 	end
 end
 
+function Lobby:resize()
+
+end
+
 return Lobby

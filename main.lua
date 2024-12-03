@@ -27,6 +27,10 @@ function love.textinput(t)
 	Suit.textinput(t)
 end
 
+function love.resize()
+	CONTEXT:resize()
+end
+
 function love.keypressed(key)
 	Suit.keypressed(key)
 end

@@ -26,6 +26,8 @@ local Context = {
 
 	draw = function(self) return self.states[self.current]:draw() end,
 
+	resize = function(self) return self.states[self.current]:resize() end,
+
 	change = function(self, ctx)
 		if ctx == nil then error('Context should not be nil') end
 

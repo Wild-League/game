@@ -30,11 +30,12 @@ function Auth:update(dt)
 	local startY = 200
 
 	-- Sign In
-	Suit.Label('Sign In', { align = 'center', color = { normal = { fg = { 0, 0, 0 } } }}, width/4 - inputWidth/2, startY, inputWidth, inputHeight)
-	Suit.Input(self.signin_username, width/4 - inputWidth/2, startY + 70, inputWidth, inputHeight)
-	Suit.Input(self.signin_password, width/4 - inputWidth/2, startY + 140, inputWidth, inputHeight)
+	Suit.Label('Sign In', { align = 'center', color = { normal = { fg = { 0, 0, 0 } } } }, width / 4 - inputWidth / 2,
+		startY, inputWidth, inputHeight)
+	Suit.Input(self.signin_username, width / 4 - inputWidth / 2, startY + 70, inputWidth, inputHeight)
+	Suit.Input(self.signin_password, width / 4 - inputWidth / 2, startY + 140, inputWidth, inputHeight)
 
-	local signin_button = Suit.Button('Sign In', width/4 - inputWidth/2, startY + 280, inputWidth, buttonHeight)
+	local signin_button = Suit.Button('Sign In', width / 4 - inputWidth / 2, startY + 280, inputWidth, buttonHeight)
 
 	if signin_button.hit then
 		local data = UserApi:signin(self.signin_username.text, self.signin_password.text)
@@ -47,12 +48,13 @@ function Auth:update(dt)
 	end
 
 	-- Sign Up
-	Suit.Label('Sign Up', { align = 'center', color = { normal = { fg = { 0, 0, 0 } } }}, width/4*3 - inputWidth/2, startY, inputWidth, inputHeight)
-	Suit.Input(self.signup_username, width/4*3 - inputWidth/2, startY + 70, inputWidth, inputHeight)
-	Suit.Input(self.signup_email, width/4*3 - inputWidth/2, startY + 140, inputWidth, inputHeight)
-	Suit.Input(self.signup_password, width/4*3 - inputWidth/2, startY + 210, inputWidth, inputHeight)
+	Suit.Label('Sign Up', { align = 'center', color = { normal = { fg = { 0, 0, 0 } } } }, width / 4 * 3 - inputWidth / 2,
+		startY, inputWidth, inputHeight)
+	Suit.Input(self.signup_username, width / 4 * 3 - inputWidth / 2, startY + 70, inputWidth, inputHeight)
+	Suit.Input(self.signup_email, width / 4 * 3 - inputWidth / 2, startY + 140, inputWidth, inputHeight)
+	Suit.Input(self.signup_password, width / 4 * 3 - inputWidth / 2, startY + 210, inputWidth, inputHeight)
 
-	local signup_button = Suit.Button('Sign Up', width/4*3 - inputWidth/2, startY + 280, inputWidth, buttonHeight)
+	local signup_button = Suit.Button('Sign Up', width / 4 * 3 - inputWidth / 2, startY + 280, inputWidth, buttonHeight)
 
 	if signup_button.hit then
 		local data = UserApi:signup(self.signup_username.text, self.signup_email.text, self.signup_password.text)
@@ -78,7 +80,7 @@ function Auth:draw()
 	)
 
 	local width = love.graphics.getWidth()
-	love.graphics.line(width/2, 50, width/2, 450)
+	love.graphics.line(width / 2, 50, width / 2, 450)
 end
 
 function Auth:auth_multiplayer_server(username, email, password)
@@ -105,6 +107,10 @@ function Auth:auth_multiplayer_server(username, email, password)
 		Constants.SOCKET_CONNECTION = nakama.create_socket(client)
 		socket.connect(Constants.SOCKET_CONNECTION)
 	end))
+end
+
+function Auth:resize()
+
 end
 
 return Auth

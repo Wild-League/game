@@ -35,5 +35,8 @@ function Queue:draw()
 	end
 end
 
-return Queue
+function Queue:resize()
 
+end
+
+return Queue

@@ -75,7 +75,6 @@ function Game:load()
 	-- end))
 end
 
-
 --ATUALIZA O JOGO (MAPA, DECK, STATUS DO JOGADOR, CARTAS)
 function Game:update(dt)
 	Map:update(dt)
@@ -94,7 +93,6 @@ function Game:update(dt)
 	-- 	enemy_card:update(dt)
 	-- end
 end
-
 
 --DESENHA O JOGO A CADA QUADRO (MAPA, DECK, STATUS DO JOGADOR, CARTAS)
 function Game:draw()
@@ -194,6 +192,10 @@ end
 function Game:draw_player_status()
 	-- self.me_status:draw()
 	-- self.enemy_status:draw()
+end
+
+function Game:resize()
+
 end
 
 return Game

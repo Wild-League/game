@@ -43,7 +43,7 @@ function Initial:load()
 			yui.Label({
 				w = 350, h = 100,
 				text = 'Choose the server you want to join!',
-				theme = { color = { normal = { fg = { 1, 1, 1 } } }}
+				theme = { color = { normal = { fg = { 1, 1, 1 } } } }
 			}),
 
 			yui.Spacer({
@@ -66,7 +66,7 @@ function Initial:load()
 			yui.Label({
 				w = 350, h = 50,
 				text = self.is_instance_valid and '' or 'Invalid wildleague instance!',
-				theme = { color = { normal = { fg = { 1, 1, 0 } } }},
+				theme = { color = { normal = { fg = { 1, 1, 0 } } } },
 			}),
 
 			yui.Button({
@@ -115,7 +115,8 @@ function Initial:draw()
 	self.ui:draw()
 
 	local default_scale = 0.3
-	local center_logo = Layout:center(Images.logo_text:getWidth() * default_scale, Images.logo_text:getHeight() * default_scale)
+	local center_logo = Layout:center(Images.logo_text:getWidth() * default_scale,
+		Images.logo_text:getHeight() * default_scale)
 
 	love.graphics.push()
 	love.graphics.translate(center_logo.width, center_logo.height - 100)
@@ -136,12 +137,16 @@ function Initial:load_background_image(url_server)
 
 	if world then
 		local background = world.background
-			and ImageHelper:load_from_url(world.background, 'background')
-			or Images.background_cloud
+				and ImageHelper:load_from_url(world.background, 'background')
+				or Images.background_cloud
 
 		self.current_background = background
 		Constants.WORLD_BACKGROUND = background
 	end
+end
+
+function Initial:resize()
+
 end
 
 return Initial
