@@ -31,6 +31,19 @@ function DeckApi:get_current_deck()
 end
 
 function DeckApi:get_deck_by_id(id)
+	local url = BaseApi:get_resource_url('deck') .. '/' .. id .. '/'
+
+	local _, response = https.request(url, {
+		method = 'GET',
+		headers = {
+			Authorization = 'Bearer ' .. Constants.ACCESS_TOKEN,
+		},
+	})
+
+	return json.decode(response)
+end
+
+function DeckApi:set_selected_declk(id)
 	local body = json.encode({
 		id = id
 	})
@@ -50,19 +63,6 @@ function DeckApi:get_deck_by_id(id)
 
 
 	print('Deck selection response: ', json.decode(response))
-end
-
-function DeckApi:set_selected_deck(id)
-	local url = BaseApi:get_resource_url('deck') .. '/' .. 'select' .. '/'
-
-	local _, response = https.request(url, {
-		method = 'POST',
-		headers = {
-			Authorization = 'Bearer ' .. Constants.ACCESS_TOKEN,
-		},
-	})
-
-	return json.decode(response)
 end
 
 return DeckApi

@@ -72,9 +72,8 @@ local function updateInterfaceSizes()
 end
 --#endregion
 
-local function drawCards(deck)
+local function drawCards(cards)
     local widgets = {}
-    local cards = deck['cards']
     -- add botão de selecionar o deck
     local selectButton = yui.Button {
         w = DeckSelection.ui.card_size.width,
@@ -82,7 +81,7 @@ local function drawCards(deck)
         text = 'Select',
         notranslate = true,
         onHit = function()
-            DeckApi:set_selected_deck(deck['id'])
+            print(card)
         end
     }
     table.insert(widgets, selectButton)
@@ -127,7 +126,7 @@ local function drawColumns()
             padding = DeckSelection.ui.padding.column,
             w = DeckSelection.ui.card_size.width * #deck['cards'],
             h = DeckSelection.ui.card_size.height,
-            unpack(drawCards(deck))
+            unpack(drawCards(deck['cards']))
         }
 
         table.insert(rows, column)
