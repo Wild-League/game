@@ -72,8 +72,9 @@ local function updateInterfaceSizes()
 end
 --#endregion
 
-local function drawCards(cards)
+local function drawCards(deck)
     local widgets = {}
+    local cards = deck['cards']
     -- add botão de selecionar o deck
     local selectButton = yui.Button {
         w = DeckSelection.ui.card_size.width,
@@ -81,7 +82,7 @@ local function drawCards(cards)
         text = 'Select',
         notranslate = true,
         onHit = function()
-            print(card)
+            print(deck['id'])
         end
     }
     table.insert(widgets, selectButton)
@@ -107,10 +108,10 @@ local function drawColumns()
     local rows = {}
 
 
-    -- for i = 1, #DeckSelection.decks do
-    for i = 1, 3 do
-        -- local deck = DeckApi:get_deck_by_id(DeckSelection.decks[i]['id'])
-        local deck = DeckApi:get_deck_by_id(DeckSelection.decks[1]['id'])
+    for i = 1, #DeckSelection.decks do
+        -- for i = 1, 3 do
+        local deck = DeckApi:get_deck_by_id(DeckSelection.decks[i]['id'])
+        -- local deck = DeckApi:get_deck_by_id(DeckSelection.decks[1]['id'])
 
         DeckSelection.ui.backgrounds[i] = {
             x = DeckSelection.ui.position.x,
@@ -126,7 +127,7 @@ local function drawColumns()
             padding = DeckSelection.ui.padding.column,
             w = DeckSelection.ui.card_size.width * #deck['cards'],
             h = DeckSelection.ui.card_size.height,
-            unpack(drawCards(deck['cards']))
+            unpack(drawCards(deck))
         }
 
         table.insert(rows, column)
