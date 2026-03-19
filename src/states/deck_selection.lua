@@ -73,6 +73,9 @@ end
 --#endregion
 
 local function drawCards(deck)
+	print('drawCards')
+	print(deck)
+
     local widgets = {}
     local cards = deck['cards']
     -- add botão de selecionar o deck
@@ -149,6 +152,8 @@ local function drawUI()
 end
 
 function DeckSelection:load()
+	print('load')
+
     FriendListSidebar:load()
     self.selected_deck = DeckApi:get_current_deck()
     self.decks = DeckApi:get_list()

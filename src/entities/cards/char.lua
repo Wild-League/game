@@ -115,7 +115,15 @@ local Char = {
 ]]
 
 function Char:get_enemies_in_range(enemies)
+	local enemies_in_range = {}
+
 	for k,v in pairs(enemies) do
+		if v.type == 'char' then
+			enemies_in_range[k] = v
+		end
+	end
+
+	for k,v in pairs(enemies_in_range) do
 		local has_collision = Utils.circle_rect_collision(
 			self.char_x, self.char_y, self.perception_range/2,
 			v.char_x, v.char_y, v.img_preview:getWidth(), v.img_preview:getHeight()

@@ -13,11 +13,9 @@ local PlayerStatus = require('src.ui.player-status')
 local json = require('lib.json')
 local Assets = require('src.assets')
 
---DEFINE PROPRIEDADES INICIAIS
 local Game = {
 	timer = Timer:new(),
 	cards = {},
-	-- enemy_cards = {}
 
 	me_status = PlayerStatus:new('2d618372-1220-49b3-b22e-00f6ca0c12a5'),
 	enemy_status = PlayerStatus:new('2d618372-1220-49b3-b22e-00f6ca0c12a5')
@@ -57,25 +55,24 @@ function Game:load()
 	end))
 
 	-- get enemy deck
-	-- coroutine.resume(coroutine.create(function()
-	-- 	local objects = {
-	-- 		{
-	-- 			collection = 'selected_deck',
-	-- 			key = 'selected_deck',
-	-- 			userId = Constants.ENEMY_ID
-	-- 		}
-	-- 	}
+	coroutine.resume(coroutine.create(function()
+		local objects = {
+			{
+				collection = 'selected_deck',
+				key = 'selected_deck',
+				userId = Constants.ENEMY_ID
+			}
+		}
 
-	-- 	local result = nakama.read_storage_objects(Constants.NAKAMA_CLIENT, objects)
+		local result = nakama.read_storage_objects(Constants.NAKAMA_CLIENT, objects)
 
-	-- 	if result then
-	-- 		local selected_deck = json.decode(result.objects[1].value)
-	-- 		EnemyDeck:load(selected_deck)
-	-- 	end
-	-- end))
+		if result then
+			local selected_deck = json.decode(result.objects[1].value)
+			EnemyDeck:load(selected_deck)
+		end
+	end))
 end
 
---ATUALIZA O JOGO (MAPA, DECK, STATUS DO JOGADOR, CARTAS)
 function Game:update(dt)
 	Map:update(dt)
 
@@ -89,12 +86,11 @@ function Game:update(dt)
 		card:get_enemies_in_range(self.cards[Constants.ENEMY_ID])
 	end
 
-	-- for _, enemy_card in pairs(self.cards[Constants.ENEMY_ID]) do
-	-- 	enemy_card:update(dt)
-	-- end
+	for _, enemy_card in pairs(self.cards[Constants.ENEMY_ID]) do
+		enemy_card:update(dt)
+	end
 end
 
---DESENHA O JOGO A CADA QUADRO (MAPA, DECK, STATUS DO JOGADOR, CARTAS)
 function Game:draw()
 	Map:draw()
 
@@ -105,15 +101,14 @@ function Game:draw()
 		card:draw()
 	end
 
-	-- for _, card in pairs(self.cards[Constants.ENEMY_ID]) do
-	-- 	card:draw()
-	-- end
+	for _, card in pairs(self.cards[Constants.ENEMY_ID]) do
+		card:draw()
+	end
 
 	if Deck.card_selected then
 		Deck.card_selected:preview(love.mouse.getX(), love.mouse.getY())
 	end
 
-	-- Desenhar as torres
 	self:draw_towers()
 
 	-- self:draw_timer()
@@ -121,8 +116,6 @@ end
 
 -- private functions ---------
 
-
---CARREGA AS TORRES NAS QUATROS POSIÇÕES DO MAPA (CANTOS)
 function Game:load_towers()
 	local tower1 = Tower:load('left', 'top')
 	local tower2 = Tower:load('left', 'bottom')
@@ -137,7 +130,7 @@ function Game:load_towers()
 end
 
 function Game:draw_towers()
-	for _, tower in ipairs(self.towers) do
+	for _, tower in ipairs(self.cards[Constants.USER_ID]) do
 		tower:draw(tower.current_life)
 	end
 end

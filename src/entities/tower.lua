@@ -73,6 +73,7 @@ function Tower:load(side, position)
 	tower.char_y = positions[side][position].y
 	tower.color = positions[side][position].color
 	tower.scale_x = positions[side][position].scale_x
+	tower.scale_y = 1
 
 	tower.update = function(tower_, dt)
 		return Tower.update(tower_, dt)
@@ -95,28 +96,29 @@ function Tower.draw(tower_, current_life)
 
 	local lifebar_x = tower_.char_x - (100 / 2)
 	local lifebar_y = tower_.char_y - tower_.h * tower_.scale_y / 2 - 10
-	Tower:lifebar(lifebar_x, lifebar_y, current_life, tower_.side,tower_.color)
+
+	Tower:lifebar(lifebar_x, lifebar_y, 100, tower_.side,tower_.color)
 end
 
 function Tower:lifebar(x, y, current_life, side, color)
+	love.graphics.setColor(color)
 
-    love.graphics.setColor(color)
+	local max_life = 100
 
-    -- Desenhar a lifebar
-    love.graphics.rectangle("line", x, y, 100, 5)
-    love.graphics.rectangle("fill", x, y, current_life, 5)
-    love.graphics.setColor(255, 255, 255)
+	love.graphics.rectangle("line", x, y, max_life, 5)
+	love.graphics.rectangle("fill", x, y, current_life, 5)
+	love.graphics.setColor(255, 255, 255)
 end
 
 function Tower:get_enemies_in_range(enemies)
-	for k,v in pairs(enemies) do
-		local has_collision = Utils.circle_rect_collision(
-			self.char_x, self.char_y, self.perception_range/2,
-			v.char_x, v.char_y, v.img_preview:getWidth(), v.img_preview:getHeight()
-		)
+	-- for k,v in pairs(enemies) do
+	-- 	local has_collision = Utils.circle_rect_collision(
+	-- 		self.char_x, self.char_y, self.perception_range/2,
+	-- 		v.char_x, v.char_y, v.img_preview:getWidth(), v.img_preview:getHeight()
+	-- 	)
 
-		self.enemies_around[k] = has_collision and v or nil
-	end
+	-- 	self.enemies_around[k] = has_collision and v or nil
+	-- end
 end
 
 return Tower

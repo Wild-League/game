@@ -1,7 +1,7 @@
 local Constants = require('src.constants')
 
 local BaseApi = {
-	current = 'prod',
+	current = 'dev',
 
 	dev = {
 		world_api_url = 'http://localhost:8000/v1/',

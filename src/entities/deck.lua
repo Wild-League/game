@@ -166,19 +166,24 @@ function Deck:rotate_deck(card)
 
 	local new_deck = self.deck_selected
 
-	for i = 1, #new_deck - 1 do
+	local index_to_remove = nil
+
+	for i = 1, #new_deck do
 		local curr_card = new_deck[i]
-		local next_card = new_deck[i + 1]
 
-		if curr_card.name == card.name then
-			new_deck[i] = card_to_add
-		end
+		if curr_card then
+			if curr_card.name == card.name then
+				new_deck[i] = card_to_add
+			end
 
-		if next_card ~= nil then
-			if next_card.name == card_to_add.name then
-				table.remove(new_deck, i + 1)
+			if curr_card.name == card_to_add.name then
+				index_to_remove = i
 			end
 		end
+	end
+
+	if index_to_remove then
+		table.remove(new_deck, index_to_remove)
 	end
 
 	new_deck[#new_deck + 1] = card
