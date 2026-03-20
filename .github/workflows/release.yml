@@ -59,9 +59,17 @@ jobs:
           mkdir -p /tmp/love-macos
           unzip -q /tmp/love-nightly/love-macos.zip -d /tmp/love-macos
 
+          # nightly.link artifacts often contain nested release zips.
+          for archive in $(find /tmp/love-macos -type f -name "*.zip"); do
+            unzip -qo "$archive" -d /tmp/love-macos/unpacked
+          done
+
           APP_PATH=$(find /tmp/love-macos -type d -name "love.app" | head -n 1)
           if [ -z "$APP_PATH" ]; then
-            echo "Could not find love.app in nightly artifact"
+            APP_PATH=$(find /tmp/love-macos/unpacked -type d -name "love.app" | head -n 1)
+          fi
+          if [ -z "$APP_PATH" ]; then
+            echo "Could not find love.app in nightly artifact (including nested zips)"
             exit 1
           fi
 
