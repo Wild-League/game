@@ -12,3 +12,16 @@ luacheck .
 ```
 
 Uses project config from `.luacheckrc` (Love2D-aware and excludes `lib/**`, `assets/**`, and `test.lua`).
+
+## Release (GitHub Actions)
+
+`/.github/workflows/release.yml` builds and publishes release artifacts for:
+- macOS (`WildLeague-macos.zip`)
+- Windows (`WildLeague-windows.zip`)
+
+Trigger a release by pushing a tag like:
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
