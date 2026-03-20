@@ -93,7 +93,7 @@ local function drawCards(deck)
     for i = 1, #cards do
         local card = cards[i]
 
-        local card = yui.Card {
+        local card_widget = yui.Card {
             w = DeckSelection.ui.card_size.width,
             h = DeckSelection.ui.card_size.height,
             image = Image:load_from_url(card['img_card'], "image"),
@@ -101,7 +101,7 @@ local function drawCards(deck)
             text_margin = 0
         }
 
-        table.insert(widgets, card)
+        table.insert(widgets, card_widget)
     end
 
     return widgets

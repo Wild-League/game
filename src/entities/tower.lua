@@ -1,4 +1,3 @@
-local Utils = require('src.helpers.utils')
 local Assets = require('src.assets')
 
 local Tower = {

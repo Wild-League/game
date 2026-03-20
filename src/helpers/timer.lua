@@ -1,6 +1,4 @@
 local Suit = require('lib.suit')
-local Images = require('src.ui.images')
-local Layout = require('src.helpers.layout')
 
 local Timer = {
 	timer = 0,

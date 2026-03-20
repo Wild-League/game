@@ -1,4 +1,3 @@
-local json = require('lib.json')
 local UserApi = require('src.api.user')
 local Alert = require('src.ui.alert')
 local Suit = require('lib.suit')

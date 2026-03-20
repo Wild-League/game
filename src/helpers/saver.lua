@@ -40,7 +40,7 @@ function Saver:retrieveData()
 	-- TODO: add log file
 	print('getting data... ')
 
-	local users = get_users()
+	get_users()
 
 	-- print(users)
 

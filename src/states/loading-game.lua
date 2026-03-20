@@ -1,5 +1,4 @@
 local Deck = require('src.entities.deck')
-local Udp = require('src.network.udp')
 
 local LoadingGame = {
 	state = 'loading'

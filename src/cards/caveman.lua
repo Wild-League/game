@@ -85,15 +85,15 @@ Caveman.actions = {
 		end,
 		draw = function(x,y)
 			local dx = nearest_enemy.x - x
-   		local dy = nearest_enemy.y - y
+			local dy = nearest_enemy.y - y
 
-   		local distance = math.sqrt(dx*dx + dy*dy)
+			local distance = math.sqrt(dx*dx + dy*dy)
 
-			 if distance > 1 then
+			if distance > 1 then
 				local angle = math.atan2(dy, dx)
 				x = x + Caveman.speed * math.cos(angle)
 				y = y + Caveman.speed * math.sin(angle)
-		 	end
+			end
 
 			walk_animation:draw(walking, x, y)
 			return x,y
