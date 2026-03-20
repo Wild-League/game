@@ -10,79 +10,37 @@ permissions:
   contents: write
 
 jobs:
-  build-windows:
-    name: Build Windows
-    runs-on: windows-latest
+  build:
+    name: Build release artifacts
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install LÖVE
-        run: choco install love --no-progress -y
-
-      - name: Build .love package
-        shell: pwsh
-        run: |
-          New-Item -ItemType Directory -Path dist -Force | Out-Null
-          Compress-Archive -Path assets,conf.lua,lib,main.lua,src -DestinationPath dist/wildleague.zip -Force
-          Rename-Item dist/wildleague.zip wildleague.love
-          Move-Item wildleague.love dist/wildleague.love -Force
-
-      - name: Build Windows distributable
-        shell: pwsh
-        run: |
-          $loveDir = "C:\Program Files\LOVE"
-          if (!(Test-Path $loveDir)) {
-            throw "LÖVE install not found at $loveDir"
-          }
-
-          New-Item -ItemType Directory -Path dist/windows/wildleague -Force | Out-Null
-
-          cmd /c copy /b "$loveDir\love.exe+dist\wildleague.love" "dist\windows\wildleague\WildLeague.exe"
-          Copy-Item "$loveDir\*.dll" dist/windows/wildleague/
-          Compress-Archive -Path dist/windows/wildleague/* -DestinationPath dist/WildLeague-windows.zip -Force
-
-      - name: Upload Windows artifact
-        uses: actions/upload-artifact@v4
+      - name: Build LÖVE 12 packages
+        id: love-build
+        uses: nhartland/love-build@v1
         with:
-          name: WildLeague-windows
-          path: dist/WildLeague-windows.zip
-
-  build-macos:
-    name: Build macOS
-    runs-on: macos-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install LÖVE
-        run: brew install --cask love
-
-      - name: Build .love package
-        run: |
-          mkdir -p dist
-          cd "$GITHUB_WORKSPACE"
-          zip -9 -r dist/wildleague.love assets conf.lua lib main.lua src
-
-      - name: Build macOS app bundle
-        run: |
-          cp -R /Applications/love.app dist/WildLeague.app
-          cp dist/wildleague.love dist/WildLeague.app/Contents/Resources/
-          cd dist
-          zip -9 -r WildLeague-macos.zip WildLeague.app
+          app_name: "WildLeague"
+          love_version: "12.0"
 
       - name: Upload macOS artifact
         uses: actions/upload-artifact@v4
         with:
           name: WildLeague-macos
-          path: dist/WildLeague-macos.zip
+          path: ${{ steps.love-build.outputs.macos-filename }}
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: WildLeague-windows
+          path: ${{ steps.love-build.outputs.win64-filename }}
 
   release:
     name: Publish Release
     runs-on: ubuntu-latest
     needs:
-      - build-windows
-      - build-macos
+      - build
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v4
