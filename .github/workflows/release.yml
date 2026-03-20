@@ -17,24 +17,69 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build LÖVE 12 packages
-        id: love-build
-        uses: nhartland/love-build@v1
-        with:
-          app_name: "WildLeague"
-          love_version: "12.0"
+      - name: Build .love package
+        run: |
+          mkdir -p dist
+          zip -9 -r dist/wildleague.love assets conf.lua lib main.lua src
+
+      - name: Download LÖVE 12 nightlies (main branch)
+        run: |
+          mkdir -p /tmp/love-nightly
+          curl -L --fail "https://nightly.link/love2d/love/workflows/main/main/love-windows-x64.zip" -o /tmp/love-nightly/love-windows-x64.zip
+          curl -L --fail "https://nightly.link/love2d/love/workflows/main/main/love-macos.zip" -o /tmp/love-nightly/love-macos.zip
+
+      - name: Build Windows package (LÖVE 12 nightly)
+        run: |
+          rm -rf /tmp/love-win
+          mkdir -p /tmp/love-win dist/windows
+          unzip -q /tmp/love-nightly/love-windows-x64.zip -d /tmp/love-win
+
+          # Some artifacts contain nested zip/exe bundles; extract all zip payloads.
+          for archive in $(find /tmp/love-win -type f -name "*.zip"); do
+            unzip -qo "$archive" -d /tmp/love-win/unpacked
+          done
+
+          LOVE_EXE=$(find /tmp/love-win -type f -iname "love.exe" | head -n 1)
+          if [ -z "$LOVE_EXE" ]; then
+            LOVE_EXE=$(find /tmp/love-win/unpacked -type f -iname "love.exe" | head -n 1)
+          fi
+          if [ -z "$LOVE_EXE" ]; then
+            echo "Could not find love.exe in nightly artifact"
+            exit 1
+          fi
+
+          LOVE_DIR=$(dirname "$LOVE_EXE")
+          cat "$LOVE_EXE" dist/wildleague.love > dist/windows/WildLeague.exe
+          cp "$LOVE_DIR"/*.dll dist/windows/ || true
+          (cd dist/windows && zip -9 -r ../WildLeague-windows.zip .)
+
+      - name: Build macOS package (LÖVE 12 nightly)
+        run: |
+          rm -rf /tmp/love-macos
+          mkdir -p /tmp/love-macos
+          unzip -q /tmp/love-nightly/love-macos.zip -d /tmp/love-macos
+
+          APP_PATH=$(find /tmp/love-macos -type d -name "love.app" | head -n 1)
+          if [ -z "$APP_PATH" ]; then
+            echo "Could not find love.app in nightly artifact"
+            exit 1
+          fi
+
+          cp -R "$APP_PATH" dist/WildLeague.app
+          cp dist/wildleague.love dist/WildLeague.app/Contents/Resources/
+          (cd dist && zip -9 -r WildLeague-macos.zip WildLeague.app)
 
       - name: Upload macOS artifact
         uses: actions/upload-artifact@v4
         with:
           name: WildLeague-macos
-          path: ${{ steps.love-build.outputs.macos-filename }}
+          path: dist/WildLeague-macos.zip
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
           name: WildLeague-windows
-          path: ${{ steps.love-build.outputs.win64-filename }}
+          path: dist/WildLeague-windows.zip
 
   release:
     name: Publish Release

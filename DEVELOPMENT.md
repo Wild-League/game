@@ -19,8 +19,10 @@ Uses project config from `.luacheckrc` (Love2D-aware and excludes `lib/**`, `ass
 - macOS (`WildLeague-macos.zip`)
 - Windows (`WildLeague-windows.zip`)
 
-The workflow uses `nhartland/love-build` with `love_version: 12.0` to ensure the
-runtime matches your LÖVE 12 requirement (including built-in `https` support).
+The workflow targets **LÖVE 12** by downloading nightlies from the
+`love2d/love` `main` branch artifacts via `nightly.link`:
+- `love-windows-x64.zip`
+- `love-macos.zip`
 
 Trigger a release by pushing a tag like:
 
