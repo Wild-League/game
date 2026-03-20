@@ -30,3 +30,6 @@ Trigger a release by pushing a tag like:
 git tag v0.1.0
 git push origin v0.1.0
 ```
+
+If you run the workflow manually (`workflow_dispatch`), provide the `tag` input
+(for example `v0.1.0`) so GitHub Release has an explicit tag to publish.
