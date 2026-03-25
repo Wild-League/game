@@ -1,9 +1,8 @@
-local yui = require('lib.yui')
+local Suit = require('lib.suit')
 local Layout = require('src.helpers.layout')
 local InstanceApi = require('src.api.instance')
 local Images = require('src.ui.images')
 local ImageHelper = require('src.helpers.image')
-local HostApi = require('src.api.host')
 local Constants = require('src.constants')
 
 local Initial = {
@@ -11,13 +10,18 @@ local Initial = {
 	is_instance_valid = true,
 	server_options = {},
 	current_background = Images.background_cloud,
-	list_worlds = nil
+	list_worlds = {
+		{
+			name = 'WildLeague',
+			url = 'https://wildleague.org',
+			api_url = 'https://wildleague.org/api'
+		},
+	},
+	selected_index = 1
 }
 
 
 function Initial:load()
-	self.list_worlds = HostApi:get_worlds().body
-
 	for i, world in ipairs(self.list_worlds) do
 		if world.url == 'https://wildleague.org' then
 			if i > 1 then
@@ -29,67 +33,16 @@ function Initial:load()
 		end
 	end
 
+	self.server_options = {}
 	for _, value in pairs(self.list_worlds) do
 		table.insert(self.server_options, { text = value.name, value = value.url })
 	end
 
-	self:load_background_image(self.server_options[1])
-
-	self.ui = yui.Ui:new({
-		x = 500,
-		y = 350,
-
-		yui.Rows {
-			yui.Label({
-				w = 350, h = 100,
-				text = 'Choose the server you want to join!',
-				theme = { color = { normal = { fg = { 1, 1, 1 } } } }
-			}),
-
-			yui.Spacer({
-				w = 350, h = 50
-			}),
-
-			yui.Choice({
-				w = 350, h = 50,
-				choices = self.server_options,
-				onChange = function(option)
-					self.instance_input = self.server_options[option.index].value
-					Initial:load_background_image(self.server_options[option.index])
-				end
-			}),
-
-			yui.Spacer({
-				w = 350, h = 50
-			}),
-
-			yui.Label({
-				w = 350, h = 50,
-				text = self.is_instance_valid and '' or 'Invalid wildleague instance!',
-				theme = { color = { normal = { fg = { 1, 1, 0 } } } },
-			}),
-
-			yui.Button({
-				w = 350, h = 50,
-				text = 'Enter',
-				onHit = function()
-					self.text = 'Loading...'
-
-					Constants.WORLD_SERVER = self.instance_input
-					Constants.WORLD_SERVER_API = self:get_api_url(self.instance_input)
-
-					local response = InstanceApi:validate(self.instance_input)
-					if response.success then
-						self.text = 'Enter'
-						CONTEXT:change('auth')
-					else
-						self.text = 'Enter'
-						self.is_instance_valid = false
-					end
-				end
-			})
-		}
-	})
+	self.selected_index = 1
+	if self.server_options[1] then
+		self.instance_input = self.server_options[1].value
+		self:load_background_image(self.instance_input)
+	end
 end
 
 function Initial:get_api_url(world_url)
@@ -101,7 +54,61 @@ function Initial:get_api_url(world_url)
 end
 
 function Initial:update(dt)
-	self.ui:update(dt)
+	local width = love.graphics.getWidth()
+	local panel_w = 350
+	local center_x = width / 2 - panel_w / 2
+	local start_y = 350
+	local label_theme = { align = 'center', color = { normal = { fg = { 1, 1, 1 } } } }
+	local err_theme = { align = 'center', color = { normal = { fg = { 1, 0, 0 } } } }
+
+	Suit.Label('Choose the server you want to join!', label_theme, center_x, start_y, panel_w, 60)
+
+	local row_y = start_y + 80
+	local btn_small = 50
+	local name_w = panel_w - 2 * btn_small - 10
+
+	local prev = Suit.Button('<', center_x, row_y, btn_small, btn_small)
+	local opt = self.server_options[self.selected_index]
+	Suit.Label(opt and opt.text or '', {
+		align = 'center',
+		color = { normal = { fg = { 1, 1, 1 } } }
+	}, center_x + btn_small + 5, row_y, name_w, btn_small)
+	local next_btn = Suit.Button('>', center_x + panel_w - btn_small, row_y, btn_small, btn_small)
+
+	if prev.hit and #self.server_options > 0 then
+		self.selected_index = self.selected_index - 1
+		if self.selected_index < 1 then
+			self.selected_index = #self.server_options
+		end
+		self.instance_input = self.server_options[self.selected_index].value
+		self:load_background_image(self.instance_input)
+	end
+
+	if next_btn.hit and #self.server_options > 0 then
+		self.selected_index = self.selected_index + 1
+		if self.selected_index > #self.server_options then
+			self.selected_index = 1
+		end
+		self.instance_input = self.server_options[self.selected_index].value
+		self:load_background_image(self.instance_input)
+	end
+
+	if not self.is_instance_valid then
+		Suit.Label('Invalid wildleague instance!', err_theme, center_x, start_y + 150, panel_w, 40)
+	end
+
+	local enter = Suit.Button('Enter', center_x, start_y + 210, panel_w, 50)
+	if enter.hit then
+		Constants.WORLD_SERVER = self.instance_input
+		Constants.WORLD_SERVER_API = self:get_api_url(self.instance_input)
+
+		local response = InstanceApi:validate(self.instance_input)
+		if response.success then
+			CONTEXT:change('auth')
+		else
+			self.is_instance_valid = false
+		end
+	end
 end
 
 function Initial:draw()
@@ -111,8 +118,6 @@ function Initial:draw()
 		love.graphics.getWidth() / self.current_background:getWidth(),
 		love.graphics.getHeight() / self.current_background:getHeight()
 	)
-
-	self.ui:draw()
 
 	local default_scale = 0.3
 	local center_logo = Layout:center(Images.logo_text:getWidth() * default_scale,
@@ -125,11 +130,11 @@ function Initial:draw()
 	love.graphics.pop()
 end
 
-function Initial:load_background_image(url_server)
+function Initial:load_background_image(world_url)
 	local world = nil
 
 	for _, w in pairs(self.list_worlds) do
-		if w.url == url_server.value then
+		if w.url == world_url then
 			world = w
 			break
 		end

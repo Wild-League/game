@@ -1,3 +1,5 @@
+require('src.helpers.env')
+
 local Suit = require('lib.suit')
 local Fonts = require('src.ui.fonts')
 local Context = require('src.context')
