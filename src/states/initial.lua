@@ -13,8 +13,8 @@ local Initial = {
 	list_worlds = {
 		{
 			name = 'WildLeague',
-			url = 'https://wildleague.org',
-			api_url = 'https://wildleague.org/api'
+			url = 'https://join.wildleague.org',
+			api_url = 'http://localhost:8000'
 		},
 	},
 	selected_index = 1
@@ -22,20 +22,9 @@ local Initial = {
 
 
 function Initial:load()
-	for i, world in ipairs(self.list_worlds) do
-		if world.url == 'https://wildleague.org' then
-			if i > 1 then
-				local temp = self.list_worlds[1]
-				self.list_worlds[1] = world
-				self.list_worlds[i] = temp
-			end
-			break
-		end
-	end
-
 	self.server_options = {}
 	for _, value in pairs(self.list_worlds) do
-		table.insert(self.server_options, { text = value.name, value = value.url })
+		table.insert(self.server_options, { text = value.name, value = value.api_url })
 	end
 
 	self.selected_index = 1
