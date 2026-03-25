@@ -1,5 +1,5 @@
 local UserApi = require('src.api.user')
-local Alert = require('src.ui.alert')
+local Toast = require('src.ui.toast')
 local Suit = require('lib.suit')
 local Fonts = require('src.ui.fonts')
 local RelationshipType = {
@@ -50,9 +50,10 @@ function FriendListSidebar:draw(screen)
 				local data = UserApi:add_friend(screen.friend_input.text)
 
 				if not data.success then
-					Alert:show(data.body.error, 'we could not find the user ' .. screen.friend_input.text, 3)
+					Toast:error(data.body.error or ('Could not find user ' .. screen.friend_input.text), 3.5,
+						'Add Friend')
 				else
-					Alert:show('Friend Request Sent', nil, 3)
+					Toast:success('Friend request sent.', 3, 'Add Friend')
 					screen.friend_input.text = ""
 					screen.show_add_friend_input = false
 				end

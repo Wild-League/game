@@ -4,6 +4,7 @@ local Suit = require('lib.suit')
 local Fonts = require('src.ui.fonts')
 local Context = require('src.context')
 local Ws = require('src.network.websocket')
+local Toast = require('src.ui.toast')
 
 function love.load()
 	love.graphics.setFont(Fonts.jura(24))
@@ -18,11 +19,13 @@ function love.update(dt)
 
 	Ws:update()
 	CONTEXT:update(dt)
+	Toast:update(dt)
 end
 
 function love.draw()
 	CONTEXT:draw()
 	Suit.draw()
+	Toast:draw()
 end
 
 function love.textinput(t)

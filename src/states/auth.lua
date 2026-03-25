@@ -6,6 +6,15 @@ local nakama = require('lib.nakama.nakama')
 local socket = require('lib.nakama.socket')
 local love2d = require('lib.nakama.engine.love2d')
 local BaseApi = require('src.api.base')
+local Toast = require('src.ui.toast')
+
+local function read_error_message(data, fallback)
+	if data == nil then return fallback end
+	if data.error ~= nil and data.error ~= '' then return data.error end
+	if data.detail ~= nil and data.detail ~= '' then return data.detail end
+	if data.message ~= nil and data.message ~= '' then return data.message end
+	return fallback
+end
 
 local Auth = {
 	signin_username = { text = 'ropoko' },
@@ -29,30 +38,39 @@ function Auth:update(dt)
 	local buttonHeight = 50
 	local startY = 200
 
-	-- Sign In
-	Suit.Label('Sign In', { align = 'center', color = { normal = { fg = { 0, 0, 0 } } } }, width / 4 - inputWidth / 2,
-		startY, inputWidth, inputHeight)
-	Suit.Input(self.signin_username, width / 4 - inputWidth / 2, startY + 70, inputWidth, inputHeight)
-	Suit.Input(self.signin_password, width / 4 - inputWidth / 2, startY + 140, inputWidth, inputHeight)
+	-- Login
+	Suit.Label('Login', { align = 'center', color = { normal = { fg = { 0, 0, 0 } } } }, width / 4 - inputWidth / 2,
+		startY - 55, inputWidth, inputHeight)
+	Suit.Label('Welcome back!', { align = 'center', color = { normal = { fg = { 0.1, 0.1, 0.1 } } } },
+		width / 4 - inputWidth / 2, startY - 20, inputWidth, inputHeight)
+	Suit.Input(self.signin_username, width / 4 - inputWidth / 2, startY + 55, inputWidth, inputHeight)
+	Suit.Input(self.signin_password, width / 4 - inputWidth / 2, startY + 125, inputWidth, inputHeight)
 
-	local signin_button = Suit.Button('Sign In', width / 4 - inputWidth / 2, startY + 280, inputWidth, buttonHeight)
+	local signin_button = Suit.Button('Sign In', width / 4 - inputWidth / 2, startY + 250, inputWidth, buttonHeight)
 
 	if signin_button.hit then
 		local data = UserApi:signin(self.signin_username.text, self.signin_password.text)
-		Constants.ACCESS_TOKEN = data.access
-		Constants.REFRESH_TOKEN = data.refresh
+
+		Constants.ACCESS_TOKEN = data.access or ''
+		Constants.REFRESH_TOKEN = data.refresh or ''
+
+		if Constants.ACCESS_TOKEN == '' then
+			Toast:error(read_error_message(data, 'Unable to login. Check credentials and try again.'), 4, 'Login Failed')
+			return
+		end
 
 		self:auth_multiplayer_server(self.signin_username.text, self.signin_username.text, self.signin_password.text)
 
+		Toast:success('Logged in successfully.', 2.5, 'Welcome')
 		CONTEXT:change('lobby')
 	end
 
 	-- Sign Up
-	Suit.Label('Sign Up', { align = 'center', color = { normal = { fg = { 0, 0, 0 } } } }, width / 4 * 3 - inputWidth / 2,
-		startY, inputWidth, inputHeight)
-	Suit.Input(self.signup_username, width / 4 * 3 - inputWidth / 2, startY + 70, inputWidth, inputHeight)
-	Suit.Input(self.signup_email, width / 4 * 3 - inputWidth / 2, startY + 140, inputWidth, inputHeight)
-	Suit.Input(self.signup_password, width / 4 * 3 - inputWidth / 2, startY + 210, inputWidth, inputHeight)
+	Suit.Label("Don't have an account?", { align = 'center', color = { normal = { fg = { 0, 0, 0 } } } },
+		width / 4 * 3 - inputWidth / 2, startY - 55, inputWidth, inputHeight)
+	Suit.Input(self.signup_username, width / 4 * 3 - inputWidth / 2, startY + 55, inputWidth, inputHeight)
+	Suit.Input(self.signup_email, width / 4 * 3 - inputWidth / 2, startY + 125, inputWidth, inputHeight)
+	Suit.Input(self.signup_password, width / 4 * 3 - inputWidth / 2, startY + 195, inputWidth, inputHeight)
 
 	local signup_button = Suit.Button('Sign Up', width / 4 * 3 - inputWidth / 2, startY + 280, inputWidth, buttonHeight)
 
@@ -61,12 +79,20 @@ function Auth:update(dt)
 
 		if data.success then
 			local signin_data = UserApi:signin(self.signup_username.text, self.signup_password.text)
-			Constants.ACCESS_TOKEN = signin_data.access
-			Constants.REFRESH_TOKEN = signin_data.refresh
+			Constants.ACCESS_TOKEN = signin_data.access or ''
+			Constants.REFRESH_TOKEN = signin_data.refresh or ''
+
+			if Constants.ACCESS_TOKEN == '' then
+				Toast:warning('Account created, but auto login failed. Please sign in manually.', 4, 'Sign Up')
+				return
+			end
 
 			self:auth_multiplayer_server(self.signup_username.text, self.signup_email.text, self.signup_password.text)
 
+			Toast:success('Account created successfully.', 3, 'Sign Up')
 			CONTEXT:change('lobby')
+		else
+			Toast:error(read_error_message(data, 'Unable to create account right now.'), 4, 'Sign Up Failed')
 		end
 	end
 end

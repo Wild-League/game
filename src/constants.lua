@@ -17,7 +17,7 @@ local Constants = {
 }
 
 setmetatable(Constants, {
-	__index = function(key)
+	__index = function(_, key)
 		error(string.format('the key: "%s" is not set in Constants', key))
 	end
 })

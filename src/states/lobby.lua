@@ -7,7 +7,6 @@ local json = require('lib.json')
 local Constants = require('src.constants')
 local Timer = require('src.helpers.timer')
 local FriendListSidebar = require('src.ui.friend-list-sidebar')
-local Alert = require('src.ui.alert')
 local HeaderBar = require('src.ui.header-bar')
 local Lobby = {
 	matchmake_state = 'idle',
@@ -69,8 +68,6 @@ function Lobby:draw()
 	Suit.Label('Search for a match or play against a friend', mainX - 70, 160)
 
 	FriendListSidebar:draw(self)
-
-	Alert:draw()
 
 	if play_button.hit then
 		coroutine.resume(coroutine.create(function()
