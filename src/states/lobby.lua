@@ -8,6 +8,7 @@ local Constants = require('src.constants')
 local Timer = require('src.helpers.timer')
 local FriendListSidebar = require('src.ui.friend-list-sidebar')
 local HeaderBar = require('src.ui.header-bar')
+local Toast = require('src.ui.toast')
 local Lobby = {
 	matchmake_state = 'idle',
 	matchmake_ticket = nil,
@@ -20,6 +21,11 @@ local Lobby = {
 function Lobby:load()
 	FriendListSidebar:load()
 	local selected_deck = DeckApi:get_current_deck()
+
+	if selected_deck == nil then
+		selected_deck = {}
+	end
+
 	socket.on_matchmaker_matched(Constants.SOCKET_CONNECTION, function(match)
 		Constants.MATCH_ID = match.matchmaker_matched.match_id
 		Constants.ENEMY_ID = self:get_enemy_user_id(match.matchmaker_matched.users)

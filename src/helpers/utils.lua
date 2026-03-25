@@ -1,5 +1,10 @@
 local Utils = {}
 
+function Utils.trim(str)
+	if str == nil then return '' end
+	return str:match('^%s*(.-)%s*$') or ''
+end
+
 function Utils.has_collision(x1, y1, w1, h1, x2, y2, w2, h2)
 	return (
 		x2 < x1 + w1 and

@@ -7,12 +7,60 @@ local socket = require('lib.nakama.socket')
 local love2d = require('lib.nakama.engine.love2d')
 local BaseApi = require('src.api.base')
 local Toast = require('src.ui.toast')
+local Utils = require('src.helpers.utils')
+
+local skip_error_keys = {
+	success = true,
+	status = true,
+	access = true,
+	refresh = true,
+}
+
+-- e.g. { "non_field_errors": ["..."] }, per-field lists, or { "detail": "..." }
+local function format_errors(data)
+	if data == nil or type(data) ~= 'table' then return nil end
+	if type(data.detail) == 'string' and data.detail ~= '' then
+		return data.detail
+	end
+	local parts = {}
+	if data.non_field_errors ~= nil then
+		local nfe = data.non_field_errors
+		if type(nfe) == 'table' then
+			for _, msg in ipairs(nfe) do
+				table.insert(parts, tostring(msg))
+			end
+		else
+			table.insert(parts, tostring(nfe))
+		end
+	end
+	for key, val in pairs(data) do
+		if not skip_error_keys[key] and key ~= 'non_field_errors' then
+			if type(val) == 'table' then
+				local msgs = {}
+				for _, msg in ipairs(val) do
+					table.insert(msgs, tostring(msg))
+				end
+				if #msgs > 0 then
+					table.insert(parts, key .. ': ' .. table.concat(msgs, ' '))
+				end
+			elseif type(val) == 'string' then
+				table.insert(parts, key .. ': ' .. val)
+			end
+		end
+	end
+	if #parts > 0 then
+		return table.concat(parts, ' · ')
+	end
+	return nil
+end
 
 local function read_error_message(data, fallback)
 	if data == nil then return fallback end
-	if data.error ~= nil and data.error ~= '' then return data.error end
-	if data.detail ~= nil and data.detail ~= '' then return data.detail end
-	if data.message ~= nil and data.message ~= '' then return data.message end
+	local formatted = format_errors(data)
+	if formatted ~= nil and formatted ~= '' then return formatted end
+	if data.error ~= nil and data.error ~= '' then return tostring(data.error) end
+	if data.detail ~= nil and data.detail ~= '' then return tostring(data.detail) end
+	if data.message ~= nil and data.message ~= '' then return tostring(data.message) end
 	return fallback
 end
 
@@ -49,7 +97,9 @@ function Auth:update(dt)
 	local signin_button = Suit.Button('Sign In', width / 4 - inputWidth / 2, startY + 250, inputWidth, buttonHeight)
 
 	if signin_button.hit then
-		local data = UserApi:signin(self.signin_username.text, self.signin_password.text)
+		local li_user = Utils.trim(self.signin_username.text)
+		local li_pass = self.signin_password.text
+		local data = UserApi:signin(li_user, li_pass)
 
 		Constants.ACCESS_TOKEN = data.access or ''
 		Constants.REFRESH_TOKEN = data.refresh or ''
@@ -59,7 +109,7 @@ function Auth:update(dt)
 			return
 		end
 
-		self:auth_multiplayer_server(self.signin_username.text, self.signin_username.text, self.signin_password.text)
+		self:auth_multiplayer_server(li_user, li_user, li_pass)
 
 		Toast:success('Logged in successfully.', 2.5, 'Welcome')
 		CONTEXT:change('lobby')
@@ -75,24 +125,34 @@ function Auth:update(dt)
 	local signup_button = Suit.Button('Sign Up', width / 4 * 3 - inputWidth / 2, startY + 280, inputWidth, buttonHeight)
 
 	if signup_button.hit then
-		local data = UserApi:signup(self.signup_username.text, self.signup_email.text, self.signup_password.text)
+		local su = Utils.trim(self.signup_username.text)
+		local se = Utils.trim(self.signup_email.text)
+		local sp = self.signup_password.text
 
-		if data.success then
-			local signin_data = UserApi:signin(self.signup_username.text, self.signup_password.text)
-			Constants.ACCESS_TOKEN = signin_data.access or ''
-			Constants.REFRESH_TOKEN = signin_data.refresh or ''
-
-			if Constants.ACCESS_TOKEN == '' then
-				Toast:warning('Account created, but auto login failed. Please sign in manually.', 4, 'Sign Up')
-				return
-			end
-
-			self:auth_multiplayer_server(self.signup_username.text, self.signup_email.text, self.signup_password.text)
-
-			Toast:success('Account created successfully.', 3, 'Sign Up')
-			CONTEXT:change('lobby')
+		if su == '' or se == '' or sp == '' then
+			Toast:warning('Please enter username, email, and password.', 3.5, 'Sign Up')
 		else
-			Toast:error(read_error_message(data, 'Unable to create account right now.'), 4, 'Sign Up Failed')
+			local data = UserApi:signup(su, se, sp)
+
+			if data.success then
+				local signin_data = UserApi:signin(su, sp)
+				Constants.ACCESS_TOKEN = (signin_data and signin_data.access) or ''
+				Constants.REFRESH_TOKEN = (signin_data and signin_data.refresh) or ''
+
+				if Constants.ACCESS_TOKEN == '' then
+					Toast:error(
+						read_error_message(signin_data, 'Account created, but sign-in failed. Try logging in manually.'),
+						5,
+						'Sign Up'
+					)
+				else
+					self:auth_multiplayer_server(su, se, sp)
+					Toast:success('Welcome! Your account is ready.', 3, 'Sign Up')
+					CONTEXT:change('lobby')
+				end
+			else
+				Toast:error(read_error_message(data, 'Unable to create account. Try again.'), 5, 'Sign Up Failed')
+			end
 		end
 	end
 end
