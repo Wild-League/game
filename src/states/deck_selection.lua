@@ -107,6 +107,7 @@ function DeckSelection:pick_catalog_index(mx, my)
 	local ly = my - r.y - 8 + self.catalog_scroll
 	if lx < 0 or ly < 0 then return nil end
 	local col = math.floor(lx / inner_w)
+	if col < 0 or col >= cols then return nil end
 	local row = math.floor(ly / inner_h)
 	local idx = row * cols + col + 1
 	if idx >= 1 and idx <= #self.catalog then
@@ -137,6 +138,7 @@ function DeckSelection:pick_deck_remove(mx, my)
 	local ly = my - r.y - 28 + self.deck_scroll
 	if lx < 0 or ly < 0 then return nil end
 	local col = math.floor(lx / inner_w)
+	if col < 0 or col >= cols then return nil end
 	local row = math.floor(ly / inner_h)
 	local idx = row * cols + col + 1
 	local cards = self.active_deck.cards
