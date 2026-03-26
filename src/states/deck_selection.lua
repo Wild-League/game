@@ -363,9 +363,14 @@ local function draw_card_cell(x, y, img, name_text)
 		local draw_x = image_x + (image_w - draw_w) / 2
 		local draw_y = image_y + (image_h - draw_h) / 2
 		love.graphics.setColor(1, 1, 1, 1)
+		local sx, sy, sw, sh = love.graphics.getScissor()
 		love.graphics.setScissor(image_x, image_y, image_w, image_h)
 		love.graphics.draw(img, draw_x, draw_y, 0, scale, scale)
-		love.graphics.setScissor()
+		if sw then
+			love.graphics.setScissor(sx, sy, sw, sh)
+		else
+			love.graphics.setScissor()
+		end
 	end
 	love.graphics.setColor(0, 0, 0, 0.45)
 	love.graphics.rectangle('fill', x + 1, y + DeckSelection.cell_h - 20, DeckSelection.cell_w - 2, 19)
