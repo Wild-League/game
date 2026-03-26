@@ -81,7 +81,7 @@ src/
   context.lua     Global state machine / router (CONTEXT global)
   constants.lua   Global mutable constants (tokens, server URLs)
   assets.lua      Preloaded Love2D image assets
-  api/            HTTP API clients (BaseApi, UserApi, DeckApi, HostApi, InstanceApi)
+  api/            HTTP API clients (BaseApi, UserApi, DeckApi, InstanceApi)
   config/         Static config tables (match events, range sizes)
   entities/       Core game objects (Card, Deck, EnemyDeck, Map, Tower, User)
   helpers/        Utilities (animation, image loading, layout, timer, utils, saver)

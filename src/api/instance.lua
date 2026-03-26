@@ -9,7 +9,7 @@ function InstanceApi:validate(url)
 		['Content-Type'] = 'application/json'
 	}
 
-	local formatted_url = url .. '/.well-known/nodeinfo/'
+	local formatted_url = url .. '/.well-known/nodeinfo'
 
 	local status_server, response_server = https.request(formatted_url, {
 		method = 'GET',
@@ -31,7 +31,7 @@ function InstanceApi:validate(url)
 
 	response = json.decode(response)
 
-	if status == 200 and response.software.name == 'WildLeague' then
+	if status == 200 and response.software.name == 'wildleague' then
 		return BaseApi:Response(status, nil, true)
 	end
 

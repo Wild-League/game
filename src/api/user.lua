@@ -16,7 +16,7 @@ function UserApi:signin(username, password)
 
 	local headers = {
 		['Content-Type'] = 'application/json',
-		['Content-Lenght'] = #body
+		['Content-Length'] = #body
 	}
 
 	local url_signin = BaseApi:get_resource_url('auth') .. '/signin/'
@@ -39,22 +39,44 @@ function UserApi:signup(username, email, password)
 
 	local headers = {
 		['Content-Type'] = 'application/json',
-		['Content-Lenght'] = #body
+		['Content-Length'] = #body
 	}
 
 	local url_signup = BaseApi:get_resource_url('auth') .. '/signup/'
 
-	local _, response = https.request(url_signup, {
+	local status, response = https.request(url_signup, {
 		data = body,
 		method = 'POST',
 		headers = headers
 	})
 
-	if response == '' then
+	-- Backend: 201 Created with empty body on success (see AuthModelViewSet.signup)
+	if status == 201 or status == 200 then
 		return { success = true }
 	end
 
-	return json.decode(response)
+	if response == nil or response == '' then
+		return {
+			success = false,
+			status = status,
+			detail = 'Signup failed (HTTP ' .. tostring(status) .. ').',
+		}
+	end
+
+	local ok, decoded = pcall(json.decode, response)
+	if not ok or decoded == nil or type(decoded) ~= 'table' then
+		return {
+			success = false,
+			status = status,
+			detail = 'Unable to read server response.',
+		}
+	end
+
+	local result = { success = false, status = status }
+	for key, value in pairs(decoded) do
+		result[key] = value
+	end
+	return result
 end
 
 --[[
@@ -79,7 +101,7 @@ function UserApi:add_friend(username)
 	local headers = {
 		authorization = 'Bearer '..Constants.ACCESS_TOKEN,
 		['Content-Type'] = 'application/json',
-		['Content-Lenght'] = #body
+		['Content-Length'] = #body
 	}
 
 	local status, response = https.request(url, {
@@ -118,7 +140,7 @@ function UserApi:accept_friend_request(friend_request_id)
 	local headers = {
 		authorization = 'Bearer '..Constants.ACCESS_TOKEN,
 		['Content-Type'] = 'application/json',
-		['Content-Lenght'] = #body
+		['Content-Length'] = #body
 	}
 
 	local _ = https.request(url, {
@@ -138,7 +160,7 @@ function UserApi:reject_friend_request(friend_request_id)
 	local headers = {
 		authorization = 'Bearer '..Constants.ACCESS_TOKEN,
 		['Content-Type'] = 'application/json',
-		['Content-Lenght'] = #body
+		['Content-Length'] = #body
 	}
 
 	local _ = https.request(url, {

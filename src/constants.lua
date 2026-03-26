@@ -11,13 +11,12 @@ local Constants = {
 	SOCKET_CONNECTION = {},
 
 	WS_CONNECTION_SERVER = {},
-	WORLD_SERVER = '', -- url of the chosen world
 	WORLD_SERVER_API = '', -- url of the chosen world api
 	WORLD_BACKGROUND = nil,
 }
 
 setmetatable(Constants, {
-	__index = function(key)
+	__index = function(_, key)
 		error(string.format('the key: "%s" is not set in Constants', key))
 	end
 })
