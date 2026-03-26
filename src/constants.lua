@@ -11,7 +11,6 @@ local Constants = {
 	SOCKET_CONNECTION = {},
 
 	WS_CONNECTION_SERVER = {},
-	WORLD_SERVER = '', -- url of the chosen world
 	WORLD_SERVER_API = '', -- url of the chosen world api
 	WORLD_BACKGROUND = nil,
 }

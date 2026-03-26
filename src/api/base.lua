@@ -26,14 +26,12 @@ local BaseApi = {
 
 	dev = {
 		world_api_url = env_str('WORLD_API_URL', 'http://localhost:8000/v1/'),
-		world_url = env_str('WORLD_URL', 'http://localhost:3000/'),
 		multiplayer_server_url = env_str('NAKAMA_HOST', 'localhost'),
 		multiplayer_server_port = env_int('NAKAMA_PORT', 7350)
 	},
 
 	prod = {
 		world_api_url = Constants.WORLD_SERVER_API .. '/v1/',
-		world_url = Constants.WORLD_SERVER,
 		multiplayer_server_url = env_str('NAKAMA_HOST', 'localhost'),
 		multiplayer_server_port = env_int('NAKAMA_PORT', 7350)
 	}
@@ -42,7 +40,6 @@ local BaseApi = {
 function BaseApi:get_resource_url(resource)
 	if self.current == 'prod' then
 		self[self.current].world_api_url = Constants.WORLD_SERVER_API .. '/v1/'
-		self[self.current].world_url = Constants.WORLD_SERVER
 	end
 
 	local routes = {

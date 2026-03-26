@@ -13,12 +13,20 @@ local Initial = {
 	list_worlds = {
 		{
 			name = 'WildLeague',
-			url = 'https://join.wildleague.org',
 			api_url = 'http://localhost:8000'
 		},
 	},
 	selected_index = 1
 }
+
+local function get_world_by_value(self, value)
+	for _, world in ipairs(self.list_worlds) do
+		if world.api_url == value then
+			return world
+		end
+	end
+	return nil
+end
 
 
 function Initial:load()
@@ -34,12 +42,9 @@ function Initial:load()
 	end
 end
 
-function Initial:get_api_url(world_url)
-	for _, world in ipairs(self.list_worlds) do
-		if world.url == world_url then
-			return world.api_url
-		end
-	end
+function Initial:get_api_url(api_url)
+	local world = get_world_by_value(self, api_url)
+	return world and world.api_url or api_url
 end
 
 function Initial:update(dt)
@@ -88,10 +93,16 @@ function Initial:update(dt)
 
 	local enter = Suit.Button('Enter', center_x, start_y + 210, panel_w, 50)
 	if enter.hit then
-		Constants.WORLD_SERVER = self.instance_input
-		Constants.WORLD_SERVER_API = self:get_api_url(self.instance_input)
+		local world = get_world_by_value(self, self.instance_input)
+		local world_api_url = world and world.api_url or self:get_api_url(self.instance_input)
+		if world_api_url == nil then
+			self.is_instance_valid = false
+			return
+		end
 
-		local response = InstanceApi:validate(self.instance_input)
+		Constants.WORLD_SERVER_API = world_api_url
+
+		local response = InstanceApi:validate(world_api_url)
 		if response.success then
 			CONTEXT:change('auth')
 		else
@@ -120,14 +131,7 @@ function Initial:draw()
 end
 
 function Initial:load_background_image(world_url)
-	local world = nil
-
-	for _, w in pairs(self.list_worlds) do
-		if w.url == world_url then
-			world = w
-			break
-		end
-	end
+	local world = get_world_by_value(self, world_url)
 
 	if world then
 		local background = world.background
