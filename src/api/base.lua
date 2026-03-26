@@ -72,7 +72,9 @@ function BaseApi:decode_json_or_nil(response)
 	local is_json = first_char == '{' or first_char == '['
 	if not is_json then return nil end
 
-	return json.decode(payload)
+	local ok, decoded = pcall(json.decode, payload)
+	if not ok then return nil end
+	return decoded
 end
 
 return BaseApi
