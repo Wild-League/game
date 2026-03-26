@@ -104,7 +104,7 @@ function DeckSelection:pick_catalog_index(mx, my)
 	local inner_w = self.cell_w + self.cell_gap
 	local inner_h = self.cell_h + self.cell_gap
 	local lx = mx - r.x - 8
-	local ly = my - r.y - 8 + self.catalog_scroll
+	local ly = my - r.y - 28 + self.catalog_scroll
 	if lx < 0 or ly < 0 then return nil end
 	local col = math.floor(lx / inner_w)
 	if col < 0 or col >= cols then return nil end
