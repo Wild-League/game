@@ -39,3 +39,35 @@ end
 function love.keypressed(key)
 	Suit.keypressed(key)
 end
+
+function love.mousepressed(x, y, button, istouch, presses)
+	if not CONTEXT then return end
+	local state = CONTEXT.states[CONTEXT.current]
+	if state.mousepressed then
+		state:mousepressed(x, y, button, istouch, presses)
+	end
+end
+
+function love.mousemoved(x, y, dx, dy, istouch)
+	if not CONTEXT then return end
+	local state = CONTEXT.states[CONTEXT.current]
+	if state.mousemoved then
+		state:mousemoved(x, y, dx, dy, istouch)
+	end
+end
+
+function love.mousereleased(x, y, button, istouch, presses)
+	if not CONTEXT then return end
+	local state = CONTEXT.states[CONTEXT.current]
+	if state.mousereleased then
+		state:mousereleased(x, y, button, istouch, presses)
+	end
+end
+
+function love.wheelmoved(x, y)
+	if not CONTEXT then return end
+	local state = CONTEXT.states[CONTEXT.current]
+	if state.wheelmoved then
+		state:wheelmoved(x, y)
+	end
+end

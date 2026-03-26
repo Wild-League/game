@@ -50,7 +50,8 @@ function BaseApi:get_resource_url(resource)
 		test = self[self.current].world_api_url .. 'test',
 		auth = self[self.current].world_api_url .. 'auth',
 		user = self[self.current].world_api_url .. 'users',
-		deck = self[self.current].world_api_url .. 'decks'
+		deck = self[self.current].world_api_url .. 'decks',
+		cards = self[self.current].world_api_url .. 'cards'
 	}
 
 	return routes[resource]

@@ -25,6 +25,11 @@ local Deck = {
 }
 
 function Deck:load(deck_selected)
+	self.deck_selected = {}
+	self.queue_next_cards = {}
+	self.playable_cards = {}
+	self.card_selected = nil
+
 	-- initiliaze cards
 	for _, card in ipairs(deck_selected.cards) do
 		table.insert(self.deck_selected, Card:new(card))
