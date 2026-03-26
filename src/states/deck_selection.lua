@@ -100,6 +100,8 @@ end
 function DeckSelection:pick_catalog_index(mx, my)
 	local r = self.regions.catalog
 	if not point_in_rect(mx, my, r.x, r.y, r.w, r.h) then return nil end
+	local content_top = r.y + 28
+	if my < content_top then return nil end
 	local cols = self.catalog_cols
 	local inner_w = self.cell_w + self.cell_gap
 	local inner_h = self.cell_h + self.cell_gap
@@ -119,6 +121,8 @@ end
 function DeckSelection:pick_deck_list_row(mx, my)
 	local r = self.regions.deck_list
 	if not point_in_rect(mx, my, r.x, r.y, r.w, r.h) then return nil end
+	local content_top = r.y + 30
+	if my < content_top then return nil end
 	local ly = my - r.y - 30 + self.deck_list_scroll
 	local row = math.floor(ly / 32)
 	if row >= 0 and row < #self.deck_summaries then
@@ -131,6 +135,8 @@ function DeckSelection:pick_deck_remove(mx, my)
 	if not self.active_deck or not self.active_deck.cards then return nil end
 	local r = self.regions.deck_zone
 	if not point_in_rect(mx, my, r.x, r.y, r.w, r.h) then return nil end
+	local content_top = r.y + 28
+	if my < content_top then return nil end
 	local cols = math.max(1, math.floor((r.w - 16) / (self.cell_w + self.cell_gap)))
 	local inner_w = self.cell_w + self.cell_gap
 	local inner_h = self.cell_h + self.cell_gap
