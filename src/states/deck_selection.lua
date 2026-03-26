@@ -179,6 +179,12 @@ function DeckSelection:save_card_ids(ids)
 end
 
 function DeckSelection:load()
+	self.catalog_scroll = 0
+	self.deck_scroll = 0
+	self.deck_list_scroll = 0
+	self.drag = nil
+	self.busy = false
+
 	FriendListSidebar:load()
 	layout_regions(self)
 	self:reload_data()
