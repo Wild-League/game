@@ -134,7 +134,7 @@ function DeckSelection:pick_deck_remove(mx, my)
 	local inner_w = self.cell_w + self.cell_gap
 	local inner_h = self.cell_h + self.cell_gap
 	local lx = mx - r.x - 8
-	local ly = my - r.y - 8 + self.deck_scroll
+	local ly = my - r.y - 28 + self.deck_scroll
 	if lx < 0 or ly < 0 then return nil end
 	local col = math.floor(lx / inner_w)
 	local row = math.floor(ly / inner_h)
@@ -142,7 +142,7 @@ function DeckSelection:pick_deck_remove(mx, my)
 	local cards = self.active_deck.cards
 	if idx < 1 or idx > #cards then return nil end
 	local cx = r.x + 8 + col * inner_w
-	local cy = r.y + 8 + row * inner_h - self.deck_scroll
+	local cy = r.y + 28 + row * inner_h - self.deck_scroll
 	local rbx = cx + self.cell_w - 18
 	local rby = cy + 4
 	if point_in_rect(mx, my, rbx, rby, 14, 14) then
@@ -186,7 +186,7 @@ function DeckSelection:update(dt)
 		local id = table.remove(self.catalog_pending, 1)
 		local card = self.catalog_by_id[id]
 		if card and card.img_card then
-			self.catalog_images[id] = Image:load_from_url(card.img_card, 'cat-' .. tostring(id))
+			self.catalog_images[id] = Image:load_from_url(card.img_card, 'card' .. tostring(id))
 		end
 	end
 end
@@ -289,10 +289,22 @@ local function draw_card_cell(x, y, img, name_text)
 	love.graphics.rectangle('line', x, y, DeckSelection.cell_w, DeckSelection.cell_h, 4, 4)
 	if img and img.getDimensions then
 		local iw, ih = img:getDimensions()
-		local scale = math.min((DeckSelection.cell_w - 8) / iw, (DeckSelection.cell_h - 28) / ih)
+		local image_x = x + 1
+		local image_y = y + 1
+		local image_w = DeckSelection.cell_w - 2
+		local image_h = DeckSelection.cell_h - 20
+		local scale = math.max(image_w / iw, image_h / ih)
+		local draw_w = iw * scale
+		local draw_h = ih * scale
+		local draw_x = image_x + (image_w - draw_w) / 2
+		local draw_y = image_y + (image_h - draw_h) / 2
 		love.graphics.setColor(1, 1, 1, 1)
-		love.graphics.draw(img, x + 4, y + 4, 0, scale, scale)
+		love.graphics.setScissor(image_x, image_y, image_w, image_h)
+		love.graphics.draw(img, draw_x, draw_y, 0, scale, scale)
+		love.graphics.setScissor()
 	end
+	love.graphics.setColor(0, 0, 0, 0.45)
+	love.graphics.rectangle('fill', x + 1, y + DeckSelection.cell_h - 20, DeckSelection.cell_w - 2, 19)
 	love.graphics.setColor(1, 1, 1, 0.9)
 	love.graphics.setFont(Fonts.jura(11))
 	local short = name_text or ''
