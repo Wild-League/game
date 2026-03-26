@@ -187,6 +187,10 @@ function Game:draw_player_status()
 	-- self.enemy_status:draw()
 end
 
+function Game:mousepressed(x, y, button)
+	Deck:mousepressed(x, y, button)
+end
+
 function Game:resize()
 
 end

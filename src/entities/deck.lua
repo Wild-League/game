@@ -214,31 +214,27 @@ function Deck:check_cooldown(dt)
 	end
 end
 
-function love.mousepressed(x, y, button)
-	-- That's a global function, thats why we need to check the context
-	-- TODO: find a better way to do that
-	if CONTEXT.current ~= 'game' then return end
-
+function Deck:mousepressed(x, y, button)
 	-- right click
 	if button ~= 1 then return end
 
-	for _, card in pairs(Deck.deck_selected) do
+	for _, card in pairs(self.deck_selected) do
 		-- click on card?
 		if (
 			x >= card.x and x <= (card.x + card.img_card:getWidth())
 			and y >= card.y and y <= (card.y + card.img_card:getHeight())
 		) then
 			if not card.is_card_loading then
-				if Deck.card_selected == card then
-					Deck.card_selected = nil
+				if self.card_selected == card then
+					self.card_selected = nil
 				else
-					Deck.card_selected = card
+					self.card_selected = card
 				end
 				break
 			end
 		else
 			-- this is the selected card?
-			if Deck.card_selected == card then
+			if self.card_selected == card then
 				-- click on map?
 				if not (x >= card.x and x <= (card.x + card.img_card:getWidth()))
 					and not (y >= card.y and y <= (card.y + card.img_card:getHeight())) then
@@ -276,8 +272,8 @@ function love.mousepressed(x, y, button)
 						)
 					end))
 
-					Deck.card_selected = nil
-					Deck.deck_selected = Deck:rotate_deck(card)
+					self.card_selected = nil
+					self.deck_selected = self:rotate_deck(card)
 
 					break
 				end
