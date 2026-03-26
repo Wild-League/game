@@ -8,7 +8,6 @@ local Constants = require('src.constants')
 local Timer = require('src.helpers.timer')
 local FriendListSidebar = require('src.ui.friend-list-sidebar')
 local HeaderBar = require('src.ui.header-bar')
-local Toast = require('src.ui.toast')
 local Lobby = {
 	matchmake_state = 'idle',
 	matchmake_ticket = nil,
