@@ -42,11 +42,6 @@ function Initial:load()
 	end
 end
 
-function Initial:get_api_url(api_url)
-	local world = get_world_by_value(self, api_url)
-	return world and world.api_url or api_url
-end
-
 function Initial:update(dt)
 	local width = love.graphics.getWidth()
 	local panel_w = 350
@@ -93,9 +88,8 @@ function Initial:update(dt)
 
 	local enter = Suit.Button('Enter', center_x, start_y + 210, panel_w, 50)
 	if enter.hit then
-		local world = get_world_by_value(self, self.instance_input)
-		local world_api_url = world and world.api_url or self:get_api_url(self.instance_input)
-		if world_api_url == nil then
+		local world_api_url = self.instance_input
+		if world_api_url == nil or world_api_url == '' then
 			self.is_instance_valid = false
 			return
 		end
