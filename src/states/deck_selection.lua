@@ -184,6 +184,68 @@ function DeckSelection:load()
 end
 
 function DeckSelection:update(dt)
+	layout_regions(self)
+
+	Suit.Input(self.new_deck_input, 16, HeaderBar.height + 38, 220, 32)
+	local create = Suit.Button('Create deck', 248, HeaderBar.height + 38, 140, 32)
+	local use_match = Suit.Button('Use for match', 400, HeaderBar.height + 38, 160, 32)
+	local del_btn = Suit.Button('Delete deck', 572, HeaderBar.height + 38, 140, 32)
+
+	if create.hit then
+		local name = self.new_deck_input.text or ''
+		name = name:match('^%s*(.-)%s*$') or ''
+		if name == '' then
+			Toast:show('warning', 'Enter a deck name (max 25 characters).', 3)
+		elseif #self.deck_summaries >= self.max_decks then
+			Toast:show('warning', 'You can have at most ' .. self.max_decks .. ' decks.', 4)
+		else
+			coroutine.resume(coroutine.create(function()
+				local code, body = DeckApi:create_deck(name:sub(1, 25))
+				if code == 201 and body then
+					self.new_deck_input.text = ''
+					self:reload_data()
+					self.active_deck_id = body.id
+					self.active_deck = DeckApi:get_deck_by_id(body.id)
+					Toast:show('success', 'Deck created.', 2)
+				elseif code == 400 then
+					Toast:show('error', 'Could not create deck (limit reached or invalid name).', 4)
+				else
+					Toast:show('error', 'Could not create deck.', 3)
+				end
+			end))
+		end
+	end
+
+	if use_match.hit and self.active_deck_id then
+		coroutine.resume(coroutine.create(function()
+			local code, _ = DeckApi:set_selected_deck(self.active_deck_id)
+			if code == 200 then
+				Toast:show('success', 'Selected deck will be used for matchmaking.', 3)
+			else
+				Toast:show('error', 'Could not select deck.', 3)
+			end
+		end))
+	end
+
+	if del_btn.hit and self.active_deck_id then
+		local id = self.active_deck_id
+		coroutine.resume(coroutine.create(function()
+			local code = DeckApi:delete_deck(id)
+			if code == 204 then
+				self.active_deck_id = nil
+				self.active_deck = nil
+				self:reload_data()
+				if #self.deck_summaries > 0 then
+					self.active_deck_id = self.deck_summaries[1].id
+					self.active_deck = DeckApi:get_deck_by_id(self.active_deck_id)
+				end
+				Toast:show('success', 'Deck deleted.', 2)
+			else
+				Toast:show('error', 'Could not delete deck.', 3)
+			end
+		end))
+	end
+
 	if self.catalog_pending and #self.catalog_pending > 0 then
 		local id = table.remove(self.catalog_pending, 1)
 		local card = self.catalog_by_id[id]
@@ -326,66 +388,6 @@ function DeckSelection:draw()
 	love.graphics.setColor(1, 1, 1, 1)
 	love.graphics.setFont(Fonts.jura(18))
 	love.graphics.print('Deck builder', 16, HeaderBar.height + 8)
-
-	Suit.Input(self.new_deck_input, 16, HeaderBar.height + 38, 220, 32)
-	local create = Suit.Button('Create deck', 248, HeaderBar.height + 38, 140, 32)
-	local use_match = Suit.Button('Use for match', 400, HeaderBar.height + 38, 160, 32)
-	local del_btn = Suit.Button('Delete deck', 572, HeaderBar.height + 38, 140, 32)
-
-	if create.hit then
-		local name = self.new_deck_input.text or ''
-		name = name:match('^%s*(.-)%s*$') or ''
-		if name == '' then
-			Toast:show('warning', 'Enter a deck name (max 25 characters).', 3)
-		elseif #self.deck_summaries >= self.max_decks then
-			Toast:show('warning', 'You can have at most ' .. self.max_decks .. ' decks.', 4)
-		else
-			coroutine.resume(coroutine.create(function()
-				local code, body = DeckApi:create_deck(name:sub(1, 25))
-				if code == 201 and body then
-					self.new_deck_input.text = ''
-					self:reload_data()
-					self.active_deck_id = body.id
-					self.active_deck = DeckApi:get_deck_by_id(body.id)
-					Toast:show('success', 'Deck created.', 2)
-				elseif code == 400 then
-					Toast:show('error', 'Could not create deck (limit reached or invalid name).', 4)
-				else
-					Toast:show('error', 'Could not create deck.', 3)
-				end
-			end))
-		end
-	end
-
-	if use_match.hit and self.active_deck_id then
-		coroutine.resume(coroutine.create(function()
-			local code, _ = DeckApi:set_selected_deck(self.active_deck_id)
-			if code == 200 then
-				Toast:show('success', 'Selected deck will be used for matchmaking.', 3)
-			else
-				Toast:show('error', 'Could not select deck.', 3)
-			end
-		end))
-	end
-
-	if del_btn.hit and self.active_deck_id then
-		local id = self.active_deck_id
-		coroutine.resume(coroutine.create(function()
-			local code = DeckApi:delete_deck(id)
-			if code == 204 then
-				self.active_deck_id = nil
-				self.active_deck = nil
-				self:reload_data()
-				if #self.deck_summaries > 0 then
-					self.active_deck_id = self.deck_summaries[1].id
-					self.active_deck = DeckApi:get_deck_by_id(self.active_deck_id)
-				end
-				Toast:show('success', 'Deck deleted.', 2)
-			else
-				Toast:show('error', 'Could not delete deck.', 3)
-			end
-		end))
-	end
 
 	local r = self.regions
 	love.graphics.setColor(0.18, 0.18, 0.22, 1)
