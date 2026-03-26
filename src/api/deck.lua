@@ -2,20 +2,8 @@ local Constants = require('src.constants')
 local https = require('https')
 local json = require('lib.json')
 local BaseApi = require('src.api.base')
-local Utils = require('src.helpers.utils')
 
 local DeckApi = {}
-
-local function decode_json_or_nil(response)
-	local payload = Utils.trim(response)
-	if payload == '' then return nil end
-
-	local first_char = payload:sub(1, 1)
-	local is_json = first_char == '{' or first_char == '['
-	if not is_json then return nil end
-
-	return json.decode(payload)
-end
 
 local function auth_headers(with_json_body)
 	local h = {
@@ -37,7 +25,7 @@ local function request_json(method, url, body)
 		headers = headers,
 		data = body,
 	})
-	return code, decode_json_or_nil(response)
+	return code, BaseApi:decode_json_or_nil(response)
 end
 
 function DeckApi:get_list()
@@ -47,7 +35,7 @@ function DeckApi:get_list()
 		headers = auth_headers(false),
 	})
 
-	return decode_json_or_nil(response) or {}
+	return BaseApi:decode_json_or_nil(response) or {}
 end
 
 function DeckApi:get_current_deck()
@@ -58,7 +46,7 @@ function DeckApi:get_current_deck()
 		headers = auth_headers(false),
 	})
 
-	return decode_json_or_nil(response)
+	return BaseApi:decode_json_or_nil(response)
 end
 
 function DeckApi:get_deck_by_id(id)
@@ -69,7 +57,7 @@ function DeckApi:get_deck_by_id(id)
 		headers = auth_headers(false),
 	})
 
-	return decode_json_or_nil(response)
+	return BaseApi:decode_json_or_nil(response)
 end
 
 function DeckApi:create_deck(name)

@@ -1,21 +1,8 @@
 local Constants = require('src.constants')
 local https = require('https')
-local json = require('lib.json')
 local BaseApi = require('src.api.base')
-local Utils = require('src.helpers.utils')
 
 local CardsApi = {}
-
-local function decode_json_or_nil(response)
-	local payload = Utils.trim(response)
-	if payload == '' then return nil end
-
-	local first_char = payload:sub(1, 1)
-	local is_json = first_char == '{' or first_char == '['
-	if not is_json then return nil end
-
-	return json.decode(payload)
-end
 
 --[[
 	GET /cards/?limit=
@@ -39,7 +26,7 @@ function CardsApi:get_list(opts)
 		},
 	})
 
-	local decoded = decode_json_or_nil(response)
+	local decoded = BaseApi:decode_json_or_nil(response)
 	return decoded or {}
 end
 

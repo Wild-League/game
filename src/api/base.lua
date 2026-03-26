@@ -1,5 +1,7 @@
 local Constants = require('src.constants')
 local Env = require('src.helpers.env')
+local json = require('lib.json')
+local Utils = require('src.helpers.utils')
 
 local function env_str(key, default)
 	local v = Env.get(key)
@@ -60,6 +62,17 @@ function BaseApi:Response(status, body, success)
 		body = body,
 		success = success
 	}
+end
+
+function BaseApi:decode_json_or_nil(response)
+	local payload = Utils.trim(response)
+	if payload == '' then return nil end
+
+	local first_char = payload:sub(1, 1)
+	local is_json = first_char == '{' or first_char == '['
+	if not is_json then return nil end
+
+	return json.decode(payload)
 end
 
 return BaseApi
