@@ -50,7 +50,9 @@ function Game:load()
 
 		if result then
 			local selected_deck = json.decode(result.objects[1].value)
-			Deck:load(selected_deck)
+			if selected_deck and selected_deck.cards and #selected_deck.cards > 0 then
+				Deck:load(selected_deck)
+			end
 		end
 	end))
 
@@ -68,7 +70,9 @@ function Game:load()
 
 		if result then
 			local selected_deck = json.decode(result.objects[1].value)
-			EnemyDeck:load(selected_deck)
+			if selected_deck and selected_deck.cards and #selected_deck.cards > 0 then
+				EnemyDeck:load(selected_deck)
+			end
 		end
 	end))
 end

@@ -8,22 +8,20 @@ local Constants = require('src.constants')
 local Timer = require('src.helpers.timer')
 local FriendListSidebar = require('src.ui.friend-list-sidebar')
 local HeaderBar = require('src.ui.header-bar')
+local Toast = require('src.ui.toast')
 local Lobby = {
 	matchmake_state = 'idle',
 	matchmake_ticket = nil,
 	timer = Timer:new(),
 	friends = {},
 	show_add_friend_input = false,
-	friend_input = { text = "" }
+	friend_input = { text = "" },
+	selected_deck = nil
 }
 
 function Lobby:load()
 	FriendListSidebar:load()
-	local selected_deck = DeckApi:get_current_deck()
-
-	if selected_deck == nil then
-		selected_deck = {}
-	end
+	self.selected_deck = DeckApi:get_current_deck()
 
 	socket.on_matchmaker_matched(Constants.SOCKET_CONNECTION, function(match)
 		Constants.MATCH_ID = match.matchmaker_matched.match_id
@@ -34,7 +32,7 @@ function Lobby:load()
 				{
 					collection = 'selected_deck',
 					key = 'selected_deck',
-					value = json.encode(selected_deck),
+					value = json.encode(self.selected_deck),
 					permissionRead = 2,
 					permissionWrite = 1,
 					version = ""
@@ -48,6 +46,13 @@ function Lobby:load()
 			end)
 		end))
 	end)
+end
+
+function Lobby:has_selected_deck()
+	return self.selected_deck ~= nil
+		and self.selected_deck.cards ~= nil
+		and type(self.selected_deck.cards) == 'table'
+		and #self.selected_deck.cards > 0
 end
 
 function Lobby:update(dt) self.timer:update(dt) end
@@ -82,6 +87,10 @@ function Lobby:draw()
 				self.matchmake_state = 'idle'
 				socket.matchmaker_remove(Constants.SOCKET_CONNECTION, self.matchmake_ticket)
 			else
+				if not self:has_selected_deck() then
+					Toast:show('warning', 'Select a deck before searching for a match.', 4)
+					return
+				end
 				self.matchmake_state = 'searching'
 				socket.matchmaker_add(Constants.SOCKET_CONNECTION, 2, 2, nil, nil, nil, nil, function(matchmake)
 					self.matchmake_ticket = matchmake.matchmaker_ticket.ticket
