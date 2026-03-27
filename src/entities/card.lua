@@ -66,19 +66,17 @@ function Card:load_animations(card)
 end
 
 function Card:draw_loading_animation()
-	local x = self.x + self.img_card:getWidth() / 2
-	local y = self.y + self.img_card:getHeight() / 2
+	local card_w = self.img_card:getWidth()
+	local card_h = self.img_card:getHeight()
+	local cx = self.x + card_w / 2
+	local cy = self.y + card_h / 2
 
-	love.graphics.stencil(function()
-		love.graphics.draw(self.img_card, self.x, self.y, 0, self.default_scale, self.default_scale)
-	end, "replace", 1, false)
-
+	love.graphics.setScissor(self.x, self.y, card_w, card_h)
 	love.graphics.setColor(1, 0, 0, 0.5)
-	love.graphics.setStencilTest('equal', 1)
-	love.graphics.arc("fill", x, y, 130, -math.pi / 2, -math.pi / 2 + (2 * math.pi * (self.current_cooldown / self.cooldown)), 100)
-	love.graphics.setColor(1, 1, 1)
-
-	love.graphics.setStencilTest()
+	love.graphics.arc("fill", cx, cy, 130, -math.pi / 2,
+	-math.pi / 2 + (2 * math.pi * (self.current_cooldown / self.cooldown)), 100)
+	love.graphics.setColor(1, 1, 1, 1)
+	love.graphics.setScissor()
 end
 
 function Card:reset_cooldown()

@@ -36,8 +36,6 @@ function LoadingGame:draw()
 	end
 end
 
-function LoadingGame:resize()
-
-end
+function LoadingGame:resize() end
 
 return LoadingGame

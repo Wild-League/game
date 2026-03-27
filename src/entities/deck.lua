@@ -266,7 +266,7 @@ function Deck:mousepressed(x, y, button)
 						socket.match_data_send(
 							Constants.SOCKET_CONNECTION,
 							Constants.MATCH_ID,
-							MatchEvents.spawn_card,
+							MatchEvents.card_spawn,
 							json.encode(payload_card),
 							nil
 						)

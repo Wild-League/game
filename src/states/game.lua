@@ -101,18 +101,22 @@ function Game:draw()
 	Deck:draw()
 	self:draw_player_status()
 
+	love.graphics.setColor(1, 1, 1, 1)
 	for _, card in pairs(self.cards[Constants.USER_ID]) do
 		card:draw()
 	end
 
+	love.graphics.setColor(1, 1, 1, 1)
 	for _, card in pairs(self.cards[Constants.ENEMY_ID]) do
 		card:draw()
 	end
 
 	if Deck.card_selected then
+		love.graphics.setColor(1, 1, 1, 1)
 		Deck.card_selected:preview(love.mouse.getX(), love.mouse.getY())
 	end
 
+	love.graphics.setColor(1, 1, 1, 1)
 	self:draw_towers()
 
 	-- self:draw_timer()
@@ -150,7 +154,15 @@ end
 function Game:handle_received_data(message)
 	local data = json.decode(message.match_data.data)
 	local user_id = message.match_data.presence.user_id
-	local opcode = data.opcode
+	local opcode = tonumber(message.match_data.op_code)
+
+	if opcode == nil then
+		if data and data.card_name and data.x and data.y and data.card_id then
+			opcode = MatchEvents.card_spawn
+		elseif data and data.card_id and data.action then
+			opcode = MatchEvents.card_action
+		end
+	end
 
 	self:handle_opcode_event(opcode, user_id, data)
 end
@@ -160,7 +172,13 @@ function Game:handle_opcode_event(opcode, user_id, data)
 
 	if opcode == MatchEvents.card_spawn then
 		-- mirroring enemy cards
+		if not self.cards[user_id] then
+			self.cards[user_id] = {}
+		end
+
 		local enemy_card = self:get_enemy_card(data.card_name)
+		if not enemy_card then return end
+
 		enemy_card.char_x = love.graphics.getWidth() - data.x
 		enemy_card.char_y = data.y
 
@@ -168,7 +186,7 @@ function Game:handle_opcode_event(opcode, user_id, data)
 	end
 
 	if opcode == MatchEvents.card_action then
-		print('hey changing action', opcode, user_id, data.card_id, data.action)
+		if not self.cards[user_id] or not self.cards[user_id][data.card_id] then return end
 		self.cards[user_id][data.card_id].current_action = data.action
 	end
 end

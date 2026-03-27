@@ -25,94 +25,25 @@ local Char = {
 	timeout = 0
 }
 
---[[
-	function Char.handle_chars_around(char, enemy)
-		char.chars_around[enemy.key] = enemy
-		char.chars_around[enemy.key].key = enemy.key
+local function get_walk_preview_quad(char)
+	if not char.img_walk then return nil end
+	if not char.frame_width or not char.frame_height then return nil end
+	if char.img_walk:getWidth() < char.frame_width then return nil end
+	if char.img_walk:getHeight() < char.frame_height then return nil end
+
+	if not char.walk_preview_quad then
+		char.walk_preview_quad = love.graphics.newQuad(
+			0,
+			0,
+			char.frame_width,
+			char.frame_height,
+			char.img_walk:getWidth(),
+			char.img_walk:getHeight()
+		)
 	end
 
-	function Char:load_actions(char)
-		char.actions = {
-			walk = {
-				update = function(dt)
-					char.animations['walk']:update(dt)
-				end,
-				draw = function(x, y, current_life, enemy)
-					char:lifebar(x,y, current_life)
-
-					if enemy then
-						x = x + char.speed
-					else
-						x = x - char.speed
-					end
-
-					char.animations['walk']:draw(char.img_walk, x, y)
-					return x, y
-				end
-			},
-			follow = {
-				update = function(dt)
-					char.nearest_enemy = char:get_nearest_enemy(char, char.chars_around)
-
-					char.animations['walk']:update(dt)
-				end,
-				draw = function(x,y, current_life)
-					char:lifebar(x,y, current_life)
-
-					local dx = char.nearest_enemy.char_x - x
-					local dy = char.nearest_enemy.char_y - y
-
-					local distance = math.sqrt(dx*dx + dy*dy)
-
-					if distance > 1 then
-						local angle = math.atan2(dy, dx)
-						x = x + char.speed * math.cos(angle)
-						y = y + char.speed * math.sin(angle)
-					end
-
-					char.animations['walk']:draw(char.img_walk, x, y)
-					return x,y
-				end
-			},
-			attack = {
-				update = function(dt)
-					char.animations['attack']:update(dt)
-				end,
-				draw = function(x,y, current_life)
-					char:lifebar(x,y, current_life)
-
-					char.nearest_enemy = char:get_nearest_enemy(char, char.chars_around)
-
-					char.animations['attack']:draw(char.img_attack,x,y)
-					return x,y
-				end
-			},
-			death = {
-				update = function(dt)
-					char.animations['death']:update(dt)
-				end,
-				draw = function(x,y, _)
-					char.animations['death']:draw(char.img_death,x,y)
-					return x,y
-				end
-			}
-		}
-
-		return char
-	end
-
-	function Char:get_nearest_enemy(char, around)
-		for _,v in pairs(around) do
-			local distance_x = v.char_x - char.char_x
-			local distance_y = v.char_y - char.char_y
-
-			if (distance_x >= (char.nearest_enemy.char_x - char.char_x))
-				and (distance_y >= (char.nearest_enemy.char_y - char.char_y)) then
-				return v
-			end
-		end
-	end
-]]
+	return char.walk_preview_quad
+end
 
 function Char:get_enemies_in_range(enemies)
 	local enemies_in_range = {}
@@ -126,7 +57,7 @@ function Char:get_enemies_in_range(enemies)
 	for k,v in pairs(enemies_in_range) do
 		local has_collision = Utils.circle_rect_collision(
 			self.char_x, self.char_y, self.perception_range/2,
-			v.char_x, v.char_y, v.img_preview:getWidth(), v.img_preview:getHeight()
+			v.char_x, v.char_y, v.frame_width or 60, v.frame_height or 60
 		)
 
 		self.enemies_around[k] = has_collision and v or nil
@@ -143,7 +74,7 @@ function Char:check_attack_range()
 	local attack_range_collision = Utils.circle_rect_collision(
 		self.char_x, self.char_y, self.attack_range/2,
 		self.nearest_enemy.char_x, self.nearest_enemy.char_y,
-		self.nearest_enemy.img_preview:getWidth(), self.nearest_enemy.img_preview:getHeight()
+		self.nearest_enemy.frame_width or 60, self.nearest_enemy.frame_height or 60
 	)
 
 	if attack_range_collision then
@@ -151,7 +82,6 @@ function Char:check_attack_range()
 			self.current_action = 'attack'
 
 			coroutine.resume(coroutine.create(function()
-				-- maybe I should create a function to send the data so I can add a proper timeout to it?
 				socket.match_data_send(
 					Constants.SOCKET_CONNECTION,
 					Constants.MATCH_ID,
@@ -187,26 +117,23 @@ function Char:get_nearest_enemy()
 end
 
 function Char:preview(x, y)
-	-- -- attack range
-	-- love.graphics.ellipse("line", x, y, card.attack_range, card.attack_range)
-	-- -- perception range
-	-- love.graphics.ellipse("line", x, y, card.perception_range, card.perception_range)
+	local walk_quad = get_walk_preview_quad(self)
+	if not walk_quad then return end
 
-	local center_x = x - self.img_preview:getWidth() / 2
-	local center_y = y - self.img_preview:getHeight() / 2
+	local center_x = x - self.frame_width / 2
+	local center_y = y - self.frame_height / 2
 
-	love.graphics.setColor(0.2,0.2,0.7,0.5)
-	love.graphics.draw(self.img_preview, center_x, center_y)
-	love.graphics.setColor(1,1,1)
+	love.graphics.setColor(0.2, 0.2, 0.7, 0.5)
+	love.graphics.draw(self.img_walk, walk_quad, center_x, center_y)
+	love.graphics.setColor(1, 1, 1, 1)
 end
 
-function Char:lifebar(x,y, current_life)
-	love.graphics.setColor(255/255,29/255,29/255)
+function Char:lifebar(x, y, current_life)
+	love.graphics.setColor(1, 29/255, 29/255)
 	love.graphics.rectangle("line", x - 10, y - 10, self.life, 5)
 	love.graphics.rectangle("fill", x - 10, y - 10, current_life, 5)
-	love.graphics.setColor(255,255,255)
+	love.graphics.setColor(1, 1, 1, 1)
 end
-
 
 function Char:get_action(current_action)
 	if current_action == 'walk' then
@@ -220,19 +147,41 @@ function Char:get_action(current_action)
 end
 
 function Char:update(dt)
-	self.animations[self.current_action]:update(dt)
+	local anim = self.animations[self.current_action]
+	if anim and type(anim.update) == 'function' then
+		anim:update(dt)
+	end
 end
 
 function Char:draw()
 	self.last_x = self.char_x
+	love.graphics.setColor(1, 1, 1, 1)
 
-	local x = self.enemy and self.char_x - self.img_preview:getWidth()/2 or self.char_x + self.img_preview:getWidth()/2
-	local y = self.char_y + self.img_preview:getHeight()/2
+	local fw = self.frame_width or 60
+	local fh = self.frame_height or 60
+
+	local x = self.enemy and self.char_x - fw/2 or self.char_x + fw/2
+	local y = self.char_y + fh/2
 
 	love.graphics.circle("line", x, y, self.perception_range)
 	love.graphics.circle("line", x, y, self.attack_range)
 
-	self.animations[self.current_action]:draw(self['img_'..self.current_action], self.char_x, self.char_y, 0, self.scale_x, 1)
+	local action = self.current_action
+	local current_animation = self.animations[action]
+	local current_img = self['img_' .. action]
+
+	local has_valid_anim = current_animation
+		and type(current_animation.draw) == 'function'
+		and current_img
+
+	if has_valid_anim then
+		current_animation:draw(current_img, self.char_x, self.char_y, 0, self.scale_x, 1)
+	else
+		local walk_quad = get_walk_preview_quad(self)
+		if walk_quad then
+			love.graphics.draw(self.img_walk, walk_quad, self.char_x, self.char_y, 0, self.scale_x, 1)
+		end
+	end
 
 	self:get_action(self.current_action)
 end
