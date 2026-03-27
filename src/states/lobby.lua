@@ -28,7 +28,7 @@ function Lobby:load()
 		local matched_token = matched.token
 		local matched_match_id = matched.match_id
 
-		Constants.ENEMY_ID = self:get_enemy_user_id(match.matchmaker_matched.users)
+		Constants.ENEMY_ID = self:get_enemy_user_id(matched.users)
 
 		coroutine.resume(coroutine.create(function()
 			self.matchmake_state = 'idle'
@@ -119,6 +119,10 @@ function Lobby:draw()
 end
 
 function Lobby:get_enemy_user_id(users)
+	if type(users) ~= 'table' then
+		return nil
+	end
+
 	for _, user in pairs(users) do
 		if user.presence.user_id ~= Constants.USER_ID then
 			return user.presence.user_id
@@ -126,8 +130,6 @@ function Lobby:get_enemy_user_id(users)
 	end
 end
 
-function Lobby:resize()
-
-end
+function Lobby:resize() end
 
 return Lobby
