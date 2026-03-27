@@ -43,6 +43,10 @@ function Card:new(card, enemy)
 	card = self:load_images(card)
 	card = self:load_animations(card)
 
+	if card.type == Card_Types.CHAR and rawget(card, 'current_life') == nil then
+		card.current_life = card.life
+	end
+
 	return Utils.copy_table(card)
 end
 
