@@ -14,7 +14,8 @@ local Card = {
 	selectable = false,
 	preview_card = false,
 	is_card_loading = false,
-	perception_range = 0
+	perception_range = 0,
+	predicted = false
 }
 
 local Card_Types = {

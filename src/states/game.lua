@@ -13,13 +13,33 @@ local PlayerStatus = require('src.ui.player-status')
 local json = require('lib.json')
 local Assets = require('src.assets')
 
+local MAP_WIDTH = 1344
+
+local function resolve_card_bucket(owner_id)
+	if owner_id == Constants.USER_ID then
+		return Constants.USER_ID
+	end
+	return Constants.ENEMY_ID
+end
+
 local Game = {
 	timer = Timer:new(),
 	cards = {},
+	pending_spawns = {},
+	last_match_tick = 0,
+	match_winner_id = nil,
+	player_side = nil,
 
 	me_status = PlayerStatus:new('2d618372-1220-49b3-b22e-00f6ca0c12a5'),
 	enemy_status = PlayerStatus:new('2d618372-1220-49b3-b22e-00f6ca0c12a5')
 }
+
+function Game:mirror_x(x)
+	if self.player_side == 'right' then
+		return MAP_WIDTH - x
+	end
+	return x
+end
 
 function Game:load()
 	Assets.TOWER = love.graphics.newImage('assets/tower.png')
@@ -34,6 +54,10 @@ function Game:load()
 
 	self.cards[Constants.USER_ID] = {}
 	self.cards[Constants.ENEMY_ID] = {}
+	self.pending_spawns = {}
+	self.last_match_tick = 0
+	self.match_winner_id = nil
+	self.player_side = nil
 
 	self:load_towers()
 
@@ -87,7 +111,6 @@ function Game:update(dt)
 
 	for _, card in pairs(self.cards[Constants.USER_ID]) do
 		card:update(dt)
-		card:get_enemies_in_range(self.cards[Constants.ENEMY_ID])
 	end
 
 	for _, enemy_card in pairs(self.cards[Constants.ENEMY_ID]) do
@@ -125,16 +148,10 @@ end
 -- private functions ---------
 
 function Game:load_towers()
-	local tower1 = Tower:load('left', 'top')
-	local tower2 = Tower:load('left', 'bottom')
-
-	local tower3 = Tower:load('right', 'top')
-	local tower4 = Tower:load('right', 'bottom')
-
-	table.insert(self.cards[Constants.USER_ID], tower1)
-	table.insert(self.cards[Constants.USER_ID], tower2)
-	table.insert(self.cards[Constants.ENEMY_ID], tower3)
-	table.insert(self.cards[Constants.ENEMY_ID], tower4)
+	table.insert(self.cards[Constants.USER_ID], Tower:load('left', 'top'))
+	table.insert(self.cards[Constants.USER_ID], Tower:load('left', 'bottom'))
+	table.insert(self.cards[Constants.ENEMY_ID], Tower:load('right', 'top'))
+	table.insert(self.cards[Constants.ENEMY_ID], Tower:load('right', 'bottom'))
 end
 
 function Game:draw_towers()
@@ -153,50 +170,228 @@ end
 
 function Game:handle_received_data(message)
 	local data = json.decode(message.match_data.data)
-	local user_id = message.match_data.presence.user_id
 	local opcode = tonumber(message.match_data.op_code)
-
-	if opcode == nil then
-		if data and data.card_name and data.x and data.y and data.card_id then
-			opcode = MatchEvents.card_spawn
-		elseif data and data.card_id and data.action then
-			opcode = MatchEvents.card_action
-		end
+	local user_id = nil
+	if message.match_data.presence then
+		user_id = message.match_data.presence.user_id
 	end
 
-	self:handle_opcode_event(opcode, user_id, data)
+	self:handle_opcode_event(opcode, user_id, data or {})
 end
 
 function Game:handle_opcode_event(opcode, user_id, data)
-	if user_id == Constants.USER_ID then return end
-
-	if opcode == MatchEvents.card_spawn then
-		-- mirroring enemy cards
-		if not self.cards[user_id] then
-			self.cards[user_id] = {}
-		end
-
-		local enemy_card = self:get_enemy_card(data.card_name)
-		if not enemy_card then return end
-
-		enemy_card.char_x = love.graphics.getWidth() - data.x
-		enemy_card.char_y = data.y
-
-		self.cards[user_id][data.card_id] = Utils.copy_table(enemy_card)
+	if opcode == MatchEvents.state_snapshot then
+		self:apply_snapshot(data)
+		return
 	end
 
-	if opcode == MatchEvents.card_action then
-		if not self.cards[user_id] or not self.cards[user_id][data.card_id] then return end
-		self.cards[user_id][data.card_id].current_action = data.action
+	if opcode == MatchEvents.entity_spawned then
+		if data and data.entity then
+			self:apply_entity_state(data.entity)
+			self.pending_spawns[data.client_intent_id] = nil
+		end
+		return
+	end
+
+	if opcode == MatchEvents.entity_updated then
+		self:apply_entity_state(data)
+		return
+	end
+
+	if opcode == MatchEvents.entity_removed then
+		if data and data.entity_id and data.owner_id then
+			local bucket = resolve_card_bucket(data.owner_id)
+			if self.cards[bucket] then
+				self.cards[bucket][data.entity_id] = nil
+			end
+		end
+		return
+	end
+
+	if opcode == MatchEvents.reject_intent then
+		if data and data.client_intent_id and self.pending_spawns[data.client_intent_id] then
+			local pending = self.pending_spawns[data.client_intent_id]
+			if self.cards[Constants.USER_ID] then
+				self.cards[Constants.USER_ID][pending.card_id] = nil
+			end
+			self.pending_spawns[data.client_intent_id] = nil
+		end
+		return
+	end
+
+	if opcode == MatchEvents.match_end then
+		self.match_winner_id = data.winner_id
+		return
 	end
 end
 
-function Game:get_enemy_card(card_name)
-	for _, value in pairs(EnemyDeck.deck) do
-		if value.name == card_name then
-			return value
+function Game:get_card_template(card_name, owner_id)
+	local search_decks = {}
+	if owner_id == Constants.USER_ID then
+		search_decks = { Deck.deck_selected, EnemyDeck.deck }
+	else
+		search_decks = { EnemyDeck.deck, Deck.deck_selected }
+	end
+
+	for _, deck in ipairs(search_decks) do
+		for _, value in pairs(deck or {}) do
+			if value.name == card_name then
+				return value
+			end
 		end
 	end
+end
+
+function Game:apply_entity_state(entity)
+	if not entity or not entity.entity_id or not entity.owner_id then return end
+
+	local bucket = resolve_card_bucket(entity.owner_id)
+
+	if not self.cards[bucket] then
+		self.cards[bucket] = {}
+	end
+
+	local card = self.cards[bucket][entity.entity_id]
+	local is_new = card == nil
+	if is_new then
+		local template = self:get_card_template(entity.card_name, entity.owner_id)
+		if not template then return end
+
+		card = Utils.copy_table(template)
+		card.card_id = entity.entity_id
+		card.predicted = false
+		card.enemy = bucket == Constants.ENEMY_ID
+		card.scale_x = card.enemy and -1 or 1
+		self.cards[bucket][entity.entity_id] = card
+	end
+
+	local prev_x = card.char_x
+	local prev_y = card.char_y
+	local has_authoritative_position = card.has_authoritative_position == true
+
+	local incoming_version = entity.entity_version or 0
+	local current_version = card.entity_version or -1
+	if incoming_version < current_version then
+		return
+	end
+
+	card.entity_version = incoming_version
+	card.card_id = entity.entity_id
+	card.enemy = bucket == Constants.ENEMY_ID
+	card.current_action = entity.action or card.current_action or 'walk'
+	card.current_life = entity.current_life or card.current_life
+	card.life = entity.max_life or card.life
+
+	local screen_x = entity.x and self:mirror_x(entity.x) or card.char_x
+	local target_y = entity.y or card.char_y
+
+	if not is_new and entity.x and card.last_screen_x then
+		local dx = screen_x - card.last_screen_x
+		if dx > 1 then
+			card.scale_x = 1
+		elseif dx < -1 then
+			card.scale_x = -1
+		end
+	end
+	if entity.x then card.last_screen_x = screen_x end
+
+	if has_authoritative_position and prev_x and prev_y and card.predicted == false then
+		local alpha = 0.35
+		card.char_x = prev_x + (screen_x - prev_x) * alpha
+		card.char_y = prev_y + (target_y - prev_y) * alpha
+	else
+		card.char_x = screen_x
+		card.char_y = target_y
+	end
+
+	card.predicted = false
+	card.has_authoritative_position = true
+end
+
+function Game:apply_snapshot(snapshot)
+	if not snapshot or not snapshot.cards then return end
+	if snapshot.match_tick and snapshot.match_tick < self.last_match_tick then return end
+
+	self.last_match_tick = snapshot.match_tick or self.last_match_tick
+	self.match_winner_id = snapshot.winner_id or self.match_winner_id
+
+	if self.player_side == nil and snapshot.towers then
+		local screen_center = love.graphics.getWidth() / 2
+		for _, t in ipairs(snapshot.towers) do
+			if t.owner_id == Constants.USER_ID then
+				self.player_side = t.x > screen_center and 'right' or 'left'
+				break
+			end
+		end
+	end
+
+	local seen = {}
+
+	for _, entity in ipairs(snapshot.cards) do
+		local b = resolve_card_bucket(entity.owner_id)
+		seen[b] = seen[b] or {}
+		seen[b][entity.entity_id] = true
+		self:apply_entity_state(entity)
+	end
+
+	for _, bucket_id in ipairs({ Constants.USER_ID, Constants.ENEMY_ID }) do
+		local entities = self.cards[bucket_id]
+		if entities then
+			for entity_id, card in pairs(entities) do
+				if type(entity_id) == 'string' and card.type == 'char' then
+					local is_seen = seen[bucket_id] and seen[bucket_id][entity_id]
+					if not is_seen and not card.predicted then
+						entities[entity_id] = nil
+					end
+				end
+			end
+		end
+	end
+
+	for _, tower_state in ipairs(snapshot.towers or {}) do
+		local tower_bucket = resolve_card_bucket(tower_state.owner_id)
+		local towers = self.cards[tower_bucket] or {}
+		for _, tower in ipairs(towers) do
+			if tower.type == 'tower' then
+				local same_band = math.abs((tower.char_y or 0) - (tower_state.y or 0)) < 160
+				if same_band then
+					tower.current_life = tower_state.current_life
+				end
+			end
+		end
+	end
+end
+
+function Game:spawn_card_intent(card, payload)
+	if not payload or not payload.client_intent_id or not payload.card_id then return end
+
+	local predicted = Utils.copy_table(card)
+	predicted.card_id = payload.card_id
+	predicted.char_x = payload.x
+	predicted.char_y = payload.y
+	predicted.predicted = true
+	predicted.current_action = 'walk'
+	predicted.entity_version = 0
+	predicted.enemy = false
+	predicted.scale_x = 1
+
+	self.cards[Constants.USER_ID][payload.card_id] = predicted
+	self.pending_spawns[payload.client_intent_id] = {
+		card_id = payload.card_id
+	}
+
+	local server_payload = Utils.copy_table(payload)
+	server_payload.x = self:mirror_x(payload.x)
+
+	coroutine.resume(coroutine.create(function()
+		socket.match_data_send(
+			Constants.SOCKET_CONNECTION,
+			Constants.MATCH_ID,
+			MatchEvents.spawn_intent,
+			json.encode(server_payload),
+			nil
+		)
+	end))
 end
 
 function Game:update_player_status()

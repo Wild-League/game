@@ -1,9 +1,3 @@
-local socket = require('lib.nakama.socket')
-local json = require('lib.json')
-local MatchEvents = require('src.config.match_events')
-local Constants = require('src.constants')
-local Utils = require('src.helpers.utils')
-
 local Char = {
 	current_action = 'walk',
 	current_life = 0,
@@ -71,82 +65,15 @@ local function get_walk_preview_quad(char)
 end
 
 function Char:get_enemies_in_range(enemies)
-	local enemies_in_range = {}
-
-	for k, v in pairs(enemies) do
-		if v.type == 'char' then
-			enemies_in_range[k] = v
-		end
-	end
-
-	for k, v in pairs(enemies_in_range) do
-		local scx, scy = char_range_center(self)
-		local rx, ry = char_hit_top_left(v)
-		local vw, vh = char_frame_size(v)
-		local has_collision = Utils.circle_rect_collision(
-			scx, scy, self.perception_range / 2,
-			rx, ry, vw, vh
-		)
-
-		self.enemies_around[k] = has_collision and v or nil
-	end
-
-	self:get_nearest_enemy()
-
-	if self.nearest_enemy then
-		self:check_attack_range()
-	end
+	return
 end
 
 function Char:check_attack_range()
-	local scx, scy = char_range_center(self)
-	local rx, ry = char_hit_top_left(self.nearest_enemy)
-	local rw, rh = char_frame_size(self.nearest_enemy)
-	local attack_range_collision = Utils.circle_rect_collision(
-		scx, scy, self.attack_range / 2,
-		rx, ry, rw, rh
-	)
-
-	if attack_range_collision then
-		if self.current_action ~= 'attack' then
-			self.current_action = 'attack'
-
-			coroutine.resume(coroutine.create(function()
-				socket.match_data_send(
-					Constants.SOCKET_CONNECTION,
-					Constants.MATCH_ID,
-					MatchEvents.card_action,
-					json.encode({
-						card_id = self.card_id,
-						action = self.current_action
-					}),
-					nil
-				)
-			end))
-		end
-	end
+	return
 end
 
 function Char:get_nearest_enemy()
-	local best = nil
-	local best_d = math.huge
-
-	for k, v in pairs(self.enemies_around) do
-		if v then
-			local ax, ay = char_range_center(self)
-			local bx, by = char_range_center(v)
-			local dx, dy = bx - ax, by - ay
-			local distance = math.sqrt(dx * dx + dy * dy)
-
-			if distance < best_d then
-				best_d = distance
-				v.card_id = k
-				best = v
-			end
-		end
-	end
-
-	self.nearest_enemy = best
+	return nil
 end
 
 function Char:preview(x, y)
@@ -176,13 +103,17 @@ function Char:lifebar(x, y, current_life)
 end
 
 function Char:get_action(current_action)
+	if not self.predicted then
+		return
+	end
+
 	if current_action == 'walk' then
 		local new_position = self.enemy
-				and self.char_x + self.speed
-				or self.char_x - self.speed
+				and self.char_x - self.speed
+				or self.char_x + self.speed
 
 		self.char_x = new_position
-		self.scale_x = self.last_x >= self.char_x and 1 or -1
+		self.scale_x = self.char_x >= self.last_x and 1 or -1
 	end
 end
 

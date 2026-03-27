@@ -1,11 +1,6 @@
 local Layout = require('src.helpers.layout')
 local Map = require('src.entities.map')
 local Card = require('src.entities.card')
-local Constants = require('src.constants')
-local socket = require('lib.nakama.socket')
-local MatchEvents = require('src.config.match_events')
-local json = require('lib.json')
-local Utils = require('src.helpers.utils')
 local uuid = require('lib.uuid')
 
 local Deck = {
@@ -251,26 +246,15 @@ function Deck:mousepressed(x, y, button)
 					card:reset_cooldown()
 
 					local payload_card = {
+						client_intent_id = uuid:generate(),
 						card_id = uuid:generate(),
 						card_name = card.name,
 						x = card.char_x,
-						y = card.char_y,
-						action = card.current_action
+						y = card.char_y
 					}
 
 					local Game = require('src.states.game')
-					card.card_id = payload_card.card_id
-					Game.cards[Constants.USER_ID][payload_card.card_id] = Utils.copy_table(card)
-
-					coroutine.resume(coroutine.create(function()
-						socket.match_data_send(
-							Constants.SOCKET_CONNECTION,
-							Constants.MATCH_ID,
-							MatchEvents.card_spawn,
-							json.encode(payload_card),
-							nil
-						)
-					end))
+					Game:spawn_card_intent(card, payload_card)
 
 					self.card_selected = nil
 					self.deck_selected = self:rotate_deck(card)
