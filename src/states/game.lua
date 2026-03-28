@@ -226,7 +226,7 @@ function Game:handle_opcode_event(opcode, user_id, data)
 end
 
 function Game:get_card_template(card_name, owner_id)
-	local search_decks = {}
+	local search_decks
 	if owner_id == Constants.USER_ID then
 		search_decks = { Deck.deck_selected, EnemyDeck.deck }
 	else

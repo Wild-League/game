@@ -133,7 +133,6 @@ end
 function Char:draw()
 	love.graphics.setColor(1, 1, 1, 1)
 
-	local fw = self.frame_width or 60
 	local fh = self.frame_height or 60
 
 	local rcx, rcy = char_range_center(self)
