@@ -70,15 +70,17 @@ function Card:load_animations(card)
 	return card
 end
 
-function Card:draw_loading_animation()
-	local card_w = self.img_card:getWidth()
-	local card_h = self.img_card:getHeight()
+function Card:draw_loading_animation(scale)
+	scale = scale or 1
+	local card_w = self.img_card:getWidth() * scale
+	local card_h = self.img_card:getHeight() * scale
 	local cx = self.x + card_w / 2
 	local cy = self.y + card_h / 2
 
 	love.graphics.setScissor(self.x, self.y, card_w, card_h)
 	love.graphics.setColor(1, 0, 0, 0.5)
-	love.graphics.arc("fill", cx, cy, 130, -math.pi / 2,
+	local arc_r = 130 * scale
+	love.graphics.arc("fill", cx, cy, arc_r, -math.pi / 2,
 	-math.pi / 2 + (2 * math.pi * (self.current_cooldown / self.cooldown)), 100)
 	love.graphics.setColor(1, 1, 1, 1)
 	love.graphics.setScissor()

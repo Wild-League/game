@@ -3,7 +3,6 @@ local Char = {
 	current_life = 0,
 
 	scale_x = 1,
-	last_x = 0,
 
 	allies_around = {},
 
@@ -19,25 +18,23 @@ local Char = {
 	timeout = 0
 }
 
--- anim8 draws with top-left at (char_x, char_y) when scale_x >= 0, and with the
--- right edge at char_x when flipped (scale_x < 0). Match hitboxes, range circles,
--- and lifebar to that footprint.
+-- World-space positions are unchanged; this only scales on-screen sprites vs. map/towers.
+local RENDER_SCALE = 1.2
+
+-- Sprites face left: scale_x 1 = unflipped (left), -1 = flipped (right). Love2D draws
+-- from top-left when scale_x > 0; scale_x < 0 mirrors horizontally. Match hitboxes,
+-- range circles, and lifebar to that footprint.
 local function char_frame_size(c)
 	local fw = c.frame_width or 60
 	local fh = c.frame_height or 60
 	return fw, fh
 end
 
-local function char_hit_top_left(c)
-	local fw, fh = char_frame_size(c)
-	if (c.scale_x or 1) < 0 then
-		return c.char_x - fw, c.char_y
-	end
-	return c.char_x, c.char_y
-end
 
 local function char_range_center(c)
 	local fw, fh = char_frame_size(c)
+	fw = fw * RENDER_SCALE
+	fh = fh * RENDER_SCALE
 	if (c.scale_x or 1) < 0 then
 		return c.char_x - fw / 2, c.char_y + fh / 2
 	end
@@ -78,13 +75,16 @@ end
 
 function Char:preview(x, y)
 	local walk_quad = get_walk_preview_quad(self)
+
 	if not walk_quad then return end
 
-	local center_x = x - self.frame_width / 2
-	local center_y = y - self.frame_height / 2
+	local fw = (self.frame_width or 60) * RENDER_SCALE
+	local fh = (self.frame_height or 60) * RENDER_SCALE
+	local center_x = x - fw / 2
+	local center_y = y - fh / 2
 
 	love.graphics.setColor(0.2, 0.2, 0.7, 0.5)
-	love.graphics.draw(self.img_walk, walk_quad, center_x, center_y)
+	love.graphics.draw(self.img_walk, walk_quad, center_x, center_y, 0, RENDER_SCALE, RENDER_SCALE)
 	love.graphics.setColor(1, 1, 1, 1)
 end
 
@@ -96,25 +96,14 @@ function Char:lifebar(x, y, current_life)
 	local fill_ratio = math.max(0, math.min(1, current_life / max_life))
 	local fill_width = bar_width * fill_ratio
 
-	love.graphics.setColor(1, 29 / 255, 29 / 255)
+	if self.enemy then
+		love.graphics.setColor(1, 29 / 255, 29 / 255)
+	else
+		love.graphics.setColor(0, 200 / 255, 0)
+	end
 	love.graphics.rectangle("line", x, y, bar_width, bar_height)
 	love.graphics.rectangle("fill", x, y, fill_width, bar_height)
 	love.graphics.setColor(1, 1, 1, 1)
-end
-
-function Char:get_action(current_action)
-	if not self.predicted then
-		return
-	end
-
-	if current_action == 'walk' then
-		local new_position = self.enemy
-				and self.char_x - self.speed
-				or self.char_x + self.speed
-
-		self.char_x = new_position
-		self.scale_x = self.char_x >= self.last_x and 1 or -1
-	end
 end
 
 function Char:update(dt)
@@ -122,10 +111,26 @@ function Char:update(dt)
 	if anim and type(anim.update) == 'function' then
 		anim:update(dt)
 	end
+
+	local prev_x = self._prev_char_x
+	if prev_x == nil then
+		prev_x = self.char_x
+	end
+
+	if self.predicted and self.current_action == 'walk' then
+		local new_position = self.enemy
+				and self.char_x + self.speed
+				or self.char_x - self.speed
+		self.char_x = new_position
+	end
+
+	-- Left-facing art: screen-x increasing → face right (-1); decreasing → face left (1).
+	self.scale_x = self.char_x > prev_x and -1 or 1
+
+	self._prev_char_x = self.char_x
 end
 
 function Char:draw()
-	self.last_x = self.char_x
 	love.graphics.setColor(1, 1, 1, 1)
 
 	local fw = self.frame_width or 60
@@ -144,21 +149,14 @@ function Char:draw()
 			and current_img
 
 	if has_valid_anim then
-		current_animation:draw(current_img, self.char_x, self.char_y, 0, self.scale_x, 1)
-	else
-		local walk_quad = get_walk_preview_quad(self)
-		if walk_quad then
-			love.graphics.draw(self.img_walk, walk_quad, self.char_x, self.char_y, 0, self.scale_x, 1)
-		end
+		current_animation:draw(current_img, self.char_x, self.char_y, 0, self.scale_x, RENDER_SCALE)
 	end
 
 	local bar_w = 46
 	local lcx, _ = char_range_center(self)
 	local lifebar_x = lcx - bar_w / 2
-	local lifebar_y = self.char_y + fh + 4
+	local lifebar_y = self.char_y + fh * RENDER_SCALE + 4
 	self:lifebar(lifebar_x, lifebar_y, self.current_life)
-
-	self:get_action(self.current_action)
 end
 
 return Char

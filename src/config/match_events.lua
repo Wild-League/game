@@ -1,15 +1,4 @@
 local MatchEvents = {
-	-- legacy card events
-	card_spawn = 0,
-	card_position = 1,
-	card_action = 2,
-	card_dead = 3,
-	card_damage = 4,
-	card_healing = 5,
-	tower_damage = 6,
-	tower_healing = 7,
-	tower_destroy = 8,
-
 	-- authoritative protocol: client intents
 	spawn_intent = 20,
 	command_intent = 21,

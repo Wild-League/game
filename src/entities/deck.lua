@@ -4,7 +4,8 @@ local Card = require('src.entities.card')
 local uuid = require('lib.uuid')
 
 local Deck = {
-	default_scale = 0.2,
+	default_scale = 1,
+	hand_slot_spacing = 80,
 	selectable_cards = 4,
 
 	deck_selected = {},
@@ -32,7 +33,6 @@ function Deck:load(deck_selected)
 
 	-- if greather than `selectable_cards`, should rotate cards
 	if #self.deck_selected > self.selectable_cards then
-
 		-- get the cards left from deck and make unselectable
 		-- and add to queue
 		for i = self.selectable_cards + 1, #self.deck_selected do
@@ -52,7 +52,7 @@ function Deck:update(dt)
 end
 
 function Deck:draw_background()
-	love.graphics.clear(1,1,1)
+	love.graphics.clear(1, 1, 1)
 
 	local window_w, window_h = love.graphics.getDimensions()
 	local image_w, image_h = 40, 40
@@ -65,9 +65,9 @@ function Deck:draw_background()
 	for x = 0, tiles_x - 1 do
 		for y = 0, tiles_y - 1 do
 			if (x + y) % 2 == 0 then
-				love.graphics.setColor(32/255, 32/255, 32/255)
+				love.graphics.setColor(32 / 255, 32 / 255, 32 / 255)
 			else
-				love.graphics.setColor(48/255, 48/255, 48/255)
+				love.graphics.setColor(48 / 255, 48 / 255, 48 / 255)
 			end
 			love.graphics.rectangle('fill', x * image_w, y * image_h, image_w, image_h)
 			love.graphics.setColor(1, 1, 1)
@@ -84,16 +84,17 @@ function Deck:draw()
 		self:highlight_selected_card(self.card_selected)
 	end
 
+	local s = self.default_scale
 	for i = 1, self.selectable_cards do
 		local card = self.deck_selected[i]
 
 		-- just in case the deck has less than `selectable_cards`
 		if card == nil then return end
 
-		love.graphics.draw(card.img_card, card.x, card.y)
+		love.graphics.draw(card.img_card, card.x, card.y, 0, s, s)
 
 		if card.is_card_loading then
-			card:draw_loading_animation()
+			card:draw_loading_animation(s)
 		end
 	end
 
@@ -107,13 +108,14 @@ function Deck:define_positions()
 	local position = Layout:down_right(196, 56)
 
 	-- assign default positions
+	local step = self.hand_slot_spacing
 	for i = 1, self.selectable_cards do
 		local card = self.deck_selected[i]
 
 		-- for cases when the deck has less than 4 cards
 		if card == nil then return end
 
-		card.x = position.width - (i * 200)
+		card.x = position.width - (i * step)
 		card.y = position.height - 50 -- padding
 	end
 
@@ -130,13 +132,17 @@ end
 
 -- the next card on queue
 function Deck:draw_preview_card()
-	love.graphics.draw(self.queue_next_cards[1].img_card, self.queue_next_cards[1].x, self.queue_next_cards[1].y, 0, 0.65 * self.default_scale, 0.65 * self.default_scale)
+	local ps = self.default_scale * 1.15
+	love.graphics.draw(self.queue_next_cards[1].img_card, self.queue_next_cards[1].x, self.queue_next_cards[1].y, 0, ps, ps)
 end
 
 function Deck:highlight_selected_card(card)
-	love.graphics.setColor(1,0,0)
-	love.graphics.rectangle("fill", card.x - 4, card.y - 4, card.img_card:getWidth() + 8, card.img_card:getHeight() + 8)
-	love.graphics.setColor(1,1,1)
+	local s = self.default_scale
+	local w = card.img_card:getWidth() * s
+	local h = card.img_card:getHeight() * s
+	love.graphics.setColor(1, 0, 0)
+	love.graphics.rectangle("fill", card.x - 4, card.y - 4, w + 8, h + 8)
+	love.graphics.setColor(1, 1, 1)
 end
 
 function Deck:set_queue_next_cards(deck)
@@ -213,12 +219,15 @@ function Deck:mousepressed(x, y, button)
 	-- right click
 	if button ~= 1 then return end
 
+	local s = self.default_scale
 	for _, card in pairs(self.deck_selected) do
+		local cw = card.img_card:getWidth() * s
+		local ch = card.img_card:getHeight() * s
 		-- click on card?
 		if (
-			x >= card.x and x <= (card.x + card.img_card:getWidth())
-			and y >= card.y and y <= (card.y + card.img_card:getHeight())
-		) then
+					x >= card.x and x <= (card.x + cw)
+					and y >= card.y and y <= (card.y + ch)
+				) then
 			if not card.is_card_loading then
 				if self.card_selected == card then
 					self.card_selected = nil
@@ -231,9 +240,8 @@ function Deck:mousepressed(x, y, button)
 			-- this is the selected card?
 			if self.card_selected == card then
 				-- click on map?
-				if not (x >= card.x and x <= (card.x + card.img_card:getWidth()))
-					and not (y >= card.y and y <= (card.y + card.img_card:getHeight())) then
-
+				if not (x >= card.x and x <= (card.x + cw))
+						and not (y >= card.y and y <= (card.y + ch)) then
 					card.char_x = x
 					card.char_y = y
 

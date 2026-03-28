@@ -35,7 +35,7 @@ local Game = {
 }
 
 function Game:mirror_x(x)
-	if self.player_side == 'right' then
+	if self.player_side == 'left' then
 		return MAP_WIDTH - x
 	end
 	return x
@@ -148,10 +148,10 @@ end
 -- private functions ---------
 
 function Game:load_towers()
-	table.insert(self.cards[Constants.USER_ID], Tower:load('left', 'top'))
-	table.insert(self.cards[Constants.USER_ID], Tower:load('left', 'bottom'))
-	table.insert(self.cards[Constants.ENEMY_ID], Tower:load('right', 'top'))
-	table.insert(self.cards[Constants.ENEMY_ID], Tower:load('right', 'bottom'))
+	table.insert(self.cards[Constants.USER_ID], Tower:load('right', 'top', Constants.USER_ID .. '_tower_top'))
+	table.insert(self.cards[Constants.USER_ID], Tower:load('right', 'bottom', Constants.USER_ID .. '_tower_bottom'))
+	table.insert(self.cards[Constants.ENEMY_ID], Tower:load('left', 'top', Constants.ENEMY_ID .. '_tower_top'))
+	table.insert(self.cards[Constants.ENEMY_ID], Tower:load('left', 'bottom', Constants.ENEMY_ID .. '_tower_bottom'))
 end
 
 function Game:draw_towers()
@@ -242,6 +242,20 @@ function Game:get_card_template(card_name, owner_id)
 	end
 end
 
+function Game:remirror_chars_from_stored_world_x()
+	for _, bucket_id in ipairs({ Constants.USER_ID, Constants.ENEMY_ID }) do
+		local ents = self.cards[bucket_id]
+		if ents then
+			for _, card in pairs(ents) do
+				if card.type == 'char' and card._world_x then
+					card.char_x = self:mirror_x(card._world_x)
+					card._prev_char_x = card.char_x
+				end
+			end
+		end
+	end
+end
+
 function Game:apply_entity_state(entity)
 	if not entity or not entity.entity_id or not entity.owner_id then return end
 
@@ -261,6 +275,8 @@ function Game:apply_entity_state(entity)
 		card.card_id = entity.entity_id
 		card.predicted = false
 		card.enemy = bucket == Constants.ENEMY_ID
+		-- Spritesheets face left: scale_x 1 = as drawn (left), -1 = flipped (right).
+		-- Enemies on the left walk right toward the player; our units walk left toward them.
 		card.scale_x = card.enemy and -1 or 1
 		self.cards[bucket][entity.entity_id] = card
 	end
@@ -282,18 +298,11 @@ function Game:apply_entity_state(entity)
 	card.current_life = entity.current_life or card.current_life
 	card.life = entity.max_life or card.life
 
-	local screen_x = entity.x and self:mirror_x(entity.x) or card.char_x
-	local target_y = entity.y or card.char_y
-
-	if not is_new and entity.x and card.last_screen_x then
-		local dx = screen_x - card.last_screen_x
-		if dx > 1 then
-			card.scale_x = 1
-		elseif dx < -1 then
-			card.scale_x = -1
-		end
+	if entity.x then
+		card._world_x = entity.x
 	end
-	if entity.x then card.last_screen_x = screen_x end
+	local screen_x = entity.x and self:mirror_x(card._world_x) or card.char_x
+	local target_y = entity.y or card.char_y
 
 	if has_authoritative_position and prev_x and prev_y and card.predicted == false then
 		local alpha = 0.35
@@ -302,6 +311,10 @@ function Game:apply_entity_state(entity)
 	else
 		card.char_x = screen_x
 		card.char_y = target_y
+	end
+
+	if card.type == 'char' then
+		card._prev_char_x = card.char_x
 	end
 
 	card.predicted = false
@@ -315,14 +328,17 @@ function Game:apply_snapshot(snapshot)
 	self.last_match_tick = snapshot.match_tick or self.last_match_tick
 	self.match_winner_id = snapshot.winner_id or self.match_winner_id
 
+	local player_side_was_unknown = self.player_side == nil
 	if self.player_side == nil and snapshot.towers then
-		local screen_center = love.graphics.getWidth() / 2
 		for _, t in ipairs(snapshot.towers) do
 			if t.owner_id == Constants.USER_ID then
-				self.player_side = t.x > screen_center and 'right' or 'left'
+				self.player_side = t.x > MAP_WIDTH / 2 and 'right' or 'left'
 				break
 			end
 		end
+	end
+	if player_side_was_unknown and self.player_side ~= nil then
+		self:remirror_chars_from_stored_world_x()
 	end
 
 	local seen = {}
@@ -352,11 +368,8 @@ function Game:apply_snapshot(snapshot)
 		local tower_bucket = resolve_card_bucket(tower_state.owner_id)
 		local towers = self.cards[tower_bucket] or {}
 		for _, tower in ipairs(towers) do
-			if tower.type == 'tower' then
-				local same_band = math.abs((tower.char_y or 0) - (tower_state.y or 0)) < 160
-				if same_band then
-					tower.current_life = tower_state.current_life
-				end
+			if tower.type == 'tower' and tower.tower_id == tower_state.tower_id then
+				tower.current_life = tower_state.current_life
 			end
 		end
 	end
@@ -394,22 +407,15 @@ function Game:spawn_card_intent(card, payload)
 	end))
 end
 
-function Game:update_player_status()
-	self.me_status:update()
-	self.enemy_status:update()
-end
+-- TODO: UI player status in game
+function Game:update_player_status() end
 
-function Game:draw_player_status()
-	-- self.me_status:draw()
-	-- self.enemy_status:draw()
-end
+function Game:draw_player_status() end
 
 function Game:mousepressed(x, y, button)
 	Deck:mousepressed(x, y, button)
 end
 
-function Game:resize()
-
-end
+function Game:resize() end
 
 return Game
