@@ -31,14 +31,15 @@ local function char_frame_size(c)
 end
 
 
+-- Center of the on-screen sprite footprint (matches Char:draw sx/sy = scale_x*RENDER_SCALE, RENDER_SCALE).
 local function char_range_center(c)
 	local fw, fh = char_frame_size(c)
-	fw = fw * RENDER_SCALE
-	fh = fh * RENDER_SCALE
+	local scaled_w = fw * RENDER_SCALE
+	local scaled_h = fh * RENDER_SCALE
 	if (c.scale_x or 1) < 0 then
-		return c.char_x - fw / 2, c.char_y + fh / 2
+		return c.char_x - scaled_w / 2, c.char_y + scaled_h / 2
 	end
-	return c.char_x + fw / 2, c.char_y + fh / 2
+	return c.char_x + scaled_w / 2, c.char_y + scaled_h / 2
 end
 
 local function get_walk_preview_quad(char)
@@ -126,10 +127,15 @@ function Char:update(dt)
 
 	-- Left-facing art: scale_x 1 = left, -1 = mirrored (right).
 	-- Screen +x → move right → face right (-1); screen -x → face left (1).
-	if self.char_x > prev_x then
-		self.scale_x = -1
-	elseif self.char_x < prev_x then
-		self.scale_x = 1
+	-- Only derive facing here for client-predicted walk: authoritative positions
+	-- and scale_x are applied in Game:apply_entity_state; comparing char_x to
+	-- _prev_char_x here would usually see no delta (or fight apply's facing).
+	if self.predicted and self.current_action == 'walk' then
+		if self.char_x > prev_x then
+			self.scale_x = -1
+		elseif self.char_x < prev_x then
+			self.scale_x = 1
+		end
 	end
 
 	self._prev_char_x = self.char_x
@@ -153,7 +159,14 @@ function Char:draw()
 			and current_img
 
 	if has_valid_anim then
-		current_animation:draw(current_img, self.char_x, self.char_y, 0, self.scale_x, RENDER_SCALE)
+		current_animation:draw(
+			current_img,
+			self.char_x,
+			self.char_y,
+			0,
+			self.scale_x * RENDER_SCALE,
+			RENDER_SCALE
+		)
 	end
 
 	local bar_w = 46
