@@ -62,6 +62,26 @@ local function get_walk_preview_quad(char)
 	return char.walk_preview_quad
 end
 
+local function get_death_animation_duration(char)
+	if char.death_animation_duration then
+		return char.death_animation_duration
+	end
+
+	local default_duration = 0.35
+	if not char.img_death or not char.frame_width then
+		char.death_animation_duration = default_duration
+		return char.death_animation_duration
+	end
+
+	local total_width = char.img_death:getWidth() or 0
+	local frame_width = char.frame_width or 0
+	local number_frames = math.max(1, math.floor(total_width / frame_width))
+	local frame_duration = (char.speed or 1) / 10
+
+	char.death_animation_duration = math.max(default_duration, number_frames * frame_duration)
+	return char.death_animation_duration
+end
+
 function Char:get_enemies_in_range(enemies)
 	return
 end
@@ -111,6 +131,12 @@ function Char:update(dt)
 	local anim = self.animations[self.current_action]
 	if anim and type(anim.update) == 'function' then
 		anim:update(dt)
+	end
+
+	if self.current_action == 'death' then
+		self.death_elapsed = (self.death_elapsed or 0) + dt
+		self.death_animation_duration = get_death_animation_duration(self)
+		return
 	end
 
 	local prev_x = self._prev_char_x

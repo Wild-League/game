@@ -105,6 +105,8 @@ function Game:update(dt)
 	for _, enemy_card in pairs(self.cards[Constants.ENEMY_ID]) do
 		enemy_card:update(dt)
 	end
+
+	self:cleanup_finished_deaths()
 end
 
 function Game:draw()
@@ -194,7 +196,7 @@ function Game:handle_opcode_event(opcode, user_id, data)
 		if data and data.entity_id and data.owner_id then
 			local bucket = resolve_card_bucket(data.owner_id)
 			if self.cards[bucket] then
-				self.cards[bucket][data.entity_id] = nil
+				self:queue_entity_removal(bucket, data.entity_id)
 			end
 		end
 		return
@@ -273,6 +275,10 @@ function Game:apply_entity_state(entity)
 	card.current_action = entity.action or card.current_action or 'walk'
 	card.current_life = entity.current_life or card.current_life
 	card.life = entity.max_life or card.life
+	if card.current_action ~= 'death' then
+		card.pending_removal = false
+		card.death_elapsed = 0
+	end
 
 	local screen_x = entity.x or card.char_x
 	local target_y = entity.y or card.char_y
@@ -329,7 +335,7 @@ function Game:apply_snapshot(snapshot)
 				if type(entity_id) == 'string' and card.type == 'char' then
 					local is_seen = seen[bucket_id] and seen[bucket_id][entity_id]
 					if not is_seen and not card.predicted then
-						entities[entity_id] = nil
+						self:queue_entity_removal(bucket_id, entity_id)
 					end
 				end
 			end
@@ -374,6 +380,42 @@ function Game:spawn_card_intent(card, payload)
 			nil
 		)
 	end))
+end
+
+function Game:queue_entity_removal(bucket, entity_id)
+	local entities = self.cards[bucket]
+	if not entities then return end
+
+	local entity = entities[entity_id]
+	if not entity then return end
+
+	if entity.type ~= 'char' then
+		entities[entity_id] = nil
+		return
+	end
+
+	entity.pending_removal = true
+	if entity.current_action ~= 'death' then
+		entity.current_action = 'death'
+		entity.death_elapsed = 0
+	end
+end
+
+function Game:cleanup_finished_deaths()
+	for _, bucket in ipairs({ Constants.USER_ID, Constants.ENEMY_ID }) do
+		local entities = self.cards[bucket]
+		if entities then
+			for entity_id, entity in pairs(entities) do
+				if entity.pending_removal and entity.type == 'char' then
+					local elapsed = entity.death_elapsed or 0
+					local duration = entity.death_animation_duration or 0.35
+					if elapsed >= duration then
+						entities[entity_id] = nil
+					end
+				end
+			end
+		end
+	end
 end
 
 -- TODO: UI player status in game
