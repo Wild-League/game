@@ -124,8 +124,13 @@ function Char:update(dt)
 		self.char_x = new_position
 	end
 
-	-- Left-facing art: screen-x increasing → face right (-1); decreasing → face left (1).
-	self.scale_x = self.char_x > prev_x and -1 or 1
+	-- Left-facing art: scale_x 1 = left, -1 = mirrored (right).
+	-- Screen +x → move right → face right (-1); screen -x → face left (1).
+	if self.char_x > prev_x then
+		self.scale_x = -1
+	elseif self.char_x < prev_x then
+		self.scale_x = 1
+	end
 
 	self._prev_char_x = self.char_x
 end

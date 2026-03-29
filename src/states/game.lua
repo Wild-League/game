@@ -250,9 +250,7 @@ function Game:apply_entity_state(entity)
 		card.card_id = entity.entity_id
 		card.predicted = false
 		card.enemy = bucket == Constants.ENEMY_ID
-		-- Spritesheets face left: scale_x 1 = as drawn (left), -1 = flipped (right).
-		-- Enemies on the left walk right toward the player; our units walk left toward them.
-		card.scale_x = card.enemy and -1 or 1
+		card._prev_char_x = nil
 		self.cards[bucket][entity.entity_id] = card
 	end
 
@@ -286,7 +284,19 @@ function Game:apply_entity_state(entity)
 	end
 
 	if card.type == 'char' then
-		card._prev_char_x = card.char_x
+		-- Keep previous screen X so Char:update can derive walk direction for scale_x.
+		-- First apply: avoid template char_x (often 0) vs real spawn X (huge fake delta).
+		if is_new then
+			card._prev_char_x = screen_x
+		else
+			card._prev_char_x = prev_x
+		end
+		-- Network handlers may run after Char:update; set facing immediately for this frame.
+		if card.char_x > card._prev_char_x then
+			card.scale_x = -1
+		elseif card.char_x < card._prev_char_x then
+			card.scale_x = 1
+		end
 	end
 
 	card.predicted = false
