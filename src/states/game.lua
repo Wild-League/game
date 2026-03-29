@@ -147,6 +147,9 @@ function Game:draw_towers()
 	for _, tower in ipairs(self.cards[Constants.USER_ID]) do
 		tower:draw(tower.current_life)
 	end
+	for _, tower in ipairs(self.cards[Constants.ENEMY_ID]) do
+		tower:draw(tower.current_life)
+	end
 end
 
 function Game:draw_timer()
