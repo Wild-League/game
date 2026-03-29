@@ -13,8 +13,6 @@ local PlayerStatus = require('src.ui.player-status')
 local json = require('lib.json')
 local Assets = require('src.assets')
 
-local MAP_WIDTH = 1344
-
 local function resolve_card_bucket(owner_id)
 	if owner_id == Constants.USER_ID then
 		return Constants.USER_ID
@@ -28,18 +26,10 @@ local Game = {
 	pending_spawns = {},
 	last_match_tick = 0,
 	match_winner_id = nil,
-	player_side = nil,
 
 	me_status = PlayerStatus:new('2d618372-1220-49b3-b22e-00f6ca0c12a5'),
 	enemy_status = PlayerStatus:new('2d618372-1220-49b3-b22e-00f6ca0c12a5')
 }
-
-function Game:mirror_x(x)
-	if self.player_side == 'left' then
-		return MAP_WIDTH - x
-	end
-	return x
-end
 
 function Game:load()
 	Assets.TOWER = love.graphics.newImage('assets/tower.png')
@@ -57,7 +47,6 @@ function Game:load()
 	self.pending_spawns = {}
 	self.last_match_tick = 0
 	self.match_winner_id = nil
-	self.player_side = nil
 
 	self:load_towers()
 
@@ -242,20 +231,6 @@ function Game:get_card_template(card_name, owner_id)
 	end
 end
 
-function Game:remirror_chars_from_stored_world_x()
-	for _, bucket_id in ipairs({ Constants.USER_ID, Constants.ENEMY_ID }) do
-		local ents = self.cards[bucket_id]
-		if ents then
-			for _, card in pairs(ents) do
-				if card.type == 'char' and card._world_x then
-					card.char_x = self:mirror_x(card._world_x)
-					card._prev_char_x = card.char_x
-				end
-			end
-		end
-	end
-end
-
 function Game:apply_entity_state(entity)
 	if not entity or not entity.entity_id or not entity.owner_id then return end
 
@@ -298,10 +273,7 @@ function Game:apply_entity_state(entity)
 	card.current_life = entity.current_life or card.current_life
 	card.life = entity.max_life or card.life
 
-	if entity.x then
-		card._world_x = entity.x
-	end
-	local screen_x = entity.x and self:mirror_x(card._world_x) or card.char_x
+	local screen_x = entity.x or card.char_x
 	local target_y = entity.y or card.char_y
 
 	if has_authoritative_position and prev_x and prev_y and card.predicted == false then
@@ -327,19 +299,6 @@ function Game:apply_snapshot(snapshot)
 
 	self.last_match_tick = snapshot.match_tick or self.last_match_tick
 	self.match_winner_id = snapshot.winner_id or self.match_winner_id
-
-	local player_side_was_unknown = self.player_side == nil
-	if self.player_side == nil and snapshot.towers then
-		for _, t in ipairs(snapshot.towers) do
-			if t.owner_id == Constants.USER_ID then
-				self.player_side = t.x > MAP_WIDTH / 2 and 'right' or 'left'
-				break
-			end
-		end
-	end
-	if player_side_was_unknown and self.player_side ~= nil then
-		self:remirror_chars_from_stored_world_x()
-	end
 
 	local seen = {}
 
@@ -393,15 +352,12 @@ function Game:spawn_card_intent(card, payload)
 		card_id = payload.card_id
 	}
 
-	local server_payload = Utils.copy_table(payload)
-	server_payload.x = self:mirror_x(payload.x)
-
 	coroutine.resume(coroutine.create(function()
 		socket.match_data_send(
 			Constants.SOCKET_CONNECTION,
 			Constants.MATCH_ID,
 			MatchEvents.spawn_intent,
-			json.encode(server_payload),
+			json.encode(payload),
 			nil
 		)
 	end))
