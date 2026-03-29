@@ -3,6 +3,8 @@ local Map = require('src.entities.map')
 local Card = require('src.entities.card')
 local uuid = require('lib.uuid')
 
+local PREVIEW_QUEUE_SCALE = 0.65
+
 local Deck = {
 	default_scale = 1,
 	hand_slot_spacing = 80,
@@ -132,7 +134,7 @@ end
 
 -- the next card on queue
 function Deck:draw_preview_card()
-	local ps = self.default_scale * 1.15
+	local ps = self.default_scale * PREVIEW_QUEUE_SCALE
 	love.graphics.draw(self.queue_next_cards[1].img_card, self.queue_next_cards[1].x, self.queue_next_cards[1].y, 0, ps, ps)
 end
 
