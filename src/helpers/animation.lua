@@ -9,7 +9,19 @@ function Animation:new(card, action)
 
 	local grid = anim8.newGrid(card.frame_width, card.frame_height, action_image:getWidth(), action_image:getHeight())
 
-	return anim8.newAnimation(grid('1-' .. number_frames, 1), card.speed / 10)
+	local frame_duration = card.speed / 10
+
+	if action == 'attack' then
+		-- attack_speed = attacks per second
+		local aps = tonumber(card.attack_speed)
+		if not aps or aps <= 0 then
+			aps = 1.0
+		end
+		local attack_cycle_seconds = 1 / aps
+		frame_duration = attack_cycle_seconds / math.max(1, number_frames)
+	end
+
+	return anim8.newAnimation(grid('1-' .. number_frames, 1), frame_duration)
 end
 
 return Animation

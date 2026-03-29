@@ -18,12 +18,8 @@ local Char = {
 	timeout = 0
 }
 
--- World-space positions are unchanged; this only scales on-screen sprites vs. map/towers.
 local RENDER_SCALE = 1.2
 
--- Sprites face left: scale_x 1 = unflipped (left), -1 = flipped (right). Love2D draws
--- from top-left when scale_x > 0; scale_x < 0 mirrors horizontally. Match hitboxes,
--- range circles, and lifebar to that footprint.
 local function char_frame_size(c)
 	local fw = c.frame_width or 60
 	local fh = c.frame_height or 60
@@ -31,7 +27,6 @@ local function char_frame_size(c)
 end
 
 
--- Center of the on-screen sprite footprint (matches Char:draw sx/sy = scale_x*RENDER_SCALE, RENDER_SCALE).
 local function char_range_center(c)
 	local fw, fh = char_frame_size(c)
 	local scaled_w = fw * RENDER_SCALE
@@ -82,17 +77,6 @@ local function get_death_animation_duration(char)
 	return char.death_animation_duration
 end
 
-function Char:get_enemies_in_range(enemies)
-	return
-end
-
-function Char:check_attack_range()
-	return
-end
-
-function Char:get_nearest_enemy()
-	return nil
-end
 
 function Char:preview(x, y)
 	local walk_quad = get_walk_preview_quad(self)
@@ -151,11 +135,6 @@ function Char:update(dt)
 		self.char_x = new_position
 	end
 
-	-- Left-facing art: scale_x 1 = left, -1 = mirrored (right).
-	-- Screen +x → move right → face right (-1); screen -x → face left (1).
-	-- Only derive facing here for client-predicted walk: authoritative positions
-	-- and scale_x are applied in Game:apply_entity_state; comparing char_x to
-	-- _prev_char_x here would usually see no delta (or fight apply's facing).
 	if self.predicted and self.current_action == 'walk' then
 		if self.char_x > prev_x then
 			self.scale_x = -1
