@@ -295,12 +295,50 @@ The game client requires two external services for full end-to-end testing:
 - **World API** (Django REST) at `http://localhost:8000` — auth, users, decks, cards
 - **Nakama** server at `localhost:7350` — real-time multiplayer
 
-Neither service is in this repository. Without them, the game launches to the initial
-server-selection screen and responds to UI interaction, but cannot authenticate or enter
-a match. The `.env` file (copied from `.env.example`) configures these endpoints.
+The backend is cloned at `/workspace/backend` and runs via Docker Compose. To start all
+backend services:
+
+```bash
+cd /workspace/backend
+docker compose up -d --build
+```
+
+This starts: Postgres (5432), API (8000), Nakama (7349-7351), and SeaweedFS (8333).
+Migrations and `ensure_nakama_card_fdw` run automatically on API container startup
+via `entrypoint.sh`.
+
+**First-time SeaweedFS setup** (only needed once, after the containers are running):
+
+```bash
+# Create S3 credentials
+docker compose exec seaweedfs-master weed shell -master=seaweedfs-master:9333 <<'EOF'
+s3.configure -user=wildleague -access_key=wildleague -secret_key=wildleague-secret -buckets=cards -actions=Read,Write,List,Tagging,Admin -apply
+EOF
+
+# Seed card data + mirror images to S3
+docker compose exec api python manage.py seed_default_cards
+
+# Allow anonymous read access to card images
+docker compose exec seaweedfs-master weed shell -master=seaweedfs-master:9333 <<'EOF'
+s3.configure -user=anonymous -actions=Read:cards,List:cards -apply
+EOF
+```
+
+**Backend tests:** `docker compose exec api python manage.py test`
+
+Without the backend, the game launches to the server-selection screen but cannot
+authenticate or enter a match.
 
 ### Linting and testing
 
-- **Lint:** `luacheck .` — see `AGENTS.md` § Linting for details.
-- **Tests:** No project-level test suite exists. Manual testing is done by running
-  `love .` and interacting with the game.
+- **Lint (game):** `luacheck .` — see `AGENTS.md` § Linting for details.
+- **Tests (game):** No project-level test suite exists. Manual testing via `love .`.
+- **Lint (backend):** No linter configured; follow `.editorconfig`.
+- **Tests (backend):** `docker compose exec api python manage.py test` (in `/workspace/backend`).
+
+### Docker in the Cloud VM
+
+Docker is installed with `fuse-overlayfs` storage driver and `iptables-legacy` for
+compatibility in the nested container environment. Start the daemon with
+`sudo dockerd &>/tmp/dockerd.log &` if it's not already running. After starting,
+run `sudo chmod 666 /var/run/docker.sock` for non-root access.
