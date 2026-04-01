@@ -253,3 +253,54 @@ pre-built artifact from its GitHub Actions CI for the target OS. See `DEVELOPMEN
 
 `lib/lurker.lua` is called on every `love.update()`. Saving any `.lua` file will
 automatically reload it in the running game — no restart required during development.
+
+---
+
+## Cursor Cloud specific instructions
+
+### Environment overview
+
+Love2D v12 nightly is installed at `/opt/love2d/` with its binary at `/opt/love2d/bin/love`
+(symlinked to `/usr/local/bin/love`). The shared libraries live in `/opt/love2d/lib/` and
+`LD_LIBRARY_PATH` is configured in `~/.bashrc` to include that path.
+
+The `lua-https` native module (`https.so`) must exist in the project root (`/workspace/https.so`)
+for any API/network calls to work. It is built from source
+([love2d/lua-https](https://github.com/love2d/lua-https)) using cmake + g++ against libcurl and
+openssl. If it is missing, rebuild it:
+
+```bash
+cd /tmp && git clone --depth 1 https://github.com/love2d/lua-https.git
+mkdir -p /tmp/lua-https/build && cd /tmp/lua-https/build
+cmake .. -DCMAKE_CXX_COMPILER=g++ -DUSE_CURL_BACKEND=ON -DUSE_OPENSSL_BACKEND=ON
+make -j$(nproc)
+cp src/https.so /workspace/https.so
+```
+
+### Running the game
+
+```bash
+export LD_LIBRARY_PATH=/opt/love2d/lib:$LD_LIBRARY_PATH
+love .
+```
+
+ALSA audio errors in the log are expected (no sound device in the VM) and do not affect
+gameplay. `conf.lua` sets `t.window.displayindex = 2`; this works in the Cloud VM (which
+has a virtual display), but on a single-monitor setup change it to `1`.
+
+### Backend services
+
+The game client requires two external services for full end-to-end testing:
+
+- **World API** (Django REST) at `http://localhost:8000` — auth, users, decks, cards
+- **Nakama** server at `localhost:7350` — real-time multiplayer
+
+Neither service is in this repository. Without them, the game launches to the initial
+server-selection screen and responds to UI interaction, but cannot authenticate or enter
+a match. The `.env` file (copied from `.env.example`) configures these endpoints.
+
+### Linting and testing
+
+- **Lint:** `luacheck .` — see `AGENTS.md` § Linting for details.
+- **Tests:** No project-level test suite exists. Manual testing is done by running
+  `love .` and interacting with the game.
