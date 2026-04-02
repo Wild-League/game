@@ -339,6 +339,6 @@ authenticate or enter a match.
 ### Docker in the Cloud VM
 
 Docker is installed with `fuse-overlayfs` storage driver and `iptables-legacy` for
-compatibility in the nested container environment. Start the daemon with
-`sudo dockerd &>/tmp/dockerd.log &` if it's not already running. After starting,
-run `sudo chmod 666 /var/run/docker.sock` for non-root access.
+compatibility in the nested container environment. The `ubuntu` user is in the `docker`
+group for non-root access. Start the daemon with `sudo dockerd &>/tmp/dockerd.log &`
+if it's not already running.
