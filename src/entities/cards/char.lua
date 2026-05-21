@@ -4,6 +4,24 @@ local MatchEvents = require('src.config.match_events')
 local Constants = require('src.constants')
 local Utils = require('src.helpers.utils')
 
+-- Hitboxes must match in-world sprite frames (frame_width / frame_height), not the
+-- deck preview image, or range checks use oversized rectangles and chars attack
+-- from too far away.
+local function char_hitbox_dimensions(card)
+	local w = card.frame_width
+	local h = card.frame_height
+	if w and h and w > 0 and h > 0 then
+		return w, h
+	end
+	local preview = card.img_preview
+	return preview:getWidth(), preview:getHeight()
+end
+
+local function char_hitbox_center(card)
+	local w, h = char_hitbox_dimensions(card)
+	return card.char_x + w / 2, card.char_y + h / 2
+end
+
 local Char = {
 	current_action = 'walk',
 	current_life = 0,
@@ -123,10 +141,13 @@ function Char:get_enemies_in_range(enemies)
 		end
 	end
 
+	local self_cx, self_cy = char_hitbox_center(self)
+
 	for k,v in pairs(enemies_in_range) do
+		local ew, eh = char_hitbox_dimensions(v)
 		local has_collision = Utils.circle_rect_collision(
-			self.char_x, self.char_y, self.perception_range/2,
-			v.char_x, v.char_y, v.img_preview:getWidth(), v.img_preview:getHeight()
+			self_cx, self_cy, self.perception_range / 2,
+			v.char_x, v.char_y, ew, eh
 		)
 
 		self.enemies_around[k] = has_collision and v or nil
@@ -140,10 +161,11 @@ function Char:get_enemies_in_range(enemies)
 end
 
 function Char:check_attack_range()
+	local self_cx, self_cy = char_hitbox_center(self)
+	local ew, eh = char_hitbox_dimensions(self.nearest_enemy)
 	local attack_range_collision = Utils.circle_rect_collision(
-		self.char_x, self.char_y, self.attack_range/2,
-		self.nearest_enemy.char_x, self.nearest_enemy.char_y,
-		self.nearest_enemy.img_preview:getWidth(), self.nearest_enemy.img_preview:getHeight()
+		self_cx, self_cy, self.attack_range / 2,
+		self.nearest_enemy.char_x, self.nearest_enemy.char_y, ew, eh
 	)
 
 	if attack_range_collision then
@@ -168,22 +190,26 @@ function Char:check_attack_range()
 end
 
 function Char:get_nearest_enemy()
-	local nearest_distance = 0
+	local nearest_distance = math.huge
+	local nearest = nil
+	local self_cx, self_cy = char_hitbox_center(self)
 
-	for k,v in pairs(self.enemies_around) do
-		local distance_x = v.char_x - self.char_x
-		local distance_y = v.char_y - self.char_y
+	for k, v in pairs(self.enemies_around) do
+		if v then
+			local vx, vy = char_hitbox_center(v)
+			local distance_x = vx - self_cx
+			local distance_y = vy - self_cy
+			local distance = math.sqrt(distance_x * distance_x + distance_y * distance_y)
 
-		local distance = math.sqrt(distance_x * distance_x + distance_y * distance_y)
-
-		if nearest_distance == 0 or distance < nearest_distance then
-			nearest_distance = distance
-			v.card_id = k
-			self.nearest_enemy = v
-		else
-			self.nearest_enemy = nil
+			if distance < nearest_distance then
+				nearest_distance = distance
+				v.card_id = k
+				nearest = v
+			end
 		end
 	end
+
+	self.nearest_enemy = nearest
 end
 
 function Char:preview(x, y)
@@ -226,11 +252,9 @@ end
 function Char:draw()
 	self.last_x = self.char_x
 
-	local x = self.enemy and self.char_x - self.img_preview:getWidth()/2 or self.char_x + self.img_preview:getWidth()/2
-	local y = self.char_y + self.img_preview:getHeight()/2
-
-	love.graphics.circle("line", x, y, self.perception_range)
-	love.graphics.circle("line", x, y, self.attack_range)
+	local cx, cy = char_hitbox_center(self)
+	love.graphics.circle("line", cx, cy, self.perception_range / 2)
+	love.graphics.circle("line", cx, cy, self.attack_range / 2)
 
 	self.animations[self.current_action]:draw(self['img_'..self.current_action], self.char_x, self.char_y, 0, self.scale_x, 1)
 
