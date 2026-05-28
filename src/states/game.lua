@@ -235,6 +235,9 @@ function Game:handle_opcode_event(opcode, user_id, data)
 			if self.cards[Constants.USER_ID] then
 				self.cards[Constants.USER_ID][pending.card_id] = nil
 			end
+			if pending.hand_state then
+				Deck:restore_hand_state(pending.hand_state)
+			end
 			self.pending_spawns[data.client_intent_id] = nil
 		end
 		return
@@ -397,6 +400,8 @@ end
 
 function Game:spawn_card_intent(card, payload)
 	if not payload or not payload.client_intent_id or not payload.card_id then return end
+	local hand_state = payload._hand_state
+	payload._hand_state = nil
 
 	local predicted = Utils.copy_table(card)
 	predicted.card_id = payload.card_id
@@ -410,7 +415,8 @@ function Game:spawn_card_intent(card, payload)
 
 	self.cards[Constants.USER_ID][payload.card_id] = predicted
 	self.pending_spawns[payload.client_intent_id] = {
-		card_id = payload.card_id
+		card_id = payload.card_id,
+		hand_state = hand_state
 	}
 
 	coroutine.resume(coroutine.create(function()
