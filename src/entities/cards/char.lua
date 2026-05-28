@@ -1,7 +1,3 @@
-local socket = require('lib.nakama.socket')
-local json = require('lib.json')
-local MatchEvents = require('src.config.match_events')
-local Constants = require('src.constants')
 local Utils = require('src.helpers.utils')
 
 local Char = {
@@ -55,6 +51,24 @@ local function char_range_center(c)
 	return c.char_x + scaled_w / 2, c.char_y + scaled_h / 2
 end
 
+local function is_living_char(card)
+	return card
+			and card.type == 'char'
+		and (card.current_life or card.life or 0) > 0
+			and card.current_action ~= 'death'
+			and not card.pending_removal
+end
+
+local function enemy_in_attack_range(attacker, target)
+	local self_cx, self_cy = char_range_center(attacker)
+	local rx, ry = char_hitbox_origin(target)
+	local rw, rh = char_hitbox_dimensions(target)
+	return Utils.circle_rect_collision(
+		self_cx, self_cy, attacker.attack_range / 2,
+		rx, ry, rw, rh
+	)
+end
+
 local function get_walk_preview_quad(char)
 	if not char.img_walk then return nil end
 	if not char.frame_width or not char.frame_height then return nil end
@@ -95,61 +109,57 @@ local function get_death_animation_duration(char)
 	return char.death_animation_duration
 end
 
-function Char:get_enemies_in_range(enemies)
-	local enemies_in_range = {}
-
-	for k, v in pairs(enemies) do
-		if v.type == 'char' then
-			enemies_in_range[k] = v
+function Char:has_attackable_enemy(enemies)
+	for _, enemy in pairs(enemies or {}) do
+		if is_living_char(enemy) and enemy_in_attack_range(self, enemy) then
+			return true
 		end
+	end
+	return false
+end
+
+function Char:get_enemies_in_range(enemies)
+	if not is_living_char(self) then
+		self.nearest_enemy = nil
+		self.enemies_around = {}
+		return
 	end
 
 	local self_cx, self_cy = char_range_center(self)
 
-	for k, v in pairs(enemies_in_range) do
-		local rx, ry = char_hitbox_origin(v)
-		local rw, rh = char_hitbox_dimensions(v)
-		local has_collision = Utils.circle_rect_collision(
-			self_cx, self_cy, self.perception_range / 2,
-			rx, ry, rw, rh
-		)
-
-		self.enemies_around[k] = has_collision and v or nil
+	for k, v in pairs(enemies or {}) do
+		if is_living_char(v) then
+			local rx, ry = char_hitbox_origin(v)
+			local rw, rh = char_hitbox_dimensions(v)
+			local in_perception = Utils.circle_rect_collision(
+				self_cx, self_cy, self.perception_range / 2,
+				rx, ry, rw, rh
+			)
+			self.enemies_around[k] = in_perception and v or nil
+		else
+			self.enemies_around[k] = nil
+		end
 	end
 
 	self:get_nearest_enemy()
-
-	if self.nearest_enemy then
-		self:check_attack_range()
-	end
+	self:check_attack_range()
 end
 
 function Char:check_attack_range()
-	local self_cx, self_cy = char_range_center(self)
-	local rx, ry = char_hitbox_origin(self.nearest_enemy)
-	local rw, rh = char_hitbox_dimensions(self.nearest_enemy)
-	local attack_range_collision = Utils.circle_rect_collision(
-		self_cx, self_cy, self.attack_range / 2,
-		rx, ry, rw, rh
-	)
+	if not is_living_char(self) then
+		self.current_action = 'death'
+		return
+	end
 
-	if attack_range_collision then
+	local target = self.nearest_enemy
+	local in_range = target and enemy_in_attack_range(self, target)
+
+	if in_range then
 		if self.current_action ~= 'attack' then
 			self.current_action = 'attack'
-
-			coroutine.resume(coroutine.create(function()
-				socket.match_data_send(
-					Constants.SOCKET_CONNECTION,
-					Constants.MATCH_ID,
-					MatchEvents.card_action,
-					json.encode({
-						card_id = self.card_id,
-						action = self.current_action
-					}),
-					nil
-				)
-			end))
 		end
+	elseif self.current_action == 'attack' then
+		self.current_action = 'walk'
 	end
 end
 

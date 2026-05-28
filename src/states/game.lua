@@ -99,12 +99,18 @@ function Game:update(dt)
 	self.timer:update(dt)
 
 	for _, card in pairs(self.cards[Constants.USER_ID]) do
-		card:update(dt)
+		if type(card) == 'table' and type(card.update) == 'function' then
+			card:update(dt)
+		end
 	end
 
 	for _, enemy_card in pairs(self.cards[Constants.ENEMY_ID]) do
-		enemy_card:update(dt)
+		if type(enemy_card) == 'table' and type(enemy_card.update) == 'function' then
+			enemy_card:update(dt)
+		end
 	end
+
+	self:update_char_combat()
 
 	self:cleanup_finished_deaths()
 end
@@ -137,6 +143,23 @@ function Game:draw()
 end
 
 -- private functions ---------
+
+function Game:update_char_combat()
+	local allies = self.cards[Constants.USER_ID] or {}
+	local enemies = self.cards[Constants.ENEMY_ID] or {}
+
+	for _, card in pairs(allies) do
+		if card.type == 'char' and type(card.get_enemies_in_range) == 'function' then
+			card:get_enemies_in_range(enemies)
+		end
+	end
+
+	for _, card in pairs(enemies) do
+		if card.type == 'char' and type(card.get_enemies_in_range) == 'function' then
+			card:get_enemies_in_range(allies)
+		end
+	end
+end
 
 function Game:load_towers()
 	table.insert(self.cards[Constants.USER_ID], Tower:load('right', 'top', Constants.USER_ID .. '_tower_top'))
@@ -272,10 +295,25 @@ function Game:apply_entity_state(entity)
 	card.entity_version = incoming_version
 	card.card_id = entity.entity_id
 	card.enemy = bucket == Constants.ENEMY_ID
-	card.current_action = entity.action or card.current_action or 'walk'
 	card.current_life = entity.current_life or card.current_life
 	card.life = entity.max_life or card.life
-	if card.current_action ~= 'death' then
+	local action = entity.action or card.current_action or 'walk'
+	if card.type == 'char' and (card.current_life or 0) <= 0 then
+		action = 'death'
+	elseif card.type == 'char' and action == 'attack' then
+		local opp_bucket = bucket == Constants.USER_ID and Constants.ENEMY_ID or Constants.USER_ID
+		local opponents = self.cards[opp_bucket] or {}
+		if type(card.has_attackable_enemy) == 'function' and not card:has_attackable_enemy(opponents) then
+			action = 'walk'
+		end
+	end
+	card.current_action = action
+	if card.current_action == 'death' and card.type == 'char' then
+		card.pending_removal = true
+		if not card.death_elapsed then
+			card.death_elapsed = 0
+		end
+	else
 		card.pending_removal = false
 		card.death_elapsed = 0
 	end
