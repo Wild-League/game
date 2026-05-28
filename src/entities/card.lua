@@ -14,7 +14,8 @@ local Card = {
 	selectable = false,
 	preview_card = false,
 	is_card_loading = false,
-	perception_range = 0
+	perception_range = 0,
+	predicted = false
 }
 
 local Card_Types = {
@@ -43,6 +44,10 @@ function Card:new(card, enemy)
 	card = self:load_images(card)
 	card = self:load_animations(card)
 
+	if card.type == Card_Types.CHAR and rawget(card, 'current_life') == nil then
+		card.current_life = card.life
+	end
+
 	return Utils.copy_table(card)
 end
 
@@ -65,20 +70,20 @@ function Card:load_animations(card)
 	return card
 end
 
-function Card:draw_loading_animation()
-	local x = self.x + self.img_card:getWidth() / 2
-	local y = self.y + self.img_card:getHeight() / 2
+function Card:draw_loading_animation(scale)
+	scale = scale or 1
+	local card_w = self.img_card:getWidth() * scale
+	local card_h = self.img_card:getHeight() * scale
+	local cx = self.x + card_w / 2
+	local cy = self.y + card_h / 2
 
-	love.graphics.stencil(function()
-		love.graphics.draw(self.img_card, self.x, self.y, 0, self.default_scale, self.default_scale)
-	end, "replace", 1, false)
-
+	love.graphics.setScissor(self.x, self.y, card_w, card_h)
 	love.graphics.setColor(1, 0, 0, 0.5)
-	love.graphics.setStencilTest('equal', 1)
-	love.graphics.arc("fill", x, y, 130, -math.pi / 2, -math.pi / 2 + (2 * math.pi * (self.current_cooldown / self.cooldown)), 100)
-	love.graphics.setColor(1, 1, 1)
-
-	love.graphics.setStencilTest()
+	local arc_r = 130 * scale
+	love.graphics.arc("fill", cx, cy, arc_r, -math.pi / 2,
+	-math.pi / 2 + (2 * math.pi * (self.current_cooldown / self.cooldown)), 100)
+	love.graphics.setColor(1, 1, 1, 1)
+	love.graphics.setScissor()
 end
 
 function Card:reset_cooldown()

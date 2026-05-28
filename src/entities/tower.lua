@@ -13,7 +13,7 @@ local default_props = {
 	img = Assets.TOWER
 }
 
-function Tower:load(side, position)
+function Tower:load(side, position, tower_id)
 	if side ~= 'left' and side ~= 'right' then
 		error('Invalid side for Tower')
 	end
@@ -27,21 +27,21 @@ function Tower:load(side, position)
 		height = love.graphics.getHeight() / 2
 	}
 
-	local red = { 255/255, 0/255, 0/255 }
-	local green = { 0/255, 255/255, 0/255 }
+	local red = { 255 / 255, 0 / 255, 0 / 255 }
+	local green = { 0 / 255, 255 / 255, 0 / 255 }
 
 	local positions = {
 		left = {
 			top = {
 				x = center.width - 470,
 				y = center.height - 180,
-				scale_x = -1,
+				scale_x = -2,
 				color = red
 			},
 			bottom = {
 				x = center.width - 470,
 				y = center.height + 200,
-				scale_x = -1,
+				scale_x = -2,
 				color = red
 			}
 		},
@@ -49,13 +49,13 @@ function Tower:load(side, position)
 			top = {
 				x = center.width + 470,
 				y = center.height - 180,
-				scale_x = 1 ,
+				scale_x = 2,
 				color = green
 			},
 			bottom = {
 				x = center.width + 470,
 				y = center.height + 200,
-				scale_x = 1,
+				scale_x = 2,
 				color = green
 			}
 		}
@@ -68,11 +68,12 @@ function Tower:load(side, position)
 	end
 
 	tower.side = side
+	tower.tower_id = tower_id
 	tower.char_x = positions[side][position].x
 	tower.char_y = positions[side][position].y
 	tower.color = positions[side][position].color
 	tower.scale_x = positions[side][position].scale_x
-	tower.scale_y = 1
+	tower.scale_y = 2
 
 	tower.update = function(tower_, dt)
 		return Tower.update(tower_, dt)
@@ -91,12 +92,14 @@ end
 function Tower:update(dt) end
 
 function Tower.draw(tower_, current_life)
-	love.graphics.draw(tower_.img, tower_.char_x, tower_.char_y, 0, tower_.scale_x, tower_.scale_y, tower_.w / 2, tower_.h / 2)
+	local life = current_life or tower_.current_life or tower_.life or 100
+	love.graphics.draw(tower_.img, tower_.char_x, tower_.char_y, 0, tower_.scale_x, tower_.scale_y, tower_.w / 2,
+		tower_.h / 2)
 
 	local lifebar_x = tower_.char_x - (100 / 2)
 	local lifebar_y = tower_.char_y - tower_.h * tower_.scale_y / 2 - 10
 
-	Tower:lifebar(lifebar_x, lifebar_y, 100, tower_.side,tower_.color)
+	Tower:lifebar(lifebar_x, lifebar_y, life, tower_.side, tower_.color)
 end
 
 function Tower:lifebar(x, y, current_life, side, color)
