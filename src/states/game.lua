@@ -122,13 +122,17 @@ function Game:draw()
 	self:draw_player_status()
 
 	love.graphics.setColor(1, 1, 1, 1)
-	for _, card in pairs(self.cards[Constants.USER_ID]) do
-		card:draw()
+	for entity_id, card in pairs(self.cards[Constants.USER_ID]) do
+		if type(entity_id) == 'string' then
+			card:draw()
+		end
 	end
 
 	love.graphics.setColor(1, 1, 1, 1)
-	for _, card in pairs(self.cards[Constants.ENEMY_ID]) do
-		card:draw()
+	for entity_id, card in pairs(self.cards[Constants.ENEMY_ID]) do
+		if type(entity_id) == 'string' then
+			card:draw()
+		end
 	end
 
 	if Deck.card_selected then
