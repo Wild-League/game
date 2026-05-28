@@ -258,6 +258,17 @@ function Deck:restore_hand_state(state)
 	self:define_positions()
 end
 
+function Deck:apply_hand_intent(intent)
+	if not intent or not intent.played_card then return end
+
+	local card = intent.played_card
+	card.is_card_loading = true
+	card:reset_cooldown()
+
+	self.card_selected = nil
+	self.deck_selected = self:rotate_deck(card)
+end
+
 function Deck:mousepressed(x, y, button)
 	-- right click
 	if button ~= 1 then return end
