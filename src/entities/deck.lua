@@ -22,6 +22,31 @@ local Deck = {
 	card_selected = nil,
 }
 
+local function clone_array(array)
+	local cloned = {}
+	for i, value in ipairs(array or {}) do
+		cloned[i] = value
+	end
+	return cloned
+end
+
+local function capture_cards_runtime_state(cards)
+	local states = {}
+	for _, card in ipairs(cards or {}) do
+		if card then
+			states[card] = {
+				is_card_loading = card.is_card_loading == true,
+				current_cooldown = card.current_cooldown,
+				selectable = card.selectable,
+				preview_card = card.preview_card,
+				char_x = card.char_x,
+				char_y = card.char_y
+			}
+		end
+	end
+	return states
+end
+
 function Deck:load(deck_selected)
 	self.deck_selected = {}
 	self.queue_next_cards = {}
@@ -217,6 +242,60 @@ function Deck:check_cooldown(dt)
 	end
 end
 
+function Deck:capture_hand_state(card)
+	return {
+		card_selected = self.card_selected,
+		deck_selected = clone_array(self.deck_selected),
+		queue_next_cards = clone_array(self.queue_next_cards),
+		card_runtime_states = capture_cards_runtime_state(self.deck_selected),
+		played_card = card,
+		played_card_loading = card and card.is_card_loading or false,
+		played_card_cooldown = card and card.current_cooldown or nil
+	}
+end
+
+function Deck:restore_hand_state(state)
+	if not state then return end
+
+	self.deck_selected = clone_array(state.deck_selected)
+	self.queue_next_cards = clone_array(state.queue_next_cards)
+	self.card_selected = state.card_selected
+
+	for card, card_state in pairs(state.card_runtime_states or {}) do
+		card.is_card_loading = card_state.is_card_loading == true
+		card.current_cooldown = card_state.current_cooldown
+		card.selectable = card_state.selectable
+		card.preview_card = card_state.preview_card
+		card.char_x = card_state.char_x
+		card.char_y = card_state.char_y
+	end
+
+	local played_card = state.played_card
+	if played_card then
+		played_card.is_card_loading = state.played_card_loading == true
+		if state.played_card_cooldown ~= nil then
+			played_card.current_cooldown = state.played_card_cooldown
+		end
+	end
+
+	if #self.queue_next_cards > 0 and self.queue_next_cards[1] then
+		self.queue_next_cards[1].preview_card = true
+	end
+
+	self:define_positions()
+end
+
+function Deck:apply_hand_intent(intent)
+	if not intent or not intent.played_card then return end
+
+	local card = intent.played_card
+	card.is_card_loading = true
+	card:reset_cooldown()
+
+	self.card_selected = nil
+	self.deck_selected = self:rotate_deck(card)
+end
+
 function Deck:mousepressed(x, y, button)
 	-- right click
 	if button ~= 1 then return end
@@ -244,6 +323,8 @@ function Deck:mousepressed(x, y, button)
 				-- click on map?
 				if not (x >= card.x and x <= (card.x + cw))
 						and not (y >= card.y and y <= (card.y + ch)) then
+					local hand_state = self:capture_hand_state(card)
+
 					card.char_x = x
 					card.char_y = y
 
@@ -262,6 +343,7 @@ function Deck:mousepressed(x, y, button)
 						x = card.char_x,
 						y = card.char_y
 					}
+					payload_card._hand_state = hand_state
 
 					local Game = require('src.states.game')
 					Game:spawn_card_intent(card, payload_card)

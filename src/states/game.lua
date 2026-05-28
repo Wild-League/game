@@ -24,6 +24,9 @@ local Game = {
 	timer = Timer:new(),
 	cards = {},
 	pending_spawns = {},
+	hand_intents = {},
+	hand_intent_order = {},
+	hand_baseline_state = nil,
 	last_match_tick = 0,
 	match_winner_id = nil,
 
@@ -45,6 +48,9 @@ function Game:load()
 	self.cards[Constants.USER_ID] = {}
 	self.cards[Constants.ENEMY_ID] = {}
 	self.pending_spawns = {}
+	self.hand_intents = {}
+	self.hand_intent_order = {}
+	self.hand_baseline_state = nil
 	self.last_match_tick = 0
 	self.match_winner_id = nil
 
@@ -122,13 +128,17 @@ function Game:draw()
 	self:draw_player_status()
 
 	love.graphics.setColor(1, 1, 1, 1)
-	for _, card in pairs(self.cards[Constants.USER_ID]) do
-		card:draw()
+	for entity_id, card in pairs(self.cards[Constants.USER_ID]) do
+		if type(entity_id) == 'string' then
+			card:draw()
+		end
 	end
 
 	love.graphics.setColor(1, 1, 1, 1)
-	for _, card in pairs(self.cards[Constants.ENEMY_ID]) do
-		card:draw()
+	for entity_id, card in pairs(self.cards[Constants.ENEMY_ID]) do
+		if type(entity_id) == 'string' then
+			card:draw()
+		end
 	end
 
 	if Deck.card_selected then
@@ -205,7 +215,12 @@ function Game:handle_opcode_event(opcode, user_id, data)
 	if opcode == MatchEvents.entity_spawned then
 		if data and data.entity then
 			self:apply_entity_state(data.entity)
-			self.pending_spawns[data.client_intent_id] = nil
+			local intent_id = data.client_intent_id
+			if intent_id and self.hand_intents[intent_id] then
+				self.hand_intents[intent_id].status = 'accepted'
+			end
+			self.pending_spawns[intent_id] = nil
+			self:maybe_finalize_hand_intents()
 		end
 		return
 	end
@@ -227,11 +242,16 @@ function Game:handle_opcode_event(opcode, user_id, data)
 
 	if opcode == MatchEvents.reject_intent then
 		if data and data.client_intent_id and self.pending_spawns[data.client_intent_id] then
+			local intent_id = data.client_intent_id
 			local pending = self.pending_spawns[data.client_intent_id]
 			if self.cards[Constants.USER_ID] then
 				self.cards[Constants.USER_ID][pending.card_id] = nil
 			end
-			self.pending_spawns[data.client_intent_id] = nil
+			self.pending_spawns[intent_id] = nil
+			self.hand_intents[intent_id] = nil
+			self:remove_hand_intent_order(intent_id)
+			self:rebuild_hand_from_intents()
+			self:maybe_finalize_hand_intents()
 		end
 		return
 	end
@@ -393,6 +413,13 @@ end
 
 function Game:spawn_card_intent(card, payload)
 	if not payload or not payload.client_intent_id or not payload.card_id then return end
+	local hand_state = payload._hand_state
+	payload._hand_state = nil
+	local intent_id = payload.client_intent_id
+
+	if hand_state and not self.hand_baseline_state then
+		self.hand_baseline_state = hand_state
+	end
 
 	local predicted = Utils.copy_table(card)
 	predicted.card_id = payload.card_id
@@ -405,9 +432,16 @@ function Game:spawn_card_intent(card, payload)
 	predicted.scale_x = 1
 
 	self.cards[Constants.USER_ID][payload.card_id] = predicted
-	self.pending_spawns[payload.client_intent_id] = {
-		card_id = payload.card_id
+	self.pending_spawns[intent_id] = {
+		card_id = payload.card_id,
+		hand_state = hand_state
 	}
+	self.hand_intents[intent_id] = {
+		id = intent_id,
+		status = 'pending',
+		played_card = hand_state and hand_state.played_card or card
+	}
+	table.insert(self.hand_intent_order, intent_id)
 
 	coroutine.resume(coroutine.create(function()
 		socket.match_data_send(
@@ -418,6 +452,40 @@ function Game:spawn_card_intent(card, payload)
 			nil
 		)
 	end))
+end
+
+function Game:remove_hand_intent_order(intent_id)
+	for i, id in ipairs(self.hand_intent_order) do
+		if id == intent_id then
+			table.remove(self.hand_intent_order, i)
+			return
+		end
+	end
+end
+
+function Game:rebuild_hand_from_intents()
+	if not self.hand_baseline_state then return end
+
+	Deck:restore_hand_state(self.hand_baseline_state)
+
+	for _, intent_id in ipairs(self.hand_intent_order) do
+		local intent = self.hand_intents[intent_id]
+		if intent then
+			Deck:apply_hand_intent(intent)
+		end
+	end
+end
+
+function Game:maybe_finalize_hand_intents()
+	for _, intent in pairs(self.hand_intents) do
+		if intent.status == 'pending' then
+			return
+		end
+	end
+
+	self.hand_intents = {}
+	self.hand_intent_order = {}
+	self.hand_baseline_state = nil
 end
 
 function Game:queue_entity_removal(bucket, entity_id)

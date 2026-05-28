@@ -27,8 +27,15 @@ function Lobby:load()
 		local matched = match.matchmaker_matched or {}
 		local matched_token = matched.token
 		local matched_match_id = matched.match_id
+		local enemy_user_id = self:get_enemy_user_id(matched.users)
+		if not enemy_user_id then
+			self.matchmake_state = 'idle'
+			self.matchmake_ticket = nil
+			Toast:show('error', 'Failed to identify opponent in matchmaker response.', 4)
+			return
+		end
 
-		Constants.ENEMY_ID = self:get_enemy_user_id(matched.users)
+		Constants.ENEMY_ID = enemy_user_id
 
 		coroutine.resume(coroutine.create(function()
 			self.matchmake_state = 'idle'
@@ -124,8 +131,9 @@ function Lobby:get_enemy_user_id(users)
 	end
 
 	for _, user in pairs(users) do
-		if user.presence.user_id ~= Constants.USER_ID then
-			return user.presence.user_id
+		local presence = user and user.presence
+		if presence and presence.user_id and presence.user_id ~= Constants.USER_ID then
+			return presence.user_id
 		end
 	end
 end
