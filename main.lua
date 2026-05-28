@@ -9,6 +9,8 @@ local Toast = require('src.ui.toast')
 function love.load()
 	love.graphics.setFont(Fonts.jura(24))
 
+	math.randomseed(os.time() + math.floor(os.clock() * 100000))
+
 	-- initialize the global state manager
 	CONTEXT = Context;
 	CONTEXT:load()

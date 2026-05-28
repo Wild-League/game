@@ -24,7 +24,7 @@ local M = {}
 -- @return The mac address string.
 local function get_mac_address()
 	local ifaddrs = sys.get_ifaddrs()
-	for _,interface in ipairs(ifaddrs) do
+	for _, interface in ipairs(ifaddrs) do
 		if interface.mac then
 			return interface.mac
 		end
@@ -42,9 +42,9 @@ function M.uuid()
 	return uuid(mac)
 end
 
-
 local make_http_request
-make_http_request = function(url, method, callback, headers, post_data, options, retry_intervals, retry_count, cancellation_token)
+make_http_request = function(url, method, callback, headers, post_data, options, retry_intervals, retry_count,
+														 cancellation_token)
 	if cancellation_token and cancellation_token.cancelled then
 		callback(nil)
 		return
@@ -58,22 +58,23 @@ make_http_request = function(url, method, callback, headers, post_data, options,
 			data = post_data and post_data or nil
 		})
 
-		local ok, decoded = pcall(json.decode, response)
+	local ok, decoded = pcall(json.decode, response)
 
-		if status_code >= 200 and status_code <= 299 then
-			callback(decoded)
-		elseif retry_count > #retry_intervals then
-				if not ok then
-						callback({ error = true, message = "Unable to decode response" })
-				else
-						callback({error = decoded.error or true, message = decoded.message, code = decoded.code})
-				end
+	if status_code >= 200 and status_code <= 299 then
+		callback(decoded)
+	elseif retry_count > #retry_intervals then
+		if not ok then
+			callback({ error = true, message = "Unable to decode response" })
 		else
-			-- Retry
-			local retry_interval = retry_intervals[retry_count]
-			love.timer.sleep(retry_interval)
-			make_http_request(url, method, callback, headers, post_data, options, retry_intervals, retry_count + 1, cancellation_token)
+			callback({ error = decoded.error or true, message = decoded.message, code = decoded.code })
 		end
+	else
+		-- Retry
+		local retry_interval = retry_intervals[retry_count]
+		love.timer.sleep(retry_interval)
+		make_http_request(url, method, callback, headers, post_data, options, retry_intervals, retry_count + 1,
+			cancellation_token)
+	end
 end
 
 
@@ -89,13 +90,15 @@ end
 function M.http(config, url_path, query_params, method, post_data, retry_policy, cancellation_token, callback)
 	local query_string = ""
 	if next(query_params) then
-		for query_key,query_value in pairs(query_params) do
+		for query_key, query_value in pairs(query_params) do
 			if type(query_value) == "table" then
-				for _,v in ipairs(query_value) do
-					query_string = ("%s%s%s=%s"):format(query_string, (#query_string == 0 and "?" or "&"), query_key, uri_encode_component(tostring(v)))
+				for _, v in ipairs(query_value) do
+					query_string = ("%s%s%s=%s"):format(query_string, (#query_string == 0 and "?" or "&"), query_key,
+						uri_encode_component(tostring(v)))
 				end
 			else
-				query_string = ("%s%s%s=%s"):format(query_string, (#query_string == 0 and "?" or "&"), query_key, uri_encode_component(tostring(query_value)))
+				query_string = ("%s%s%s=%s"):format(query_string, (#query_string == 0 and "?" or "&"), query_key,
+					uri_encode_component(tostring(query_value)))
 			end
 		end
 	end
@@ -117,7 +120,8 @@ function M.http(config, url_path, query_params, method, post_data, retry_policy,
 
 	log("HTTP", method, url)
 	log("DATA", post_data)
-	make_http_request(url, method, callback, headers, post_data, options, retry_policy or config.retry_policy, 1, cancellation_token)
+	make_http_request(url, method, callback, headers, post_data, options, retry_policy or config.retry_policy, 1,
+		cancellation_token)
 end
 
 --- Create a new socket with message handler.
@@ -172,7 +176,7 @@ function M.socket_connect(socket, callback)
 		callback(true)
 
 		function ws:onmessage(message)
-			print('ws message', message)
+			-- print('ws message', message)
 
 			log("EVENT_MESSAGE: ", message)
 			on_message(socket, message)

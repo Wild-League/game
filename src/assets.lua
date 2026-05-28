@@ -20,9 +20,11 @@ local Assets = {
 	TOWER = love.graphics.newImage('assets/tower.png'),
 }
 
+Assets.TOWER:setFilter('nearest', 'nearest')
+
 setmetatable(Assets, {
 	__index = function(_, key)
-			error(string.format('the assets: "%s" is not set in assets', key))
+		error(string.format('the assets: "%s" is not set in assets', key))
 	end
 })
 
