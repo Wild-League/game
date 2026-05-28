@@ -30,6 +30,23 @@ local function clone_array(array)
 	return cloned
 end
 
+local function capture_cards_runtime_state(cards)
+	local states = {}
+	for _, card in ipairs(cards or {}) do
+		if card then
+			states[card] = {
+				is_card_loading = card.is_card_loading == true,
+				current_cooldown = card.current_cooldown,
+				selectable = card.selectable,
+				preview_card = card.preview_card,
+				char_x = card.char_x,
+				char_y = card.char_y
+			}
+		end
+	end
+	return states
+end
+
 function Deck:load(deck_selected)
 	self.deck_selected = {}
 	self.queue_next_cards = {}
@@ -230,6 +247,7 @@ function Deck:capture_hand_state(card)
 		card_selected = self.card_selected,
 		deck_selected = clone_array(self.deck_selected),
 		queue_next_cards = clone_array(self.queue_next_cards),
+		card_runtime_states = capture_cards_runtime_state(self.deck_selected),
 		played_card = card,
 		played_card_loading = card and card.is_card_loading or false,
 		played_card_cooldown = card and card.current_cooldown or nil
@@ -242,6 +260,15 @@ function Deck:restore_hand_state(state)
 	self.deck_selected = clone_array(state.deck_selected)
 	self.queue_next_cards = clone_array(state.queue_next_cards)
 	self.card_selected = state.card_selected
+
+	for card, card_state in pairs(state.card_runtime_states or {}) do
+		card.is_card_loading = card_state.is_card_loading == true
+		card.current_cooldown = card_state.current_cooldown
+		card.selectable = card_state.selectable
+		card.preview_card = card_state.preview_card
+		card.char_x = card_state.char_x
+		card.char_y = card_state.char_y
+	end
 
 	local played_card = state.played_card
 	if played_card then
