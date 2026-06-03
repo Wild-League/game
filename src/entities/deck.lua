@@ -30,18 +30,24 @@ local function clone_array(array)
 	return cloned
 end
 
+local function capture_card_runtime_state(card)
+	if not card then return nil end
+	return {
+		is_card_loading = card.is_card_loading == true,
+		current_cooldown = card.current_cooldown,
+		selectable = card.selectable,
+		preview_card = card.preview_card,
+		char_x = card.char_x,
+		char_y = card.char_y
+	}
+end
+
 local function capture_cards_runtime_state(cards)
 	local states = {}
 	for _, card in ipairs(cards or {}) do
-		if card then
-			states[card] = {
-				is_card_loading = card.is_card_loading == true,
-				current_cooldown = card.current_cooldown,
-				selectable = card.selectable,
-				preview_card = card.preview_card,
-				char_x = card.char_x,
-				char_y = card.char_y
-			}
+		local state = capture_card_runtime_state(card)
+		if state then
+			states[card] = state
 		end
 	end
 	return states
@@ -243,11 +249,19 @@ function Deck:check_cooldown(dt)
 end
 
 function Deck:capture_hand_state(card)
+	local runtime_states = capture_cards_runtime_state(self.deck_selected)
+	for _, queued_card in ipairs(self.queue_next_cards or {}) do
+		local state = capture_card_runtime_state(queued_card)
+		if state then
+			runtime_states[queued_card] = state
+		end
+	end
+
 	return {
 		card_selected = self.card_selected,
 		deck_selected = clone_array(self.deck_selected),
 		queue_next_cards = clone_array(self.queue_next_cards),
-		card_runtime_states = capture_cards_runtime_state(self.deck_selected),
+		card_runtime_states = runtime_states,
 		played_card = card,
 		played_card_loading = card and card.is_card_loading or false,
 		played_card_cooldown = card and card.current_cooldown or nil
@@ -323,8 +337,6 @@ function Deck:mousepressed(x, y, button)
 				-- click on map?
 				if not (x >= card.x and x <= (card.x + cw))
 						and not (y >= card.y and y <= (card.y + ch)) then
-					local hand_state = self:capture_hand_state(card)
-
 					card.char_x = x
 					card.char_y = y
 
@@ -335,6 +347,10 @@ function Deck:mousepressed(x, y, button)
 
 					card.is_card_loading = true
 					card:reset_cooldown()
+
+					local hand_state = self:capture_hand_state(card)
+					hand_state.played_card_loading = true
+					hand_state.played_card_cooldown = card.current_cooldown
 
 					local payload_card = {
 						client_intent_id = uuid:generate(),

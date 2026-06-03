@@ -24,7 +24,11 @@ local Card_Types = {
 }
 
 function Card:new(card, enemy)
-	self.perception_range = card.attack_range * 2
+	if card.type == Card_Types.SPELL then
+		self.perception_range = card.attack_range or 0
+	else
+		self.perception_range = (card.attack_range or 0) * 2
+	end
 	self.enemy = enemy or false
 
 	if card.type == Card_Types.CHAR then

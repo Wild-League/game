@@ -104,6 +104,8 @@ function Game:update(dt)
 
 	self.timer:update(dt)
 
+	self:update_char_combat()
+
 	for _, card in pairs(self.cards[Constants.USER_ID]) do
 		if type(card) == 'table' and type(card.update) == 'function' then
 			card:update(dt)
@@ -115,8 +117,6 @@ function Game:update(dt)
 			enemy_card:update(dt)
 		end
 	end
-
-	self:update_char_combat()
 
 	self:cleanup_finished_deaths()
 end
@@ -159,13 +159,21 @@ function Game:update_char_combat()
 	local enemies = self.cards[Constants.ENEMY_ID] or {}
 
 	for _, card in pairs(allies) do
-		if card.type == 'char' and type(card.get_enemies_in_range) == 'function' then
+		if type(card.get_enemies_in_range) ~= 'function' then
+			-- skip
+		elseif card.type == 'char' then
+			card:get_enemies_in_range(enemies)
+		elseif card.type == 'spell' then
 			card:get_enemies_in_range(enemies)
 		end
 	end
 
 	for _, card in pairs(enemies) do
-		if card.type == 'char' and type(card.get_enemies_in_range) == 'function' then
+		if type(card.get_enemies_in_range) ~= 'function' then
+			-- skip
+		elseif card.type == 'char' then
+			card:get_enemies_in_range(allies)
+		elseif card.type == 'spell' then
 			card:get_enemies_in_range(allies)
 		end
 	end
@@ -214,8 +222,20 @@ function Game:handle_opcode_event(opcode, user_id, data)
 
 	if opcode == MatchEvents.entity_spawned then
 		if data and data.entity then
-			self:apply_entity_state(data.entity)
 			local intent_id = data.client_intent_id
+			local pending = intent_id and self.pending_spawns[intent_id]
+			if pending and data.entity.entity_id ~= pending.card_id then
+				local predicted = self.cards[Constants.USER_ID]
+						and self.cards[Constants.USER_ID][pending.card_id]
+				if predicted then
+					predicted.card_id = data.entity.entity_id
+					self.cards[Constants.USER_ID][data.entity.entity_id] = predicted
+					self.cards[Constants.USER_ID][pending.card_id] = nil
+					pending.card_id = data.entity.entity_id
+				end
+			end
+
+			self:apply_entity_state(data.entity)
 			if intent_id and self.hand_intents[intent_id] then
 				self.hand_intents[intent_id].status = 'accepted'
 			end
@@ -242,23 +262,113 @@ function Game:handle_opcode_event(opcode, user_id, data)
 
 	if opcode == MatchEvents.reject_intent then
 		if data and data.client_intent_id and self.pending_spawns[data.client_intent_id] then
-			local intent_id = data.client_intent_id
-			local pending = self.pending_spawns[data.client_intent_id]
-			if self.cards[Constants.USER_ID] then
-				self.cards[Constants.USER_ID][pending.card_id] = nil
-			end
-			self.pending_spawns[intent_id] = nil
-			self.hand_intents[intent_id] = nil
-			self:remove_hand_intent_order(intent_id)
-			self:rebuild_hand_from_intents()
-			self:maybe_finalize_hand_intents()
+			self:handle_reject_intent(data.client_intent_id)
 		end
+		return
+	end
+
+	if opcode == MatchEvents.damage_event then
+		self:apply_damage_event(data)
 		return
 	end
 
 	if opcode == MatchEvents.match_end then
 		self.match_winner_id = data.winner_id
 		return
+	end
+end
+
+function Game:should_keep_local_spell(card)
+	return card
+			and card.type == 'spell'
+			and (card.local_cast or card.predicted)
+			and not card.pending_removal
+end
+
+function Game:handle_reject_intent(intent_id)
+	local pending = self.pending_spawns[intent_id]
+	local intent = self.hand_intents[intent_id]
+	local played_card = intent and intent.played_card
+
+	self.pending_spawns[intent_id] = nil
+	self.hand_intents[intent_id] = nil
+	self:remove_hand_intent_order(intent_id)
+
+	if played_card and played_card.type == 'spell' then
+		if self.hand_baseline_state then
+			Deck:restore_hand_state(self.hand_baseline_state)
+			played_card.is_card_loading = true
+			played_card:reset_cooldown()
+			Deck.card_selected = nil
+			Deck.deck_selected = Deck:rotate_deck(played_card)
+		end
+		self:maybe_finalize_hand_intents()
+		return
+	end
+
+	if self.cards[Constants.USER_ID] and pending then
+		self.cards[Constants.USER_ID][pending.card_id] = nil
+	end
+	self:rebuild_hand_from_intents()
+	self:maybe_finalize_hand_intents()
+end
+
+function Game:find_entity_by_id(entity_id, owner_id)
+	if not entity_id then return nil end
+
+	if owner_id then
+		local bucket = resolve_card_bucket(owner_id)
+		return self.cards[bucket] and self.cards[bucket][entity_id]
+	end
+
+	for _, bucket_id in ipairs({ Constants.USER_ID, Constants.ENEMY_ID }) do
+		local entity = self.cards[bucket_id] and self.cards[bucket_id][entity_id]
+		if entity then
+			return entity
+		end
+	end
+
+	return nil
+end
+
+function Game:flash_damage_target(entity_id, owner_id, current_life)
+	local entity = self:find_entity_by_id(entity_id, owner_id)
+	if not entity then return end
+
+	if current_life ~= nil and entity.type == 'char' then
+		entity.current_life = current_life
+	end
+
+	entity.damage_flash_until = love.timer.getTime() + 0.15
+end
+
+function Game:apply_damage_event(data)
+	if not data then return end
+
+	local hits = data.hits
+	if not hits then
+		if data.target_entity_id or data.entity_id then
+			hits = { data }
+		end
+	end
+
+	if hits then
+		for _, hit in ipairs(hits) do
+			self:flash_damage_target(
+				hit.entity_id or hit.target_entity_id,
+				hit.owner_id or hit.target_owner_id,
+				hit.target_current_life
+			)
+		end
+	end
+
+	local source_id = data.source_entity_id
+	local source_owner = data.source_owner_id or data.owner_id
+	if source_id and source_owner then
+		local spell = self:find_entity_by_id(source_id, source_owner)
+		if spell and spell.type == 'spell' and type(spell.flash_hit) == 'function' then
+			spell:flash_hit()
+		end
 	end
 end
 
@@ -296,9 +406,18 @@ function Game:apply_entity_state(entity)
 
 		card = Utils.copy_table(template)
 		card.card_id = entity.entity_id
-		card.predicted = false
 		card.enemy = bucket == Constants.ENEMY_ID
 		card._prev_char_x = nil
+		if card.type == 'spell' then
+			card.cast_elapsed = 0
+			card.targets_hit = false
+			card.hit_targets = {}
+			card.enemies_around = {}
+			card.local_cast = true
+			card.predicted = true
+		else
+			card.predicted = false
+		end
 		self.cards[bucket][entity.entity_id] = card
 	end
 
@@ -317,15 +436,26 @@ function Game:apply_entity_state(entity)
 	card.enemy = bucket == Constants.ENEMY_ID
 	card.current_life = entity.current_life or card.current_life
 	card.life = entity.max_life or card.life
-	local action = entity.action or card.current_action or 'walk'
-	if card.type == 'char' and (card.current_life or 0) <= 0 then
-		action = 'death'
-	elseif card.type == 'char' and action == 'attack' then
-		local opp_bucket = bucket == Constants.USER_ID and Constants.ENEMY_ID or Constants.USER_ID
-		local opponents = self.cards[opp_bucket] or {}
-		if type(card.has_attackable_enemy) == 'function' and not card:has_attackable_enemy(opponents) then
-			action = 'walk'
+	local action = entity.action or card.current_action
+	if card.type == 'spell' then
+		if card.local_cast then
+			action = 'attack'
+		else
+			action = action or 'attack'
 		end
+	elseif card.type == 'char' then
+		action = action or 'walk'
+		if (card.current_life or 0) <= 0 then
+			action = 'death'
+		elseif action == 'attack' then
+			local opp_bucket = bucket == Constants.USER_ID and Constants.ENEMY_ID or Constants.USER_ID
+			local opponents = self.cards[opp_bucket] or {}
+			if type(card.has_attackable_enemy) == 'function' and not card:has_attackable_enemy(opponents) then
+				action = 'walk'
+			end
+		end
+	else
+		action = action or card.current_action or 'walk'
 	end
 	card.current_action = action
 	if card.current_action == 'death' and card.type == 'char' then
@@ -333,7 +463,10 @@ function Game:apply_entity_state(entity)
 		if not card.death_elapsed then
 			card.death_elapsed = 0
 		end
-	else
+	elseif card.type == 'char' then
+		card.pending_removal = false
+		card.death_elapsed = 0
+	elseif card.type ~= 'spell' then
 		card.pending_removal = false
 		card.death_elapsed = 0
 	end
@@ -366,7 +499,14 @@ function Game:apply_entity_state(entity)
 		end
 	end
 
-	card.predicted = false
+	if card.type == 'spell' then
+		if not self:should_keep_local_spell(card) then
+			card.predicted = false
+			card.local_cast = false
+		end
+	else
+		card.predicted = false
+	end
 	card.has_authoritative_position = true
 end
 
@@ -390,9 +530,11 @@ function Game:apply_snapshot(snapshot)
 		local entities = self.cards[bucket_id]
 		if entities then
 			for entity_id, card in pairs(entities) do
-				if type(entity_id) == 'string' and card.type == 'char' then
+				if type(entity_id) == 'string' and (card.type == 'char' or card.type == 'spell') then
 					local is_seen = seen[bucket_id] and seen[bucket_id][entity_id]
-					if not is_seen and not card.predicted then
+					if self:should_keep_local_spell(card) then
+						-- client-driven cast VFX; ignore snapshot prune until finished
+					elseif not is_seen and not card.predicted then
 						self:queue_entity_removal(bucket_id, entity_id)
 					end
 				end
@@ -426,10 +568,21 @@ function Game:spawn_card_intent(card, payload)
 	predicted.char_x = payload.x
 	predicted.char_y = payload.y
 	predicted.predicted = true
-	predicted.current_action = 'walk'
 	predicted.entity_version = 0
 	predicted.enemy = false
 	predicted.scale_x = 1
+
+	if card.type == 'spell' then
+		predicted.current_action = 'attack'
+		predicted.cast_elapsed = 0
+		predicted.targets_hit = false
+		predicted.hit_targets = {}
+		predicted.enemies_around = {}
+		predicted.local_cast = true
+		payload.card_type = 'spell'
+	else
+		predicted.current_action = 'walk'
+	end
 
 	self.cards[Constants.USER_ID][payload.card_id] = predicted
 	self.pending_spawns[intent_id] = {
@@ -495,6 +648,14 @@ function Game:queue_entity_removal(bucket, entity_id)
 	local entity = entities[entity_id]
 	if not entity then return end
 
+	if entity.type == 'spell' then
+		if self:should_keep_local_spell(entity) then
+			return
+		end
+		entity.pending_removal = true
+		return
+	end
+
 	if entity.type ~= 'char' then
 		entities[entity_id] = nil
 		return
@@ -515,6 +676,15 @@ function Game:cleanup_finished_deaths()
 				if entity.pending_removal and entity.type == 'char' then
 					local elapsed = entity.death_elapsed or 0
 					local duration = entity.death_animation_duration or 0.35
+					if elapsed >= duration then
+						entities[entity_id] = nil
+					end
+				elseif entity.pending_removal and entity.type == 'spell' then
+					local elapsed = entity.cast_elapsed or 0
+					local duration = 0.35
+					if type(entity.get_cast_duration) == 'function' then
+						duration = entity:get_cast_duration()
+					end
 					if elapsed >= duration then
 						entities[entity_id] = nil
 					end

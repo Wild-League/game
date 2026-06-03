@@ -272,6 +272,9 @@ function Char:draw()
 			and current_img
 
 	if has_valid_anim then
+		if self.damage_flash_until and love.timer.getTime() < self.damage_flash_until then
+			love.graphics.setColor(1, 0.45, 0.45, 1)
+		end
 		current_animation:draw(
 			current_img,
 			self.char_x,
@@ -280,6 +283,7 @@ function Char:draw()
 			self.scale_x * RENDER_SCALE,
 			RENDER_SCALE
 		)
+		love.graphics.setColor(1, 1, 1, 1)
 	end
 
 	local bar_w = 46
