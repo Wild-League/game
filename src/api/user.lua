@@ -172,6 +172,34 @@ function UserApi:reject_friend_request(friend_request_id)
 	return nil
 end
 
+function UserApi:remove_friend(relationship_id)
+	local url = BaseApi:get_resource_url('user') .. '/remove_friend/'
+
+	local body = json.encode({ relationship_id = relationship_id })
+
+	local headers = {
+		authorization = 'Bearer '..Constants.ACCESS_TOKEN,
+		['Content-Type'] = 'application/json',
+		['Content-Length'] = #body
+	}
+
+	local status, response = https.request(url, {
+		method = 'POST',
+		headers = headers,
+		data = body
+	})
+
+	if response == '' then
+		return BaseApi:Response(status, nil, status == 200)
+	end
+
+	return BaseApi:Response(
+		status,
+		response == '' and nil or json.decode(response),
+		status == 200
+	)
+end
+
 function UserApi:get_me()
 	local url = BaseApi:get_resource_url('user') .. '/me/'
 

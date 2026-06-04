@@ -86,8 +86,20 @@ function FriendListSidebar:draw(screen)
 			end
 
 			if friend.relationship_type == RelationshipType.Friend then
+				local display_name = friend.friend_username or friend.requester_username
 				love.graphics.setFont(Fonts.jura(20))
-				Suit.Label(friend.requester_username, self.x + 10, friend_y)
+				Suit.Label(display_name, self.x + 10, friend_y)
+
+				local remove_button = Suit.Button('Remove', self.x + 10, friend_y + 30, 230, 30)
+				if remove_button.hit then
+					local result = UserApi:remove_friend(friend.id)
+					if result and result.success then
+						Toast:success('Friend removed.', 3, 'Friends')
+						self.friends = UserApi:get_friends()
+					else
+						Toast:error('Could not remove friend.', 3.5, 'Friends')
+					end
+				end
 			end
 		end
 	else
