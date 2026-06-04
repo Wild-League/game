@@ -30,6 +30,10 @@ local function clone_array(array)
 	return cloned
 end
 
+local function point_in_rect(px, py, rx, ry, rw, rh)
+	return px >= rx and px <= rx + rw and py >= ry and py <= ry + rh
+end
+
 local function capture_card_runtime_state(card)
 	if not card then return nil end
 	return {
@@ -311,62 +315,61 @@ function Deck:apply_hand_intent(intent)
 end
 
 function Deck:mousepressed(x, y, button)
-	-- right click
 	if button ~= 1 then return end
 
 	local s = self.default_scale
-	for _, card in pairs(self.deck_selected) do
+	local clicked_card = nil
+
+	for _, card in ipairs(self.deck_selected) do
 		local cw = card.img_card:getWidth() * s
 		local ch = card.img_card:getHeight() * s
-		-- click on card?
-		if (
-					x >= card.x and x <= (card.x + cw)
-					and y >= card.y and y <= (card.y + ch)
-				) then
-			if not card.is_card_loading then
-				if self.card_selected == card then
-					self.card_selected = nil
-				else
-					self.card_selected = card
-				end
-				break
-			end
-		else
-			-- this is the selected card?
-			if self.card_selected == card then
-				-- click on map?
-				if not (x >= card.x and x <= (card.x + cw))
-						and not (y >= card.y and y <= (card.y + ch)) then
-					card.char_x = Map:clamp_player_x(x)
-					card.char_y = y
-
-					card.is_card_loading = true
-					card:reset_cooldown()
-
-					local hand_state = self:capture_hand_state(card)
-					hand_state.played_card_loading = true
-					hand_state.played_card_cooldown = card.current_cooldown
-
-					local payload_card = {
-						client_intent_id = uuid:generate(),
-						card_id = uuid:generate(),
-						card_name = card.name,
-						x = card.char_x,
-						y = card.char_y
-					}
-					payload_card._hand_state = hand_state
-
-					local Game = require('src.states.game')
-					Game:spawn_card_intent(card, payload_card)
-
-					self.card_selected = nil
-					self.deck_selected = self:rotate_deck(card)
-
-					break
-				end
-			end
+		if point_in_rect(x, y, card.x, card.y, cw, ch) then
+			clicked_card = card
+			break
 		end
 	end
+
+	if clicked_card then
+		if not clicked_card.is_card_loading then
+			if self.card_selected == clicked_card then
+				self.card_selected = nil
+			else
+				self.card_selected = clicked_card
+			end
+		end
+		return
+	end
+
+	if not self.card_selected then return end
+
+	local hand_top_y = self.deck_selected[1] and self.deck_selected[1].y
+	if hand_top_y and y >= hand_top_y then return end
+
+	local card = self.card_selected
+	card.char_x = Map:clamp_player_x(x)
+	card.char_y = y
+
+	card.is_card_loading = true
+	card:reset_cooldown()
+
+	local hand_state = self:capture_hand_state(card)
+	hand_state.played_card_loading = true
+	hand_state.played_card_cooldown = card.current_cooldown
+
+	local payload_card = {
+		client_intent_id = uuid:generate(),
+		card_id = uuid:generate(),
+		card_name = card.name,
+		x = card.char_x,
+		y = card.char_y
+	}
+	payload_card._hand_state = hand_state
+
+	local Game = require('src.states.game')
+	Game:spawn_card_intent(card, payload_card)
+
+	self.card_selected = nil
+	self.deck_selected = self:rotate_deck(card)
 end
 
 return Deck
