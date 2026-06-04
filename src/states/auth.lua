@@ -109,10 +109,13 @@ function Auth:update(dt)
 			return
 		end
 
-		self:auth_multiplayer_server(li_user, li_user, li_pass)
-
-		Toast:success('Logged in successfully.', 2.5, 'Welcome')
-		CONTEXT:change('lobby')
+		self:auth_multiplayer_server(li_user, li_pass, function(ok)
+			if not ok then
+				return
+			end
+			Toast:success('Logged in successfully.', 2.5, 'Welcome')
+			CONTEXT:change('lobby')
+		end)
 	end
 
 	-- Sign Up
@@ -146,9 +149,13 @@ function Auth:update(dt)
 						'Sign Up'
 					)
 				else
-					self:auth_multiplayer_server(su, se, sp)
-					Toast:success('Welcome! Your account is ready.', 3, 'Sign Up')
-					CONTEXT:change('lobby')
+					self:auth_multiplayer_server(su, sp, function(ok)
+						if not ok then
+							return
+						end
+						Toast:success('Welcome! Your account is ready.', 3, 'Sign Up')
+						CONTEXT:change('lobby')
+					end)
 				end
 			else
 				Toast:error(read_error_message(data, 'Unable to create account. Try again.'), 5, 'Sign Up Failed')
@@ -169,7 +176,7 @@ function Auth:draw()
 	love.graphics.line(width / 2, 50, width / 2, 450)
 end
 
-function Auth:auth_multiplayer_server(username, email, password)
+function Auth:auth_multiplayer_server(username, password, on_ready)
 	local client = nakama.create_client({
 		host = BaseApi[BaseApi.current].multiplayer_server_url,
 		port = BaseApi[BaseApi.current].multiplayer_server_port,
@@ -179,19 +186,53 @@ function Auth:auth_multiplayer_server(username, email, password)
 	})
 
 	local me = UserApi:get_me()
+	if not me or not me.email or me.email == '' then
+		Toast:error('Could not load your profile after sign-in.', 5, 'Login Failed')
+		if on_ready then
+			on_ready(false)
+		end
+		return
+	end
 
 	Constants.NAKAMA_CLIENT = client
 
 	coroutine.resume(coroutine.create(function()
 		local result = nakama.authenticate_email(client, me.email, password, { level = "1" }, true, username)
 
-		if result then
-			Constants.USER_ID = result.user_id
-			nakama.set_bearer_token(client, result.token)
+		if not result or result.error then
+			local msg = (result and result.message) or 'Multiplayer authentication failed.'
+			Toast:error(tostring(msg), 5, 'Login Failed')
+			if on_ready then
+				on_ready(false)
+			end
+			return
 		end
 
+		Constants.USER_ID = result.user_id
+		nakama.set_bearer_token(client, result.token)
+
 		Constants.SOCKET_CONNECTION = nakama.create_socket(client)
-		socket.connect(Constants.SOCKET_CONNECTION)
+
+		socket.on_disconnect(Constants.SOCKET_CONNECTION, function()
+			Toast:warning(
+				'Disconnected from the multiplayer server. Another login may have replaced this session.',
+				6,
+				'Session'
+			)
+		end)
+
+		socket.connect(Constants.SOCKET_CONNECTION, function(ok)
+			if ok then
+				if on_ready then
+					on_ready(true)
+				end
+				return
+			end
+			Toast:error('Could not connect to the multiplayer server.', 5, 'Login Failed')
+			if on_ready then
+				on_ready(false)
+			end
+		end)
 	end))
 end
 

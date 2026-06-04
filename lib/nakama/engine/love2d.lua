@@ -167,8 +167,9 @@ function M.socket_connect(socket, callback)
 	assert(socket)
 	assert(callback)
 
-
-	local ws = Ws:connect('localhost', 7350, ('/ws?token=%s'):format(uri.encode_component(socket.config.bearer_token)))
+	local host = socket.config.host or 'localhost'
+	local port = socket.config.port or 7350
+	local ws = Ws:connect(host, port, ('/ws?token=%s'):format(uri.encode_component(socket.config.bearer_token)))
 
 	if ws then
 		log("EVENT_CONNECTED")
