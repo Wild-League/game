@@ -69,6 +69,33 @@ local function enemy_in_attack_range(attacker, target)
 	)
 end
 
+local function tower_hitbox_dimensions(tower)
+	local scale_x = math.abs(tower.scale_x or 2)
+	local scale_y = tower.scale_y or 2
+	return (tower.w or 64) * scale_x, (tower.h or 64) * scale_y
+end
+
+local function tower_hitbox_origin(tower)
+	local rw, rh = tower_hitbox_dimensions(tower)
+	return tower.char_x - rw / 2, tower.char_y - rh / 2
+end
+
+local function tower_in_attack_range(attacker, tower)
+	if not tower or tower.type ~= 'tower' then
+		return false
+	end
+	if (tower.current_life or tower.life or 0) <= 0 then
+		return false
+	end
+	local self_cx, self_cy = char_range_center(attacker)
+	local rx, ry = tower_hitbox_origin(tower)
+	local rw, rh = tower_hitbox_dimensions(tower)
+	return Utils.circle_rect_collision(
+		self_cx, self_cy, attacker.attack_range / 2,
+		rx, ry, rw, rh
+	)
+end
+
 local function get_walk_preview_quad(char)
 	if not char.img_walk then return nil end
 	if not char.frame_width or not char.frame_height then return nil end
@@ -109,16 +136,25 @@ local function get_death_animation_duration(char)
 	return char.death_animation_duration
 end
 
-function Char:has_attackable_enemy(enemies)
-	for _, enemy in pairs(enemies or {}) do
-		if is_living_char(enemy) and enemy_in_attack_range(self, enemy) then
+function Char:has_attackable_enemy(_enemies)
+	for _, enemy in pairs(self.enemies_around or {}) do
+		if enemy and is_living_char(enemy) and enemy_in_attack_range(self, enemy) then
 			return true
 		end
 	end
 	return false
 end
 
-function Char:get_enemies_in_range(enemies)
+function Char:has_attackable_tower(opponent_towers)
+	for _, tower in ipairs(opponent_towers or {}) do
+		if tower_in_attack_range(self, tower) then
+			return true
+		end
+	end
+	return false
+end
+
+function Char:refresh_perception(enemies)
 	if not is_living_char(self) then
 		self.nearest_enemy = nil
 		self.enemies_around = {}
@@ -142,23 +178,25 @@ function Char:get_enemies_in_range(enemies)
 	end
 
 	self:get_nearest_enemy()
-	self:check_attack_range()
 end
 
-function Char:check_attack_range()
+function Char:get_enemies_in_range(enemies, opponent_towers)
+	self:refresh_perception(enemies)
+	self:sync_combat_action(opponent_towers)
+end
+
+function Char:sync_combat_action(opponent_towers)
 	if not is_living_char(self) then
 		self.current_action = 'death'
 		return
 	end
 
 	local target = self.nearest_enemy
-	local in_range = target and enemy_in_attack_range(self, target)
-
-	if in_range then
-		if self.current_action ~= 'attack' then
-			self.current_action = 'attack'
-		end
-	elseif self.current_action == 'attack' then
+	if target and enemy_in_attack_range(self, target) then
+		self.current_action = 'attack'
+	elseif self:has_attackable_tower(opponent_towers) then
+		self.current_action = 'attack'
+	else
 		self.current_action = 'walk'
 	end
 end

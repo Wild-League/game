@@ -20,6 +20,21 @@ local function resolve_card_bucket(owner_id)
 	return Constants.ENEMY_ID
 end
 
+local function collect_towers(bucket)
+	local towers = {}
+	if not bucket then
+		return towers
+	end
+	for _, entity in pairs(bucket) do
+		if type(entity) == 'table' and entity.type == 'tower' then
+			if (entity.current_life or entity.life or 0) > 0 then
+				towers[#towers + 1] = entity
+			end
+		end
+	end
+	return towers
+end
+
 local Game = {
 	timer = Timer:new(),
 	cards = {},
@@ -177,11 +192,14 @@ function Game:update_char_combat()
 	local allies = self.cards[Constants.USER_ID] or {}
 	local enemies = self.cards[Constants.ENEMY_ID] or {}
 
+	local enemy_towers = collect_towers(self.cards[Constants.ENEMY_ID])
+	local ally_towers = collect_towers(self.cards[Constants.USER_ID])
+
 	for _, card in pairs(allies) do
 		if type(card.get_enemies_in_range) ~= 'function' then
 			-- skip
 		elseif card.type == 'char' then
-			card:get_enemies_in_range(enemies)
+			card:get_enemies_in_range(enemies, enemy_towers)
 		elseif card.type == 'spell' then
 			card:get_enemies_in_range(enemies)
 		end
@@ -191,7 +209,7 @@ function Game:update_char_combat()
 		if type(card.get_enemies_in_range) ~= 'function' then
 			-- skip
 		elseif card.type == 'char' then
-			card:get_enemies_in_range(allies)
+			card:get_enemies_in_range(allies, ally_towers)
 		elseif card.type == 'spell' then
 			card:get_enemies_in_range(allies)
 		end
@@ -465,6 +483,11 @@ function Game:apply_entity_state(entity)
 	card.enemy = bucket == Constants.ENEMY_ID
 	card.current_life = entity.current_life or card.current_life
 	card.life = entity.max_life or card.life
+	local opp_towers = nil
+	if card.type == 'char' then
+		local opp_bucket = bucket == Constants.USER_ID and Constants.ENEMY_ID or Constants.USER_ID
+		opp_towers = collect_towers(self.cards[opp_bucket])
+	end
 	local action = entity.action or card.current_action
 	if card.type == 'spell' then
 		if card.local_cast then
@@ -473,13 +496,20 @@ function Game:apply_entity_state(entity)
 			action = action or 'attack'
 		end
 	elseif card.type == 'char' then
+		local opp_bucket = bucket == Constants.USER_ID and Constants.ENEMY_ID or Constants.USER_ID
+		local opponents = self.cards[opp_bucket] or {}
+		if type(card.refresh_perception) == 'function' then
+			card:refresh_perception(opponents)
+		end
 		action = action or 'walk'
 		if (card.current_life or 0) <= 0 then
 			action = 'death'
 		elseif action == 'attack' then
-			local opp_bucket = bucket == Constants.USER_ID and Constants.ENEMY_ID or Constants.USER_ID
-			local opponents = self.cards[opp_bucket] or {}
-			if type(card.has_attackable_enemy) == 'function' and not card:has_attackable_enemy(opponents) then
+			local can_attack_char = type(card.has_attackable_enemy) == 'function'
+					and card:has_attackable_enemy(opponents)
+			local can_attack_tower = type(card.has_attackable_tower) == 'function'
+					and card:has_attackable_tower(opp_towers)
+			if not can_attack_char and not can_attack_tower then
 				action = 'walk'
 			end
 		end
@@ -525,6 +555,9 @@ function Game:apply_entity_state(entity)
 			card.scale_x = -1
 		elseif card.char_x < card._prev_char_x then
 			card.scale_x = 1
+		end
+		if type(card.sync_combat_action) == 'function' then
+			card:sync_combat_action(opp_towers)
 		end
 	end
 
