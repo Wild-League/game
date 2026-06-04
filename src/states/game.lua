@@ -124,6 +124,10 @@ end
 function Game:draw()
 	Map:draw()
 
+	if Deck.card_selected then
+		Map:block_left_side()
+	end
+
 	Deck:draw()
 	self:draw_player_status()
 
@@ -142,8 +146,9 @@ function Game:draw()
 	end
 
 	if Deck.card_selected then
+		local mx, my = love.mouse.getPosition()
 		love.graphics.setColor(1, 1, 1, 1)
-		Deck.card_selected:preview(love.mouse.getX(), love.mouse.getY())
+		Deck.card_selected:preview(Map:clamp_player_x(mx), my)
 	end
 
 	love.graphics.setColor(1, 1, 1, 1)
@@ -703,6 +708,8 @@ function Game:mousepressed(x, y, button)
 	Deck:mousepressed(x, y, button)
 end
 
-function Game:resize() end
+function Game:resize()
+	Map:refresh_bounds()
+end
 
 return Game

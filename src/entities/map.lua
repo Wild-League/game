@@ -21,9 +21,24 @@ local Map = {
 function Map:load()
 	self.map = sti('assets/world.lua')
 	self.original_width, self.original_height = love.graphics.getDimensions()
+	self:sides()
 end
 
-function Map:update(dt) end
+function Map:update(dt)
+	self:refresh_bounds()
+end
+
+function Map:refresh_bounds()
+	self:sides()
+end
+
+function Map:clamp_player_x(x)
+	self:sides()
+	if x <= self.left_side.w then
+		return self.left_side.w
+	end
+	return x
+end
 
 function Map:draw()
 	-- self.map:draw(nil, nil, scale_x, scale_y - 0.2)

@@ -337,13 +337,8 @@ function Deck:mousepressed(x, y, button)
 				-- click on map?
 				if not (x >= card.x and x <= (card.x + cw))
 						and not (y >= card.y and y <= (card.y + ch)) then
-					card.char_x = x
+					card.char_x = Map:clamp_player_x(x)
 					card.char_y = y
-
-					-- map limit
-					if card.char_x <= Map.left_side.w then
-						card.char_x = Map.left_side.w
-					end
 
 					card.is_card_loading = true
 					card:reset_cooldown()
