@@ -5,6 +5,7 @@ local Tower = {
 	enemies_around = {},
 	layout_ref_width = 1344,
 	layout_ref_height = 768,
+	destroy_duration = 1.4,
 }
 
 local default_props = {
@@ -13,7 +14,10 @@ local default_props = {
 	current_life = 100,
 	w = Assets.TOWER:getWidth(),
 	h = Assets.TOWER:getHeight(),
-	img = Assets.TOWER
+	img = Assets.TOWER,
+	destroying = false,
+	destroy_elapsed = 0,
+	hidden = false,
 }
 
 local function layout_slot(side, position)
@@ -70,6 +74,15 @@ function Tower:reposition(tower)
 	tower.scale_x = slot.scale_x
 end
 
+function Tower:start_destroy(tower)
+	if not tower or tower.destroying or tower.hidden then
+		return
+	end
+	tower.destroying = true
+	tower.destroy_elapsed = 0
+	tower.destroy_duration = tower.destroy_duration or self.destroy_duration
+end
+
 function Tower:load(side, position, tower_id)
 	if side ~= 'left' and side ~= 'right' then
 		error('Invalid side for Tower')
@@ -95,6 +108,7 @@ function Tower:load(side, position, tower_id)
 	tower.color = slot.color
 	tower.scale_x = slot.scale_x
 	tower.scale_y = 2
+	tower.destroy_duration = self.destroy_duration
 
 	tower.update = function(tower_, dt)
 		return Tower.update(tower_, dt)
@@ -110,27 +124,53 @@ function Tower:load(side, position, tower_id)
 	return tower
 end
 
-function Tower:update(dt) end
+function Tower:update(dt)
+	if not self.destroying then
+		return
+	end
+
+	self.destroy_elapsed = (self.destroy_elapsed or 0) + dt
+	local duration = self.destroy_duration or Tower.destroy_duration
+	if self.destroy_elapsed >= duration then
+		self.hidden = true
+		self.destroying = false
+	end
+end
 
 function Tower.draw(tower_, current_life)
+	if tower_.hidden then
+		return
+	end
+
+	local alpha = 1
+	if tower_.destroying then
+		local duration = tower_.destroy_duration or Tower.destroy_duration
+		local elapsed = tower_.destroy_elapsed or 0
+		alpha = math.max(0, 1 - (elapsed / duration))
+	end
+
 	local life = current_life or tower_.current_life or tower_.life or 100
+	love.graphics.setColor(1, 1, 1, alpha)
 	love.graphics.draw(tower_.img, tower_.char_x, tower_.char_y, 0, tower_.scale_x, tower_.scale_y, tower_.w / 2,
 		tower_.h / 2)
 
 	local lifebar_x = tower_.char_x - (100 / 2)
 	local lifebar_y = tower_.char_y - tower_.h * tower_.scale_y / 2 - 10
 
-	Tower:lifebar(lifebar_x, lifebar_y, life, tower_.side, tower_.color)
+	Tower:lifebar(lifebar_x, lifebar_y, life, tower_.side, tower_.color, alpha)
+	love.graphics.setColor(1, 1, 1, 1)
 end
 
-function Tower:lifebar(x, y, current_life, side, color)
-	love.graphics.setColor(color)
+function Tower:lifebar(x, y, current_life, side, color, alpha)
+	alpha = alpha or 1
+	local r, g, b = color[1], color[2], color[3]
+	love.graphics.setColor(r, g, b, alpha)
 
 	local max_life = 100
 
 	love.graphics.rectangle("line", x, y, max_life, 5)
 	love.graphics.rectangle("fill", x, y, current_life, 5)
-	love.graphics.setColor(255, 255, 255)
+	love.graphics.setColor(1, 1, 1, 1)
 end
 
 function Tower:get_enemies_in_range(enemies)

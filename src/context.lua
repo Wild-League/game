@@ -5,6 +5,7 @@ local Queue = require('src.states.queue')
 local Lobby = require('src.states.lobby')
 local LoadingGame = require('src.states.loading-game')
 local DeckSelection = require('src.states.deck_selection')
+local GameEnd = require('src.states.game-end')
 
 local Context = {
 	states = {
@@ -14,6 +15,7 @@ local Context = {
 		queue = Queue,
 		loading_game = LoadingGame,
 		game = Game,
+		game_end = GameEnd,
 		deck_selection = DeckSelection
 	},
 

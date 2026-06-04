@@ -44,6 +44,10 @@ local Game = {
 	hand_baseline_state = nil,
 	last_match_tick = 0,
 	match_winner_id = nil,
+	match_ended = false,
+	game_over = false,
+	pending_result = nil,
+	result_for_screen = nil,
 
 	me_status = nil,
 	enemy_status = nil
@@ -71,6 +75,10 @@ function Game:load()
 	self.hand_baseline_state = nil
 	self.last_match_tick = 0
 	self.match_winner_id = nil
+	self.match_ended = false
+	self.game_over = false
+	self.pending_result = nil
+	self.result_for_screen = nil
 
 	self:load_towers()
 	self:layout_towers()
@@ -138,6 +146,13 @@ function Game:update(dt)
 	end
 
 	self:cleanup_finished_deaths()
+	self:update_towers(dt)
+
+	if self:ready_for_result_screen() then
+		self.result_for_screen = self.pending_result
+		CONTEXT:change('game_end')
+		return
+	end
 end
 
 function Game:draw()
@@ -233,13 +248,105 @@ function Game:layout_towers()
 	end
 end
 
+function Game:update_towers(dt)
+	for _, bucket_id in ipairs({ Constants.USER_ID, Constants.ENEMY_ID }) do
+		for _, tower in ipairs(self.cards[bucket_id] or {}) do
+			if type(tower) == 'table' and tower.type == 'tower' and type(tower.update) == 'function' then
+				tower:update(dt)
+			end
+		end
+	end
+end
+
 function Game:draw_towers()
-	for _, tower in ipairs(self.cards[Constants.USER_ID]) do
-		tower:draw(tower.current_life)
+	for _, tower in ipairs(self.cards[Constants.USER_ID] or {}) do
+		if type(tower) == 'table' and tower.type == 'tower' and not tower.hidden then
+			tower:draw(tower.current_life)
+		end
 	end
-	for _, tower in ipairs(self.cards[Constants.ENEMY_ID]) do
-		tower:draw(tower.current_life)
+	for _, tower in ipairs(self.cards[Constants.ENEMY_ID] or {}) do
+		if type(tower) == 'table' and tower.type == 'tower' and not tower.hidden then
+			tower:draw(tower.current_life)
+		end
 	end
+end
+
+function Game:apply_tower_life(tower, new_life)
+	if not tower or tower.type ~= 'tower' then return end
+
+	local prev_life = tower.current_life or tower.life or 0
+	if new_life <= 0 and not tower.hidden then
+		if prev_life > 0 or not tower.destroying then
+			Tower:start_destroy(tower)
+		end
+	end
+	tower.current_life = new_life
+end
+
+function Game:count_alive_towers(bucket)
+	if not bucket then return 0 end
+
+	local count = 0
+	for _, entity in ipairs(bucket) do
+		if type(entity) == 'table' and entity.type == 'tower' and not entity.hidden then
+			if (entity.current_life or 0) > 0 then
+				count = count + 1
+			end
+		end
+	end
+	return count
+end
+
+function Game:check_match_end()
+	if self.match_ended then return end
+
+	local user_alive = self:count_alive_towers(self.cards[Constants.USER_ID])
+	local enemy_alive = self:count_alive_towers(self.cards[Constants.ENEMY_ID])
+
+	if user_alive == 0 then
+		self.pending_result = 'defeat'
+	elseif enemy_alive == 0 then
+		self.pending_result = 'victory'
+	else
+		return
+	end
+
+	if self.match_winner_id then
+		self.pending_result = self.match_winner_id == Constants.USER_ID and 'victory' or 'defeat'
+	end
+
+	self.match_ended = true
+	self.game_over = true
+end
+
+function Game:ready_for_result_screen()
+	if not self.match_ended then return false end
+
+	for _, bucket_id in ipairs({ Constants.USER_ID, Constants.ENEMY_ID }) do
+		for _, tower in ipairs(self.cards[bucket_id] or {}) do
+			if type(tower) == 'table' and tower.type == 'tower' and tower.destroying then
+				return false
+			end
+		end
+	end
+
+	return self.pending_result ~= nil
+end
+
+function Game:reset_match_state()
+	self.cards[Constants.USER_ID] = {}
+	self.cards[Constants.ENEMY_ID] = {}
+	self.pending_spawns = {}
+	self.hand_intents = {}
+	self.hand_intent_order = {}
+	self.hand_baseline_state = nil
+	self.last_match_tick = 0
+	self.match_winner_id = nil
+	self.match_ended = false
+	self.game_over = false
+	self.pending_result = nil
+	self.result_for_screen = nil
+	Deck.card_selected = nil
 end
 
 function Game:draw_timer()
@@ -321,6 +428,7 @@ function Game:handle_opcode_event(opcode, user_id, data)
 
 	if opcode == MatchEvents.match_end then
 		self.match_winner_id = data.winner_id
+		self:check_match_end()
 		return
 	end
 end
@@ -373,6 +481,11 @@ function Game:find_entity_by_id(entity_id, owner_id)
 		if entity then
 			return entity
 		end
+		for _, tower in ipairs(self.cards[bucket_id] or {}) do
+			if type(tower) == 'table' and tower.type == 'tower' and tower.tower_id == entity_id then
+				return tower
+			end
+		end
 	end
 
 	return nil
@@ -382,8 +495,13 @@ function Game:flash_damage_target(entity_id, owner_id, current_life)
 	local entity = self:find_entity_by_id(entity_id, owner_id)
 	if not entity then return end
 
-	if current_life ~= nil and entity.type == 'char' then
-		entity.current_life = current_life
+	if current_life ~= nil then
+		if entity.type == 'char' then
+			entity.current_life = current_life
+		elseif entity.type == 'tower' then
+			self:apply_tower_life(entity, current_life)
+			self:check_match_end()
+		end
 	end
 
 	entity.damage_flash_until = love.timer.getTime() + 0.15
@@ -609,13 +727,16 @@ function Game:apply_snapshot(snapshot)
 		local towers = self.cards[tower_bucket] or {}
 		for _, tower in ipairs(towers) do
 			if tower.type == 'tower' and tower.tower_id == tower_state.tower_id then
-				tower.current_life = tower_state.current_life
+				self:apply_tower_life(tower, tower_state.current_life)
 			end
 		end
 	end
+
+	self:check_match_end()
 end
 
 function Game:spawn_card_intent(card, payload)
+	if self.game_over then return end
 	if not payload or not payload.client_intent_id or not payload.card_id then return end
 	local hand_state = payload._hand_state
 	payload._hand_state = nil
@@ -768,6 +889,7 @@ function Game:draw_player_status()
 end
 
 function Game:mousepressed(x, y, button)
+	if self.game_over then return end
 	Deck:mousepressed(x, y, button)
 end
 
