@@ -1,7 +1,10 @@
 local Assets = require('src.assets')
+local Map = require('src.entities.map')
 
 local Tower = {
-	enemies_around = {}
+	enemies_around = {},
+	layout_ref_width = 1344,
+	layout_ref_height = 768,
 }
 
 local default_props = {
@@ -13,6 +16,60 @@ local default_props = {
 	img = Assets.TOWER
 }
 
+local function layout_slot(side, position)
+	local center_x, center_y = Map:get_play_center()
+	local play_w = Map:get_play_width()
+	local play_h = Map:get_play_height()
+	local scale_x = play_w / Tower.layout_ref_width
+	local scale_y = play_h / Tower.layout_ref_height
+
+	local red = { 255 / 255, 0 / 255, 0 / 255 }
+	local green = { 0 / 255, 255 / 255, 0 / 255 }
+
+	local positions = {
+		left = {
+			top = {
+				x = center_x - 470 * scale_x,
+				y = center_y - 180 * scale_y,
+				scale_x = -2,
+				color = red
+			},
+			bottom = {
+				x = center_x - 470 * scale_x,
+				y = center_y + 200 * scale_y,
+				scale_x = -2,
+				color = red
+			}
+		},
+		right = {
+			top = {
+				x = center_x + 470 * scale_x,
+				y = center_y - 180 * scale_y,
+				scale_x = 2,
+				color = green
+			},
+			bottom = {
+				x = center_x + 470 * scale_x,
+				y = center_y + 200 * scale_y,
+				scale_x = 2,
+				color = green
+			}
+		}
+	}
+
+	return positions[side][position]
+end
+
+function Tower:reposition(tower)
+	if not tower or tower.type ~= 'tower' then return end
+
+	local slot = layout_slot(tower.side, tower.position)
+	tower.char_x = slot.x
+	tower.char_y = slot.y
+	tower.color = slot.color
+	tower.scale_x = slot.scale_x
+end
+
 function Tower:load(side, position, tower_id)
 	if side ~= 'left' and side ~= 'right' then
 		error('Invalid side for Tower')
@@ -22,44 +79,7 @@ function Tower:load(side, position, tower_id)
 		error('Invalid position for Tower')
 	end
 
-	local center = {
-		width = love.graphics.getWidth() / 2,
-		height = love.graphics.getHeight() / 2
-	}
-
-	local red = { 255 / 255, 0 / 255, 0 / 255 }
-	local green = { 0 / 255, 255 / 255, 0 / 255 }
-
-	local positions = {
-		left = {
-			top = {
-				x = center.width - 470,
-				y = center.height - 180,
-				scale_x = -2,
-				color = red
-			},
-			bottom = {
-				x = center.width - 470,
-				y = center.height + 200,
-				scale_x = -2,
-				color = red
-			}
-		},
-		right = {
-			top = {
-				x = center.width + 470,
-				y = center.height - 180,
-				scale_x = 2,
-				color = green
-			},
-			bottom = {
-				x = center.width + 470,
-				y = center.height + 200,
-				scale_x = 2,
-				color = green
-			}
-		}
-	}
+	local slot = layout_slot(side, position)
 
 	local tower = {}
 
@@ -68,11 +88,12 @@ function Tower:load(side, position, tower_id)
 	end
 
 	tower.side = side
+	tower.position = position
 	tower.tower_id = tower_id
-	tower.char_x = positions[side][position].x
-	tower.char_y = positions[side][position].y
-	tower.color = positions[side][position].color
-	tower.scale_x = positions[side][position].scale_x
+	tower.char_x = slot.x
+	tower.char_y = slot.y
+	tower.color = slot.color
+	tower.scale_x = slot.scale_x
 	tower.scale_y = 2
 
 	tower.update = function(tower_, dt)
@@ -118,7 +139,7 @@ function Tower:get_enemies_in_range(enemies)
 	-- 		self.char_x, self.char_y, self.perception_range/2,
 	-- 		v.char_x, v.char_y, v.img_preview:getWidth(), v.img_preview:getHeight()
 	-- 	)
-
+	--
 	-- 	self.enemies_around[k] = has_collision and v or nil
 	-- end
 end

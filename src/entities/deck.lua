@@ -1,11 +1,25 @@
-local Layout = require('src.helpers.layout')
 local Map = require('src.entities.map')
 local Card = require('src.entities.card')
+local MatchUi = require('src.config.match_ui')
+local Images = require('src.ui.images')
 local uuid = require('lib.uuid')
 
+local DECK_BG = {
+	base = { 18 / 255, 16 / 255, 22 / 255, 1 },
+	top = { 52 / 255, 42 / 255, 36 / 255, 1 },
+	bottom = { 12 / 255, 11 / 255, 16 / 255, 1 },
+	panel = { 38 / 255, 32 / 255, 44 / 255, 0.72 },
+	panel_edge = { 24 / 255, 20 / 255, 28 / 255, 0.9 },
+	accent = { 210 / 255, 168 / 255, 72 / 255, 1 },
+	accent_shadow = { 0, 0, 0, 0.35 },
+	highlight = { 1, 1, 1, 0.07 },
+}
+
 local PREVIEW_QUEUE_SCALE = 0.65
+local BADGE_MARGIN = 120
 
 local Deck = {
+	ui_height = MatchUi.deck_ui_height,
 	default_scale = 1,
 	hand_slot_spacing = 80,
 	selectable_cards = 4,
@@ -88,34 +102,131 @@ function Deck:update(dt)
 	self:check_cooldown(dt)
 end
 
-function Deck:draw_background()
-	love.graphics.clear(1, 1, 1)
+function Deck:get_strip_top()
+	return Map:get_play_height()
+end
 
-	local window_w, window_h = love.graphics.getDimensions()
-	local image_w, image_h = 40, 40
+function Deck:get_play_area_bottom()
+	return self:get_strip_top() - 1
+end
 
-	local tiles_x = math.ceil(window_w / image_w)
-	local tiles_y = math.ceil(window_h / image_h)
+function Deck:is_in_strip(y)
+	return y >= self:get_strip_top()
+end
 
-	love.graphics.setScissor(0, window_h - 163, window_w, 163)
+local function lerp_color(a, b, t)
+	return {
+		a[1] + (b[1] - a[1]) * t,
+		a[2] + (b[2] - a[2]) * t,
+		a[3] + (b[3] - a[3]) * t,
+		(a[4] or 1) + ((b[4] or 1) - (a[4] or 1)) * t,
+	}
+end
 
-	for x = 0, tiles_x - 1 do
-		for y = 0, tiles_y - 1 do
-			if (x + y) % 2 == 0 then
-				love.graphics.setColor(32 / 255, 32 / 255, 32 / 255)
+local function set_color(c)
+	love.graphics.setColor(c[1], c[2], c[3], c[4] or 1)
+end
+
+local function draw_vertical_gradient(x, y, w, h, color_top, color_bottom, bands)
+	bands = bands or 14
+	local band_h = h / bands
+	for i = 0, bands - 1 do
+		local t = (i + 0.5) / bands
+		set_color(lerp_color(color_top, color_bottom, t))
+		love.graphics.rectangle('fill', x, y + i * band_h, w, band_h + 1)
+	end
+end
+
+local function draw_texture_overlay(strip_top, window_w, ui_height)
+	local img = Images.background_deck
+	if not img or not img.getDimensions then return end
+
+	local iw, ih = img:getDimensions()
+	if iw <= 0 or ih <= 0 then return end
+
+	local scale = math.max(window_w / iw, ui_height / ih)
+	local draw_w = iw * scale
+	local draw_h = ih * scale
+	local draw_x = (window_w - draw_w) / 2
+	local draw_y = strip_top + (ui_height - draw_h) / 2
+
+	love.graphics.setColor(1, 1, 1, 0.18)
+	love.graphics.draw(img, draw_x, draw_y, 0, scale, scale)
+end
+
+local function draw_subtle_grid(strip_top, window_w, ui_height)
+	local cell = 24
+	local cols = math.ceil(window_w / cell)
+	local rows = math.ceil(ui_height / cell)
+
+	for row = 0, rows - 1 do
+		for col = 0, cols - 1 do
+			if (col + row) % 2 == 0 then
+				set_color({ 1, 1, 1, 0.035 })
 			else
-				love.graphics.setColor(48 / 255, 48 / 255, 48 / 255)
+				set_color({ 1, 1, 1, 0.015 })
 			end
-			love.graphics.rectangle('fill', x * image_w, y * image_h, image_w, image_h)
-			love.graphics.setColor(1, 1, 1)
+			love.graphics.rectangle(
+				'fill',
+				col * cell,
+				strip_top + row * cell,
+				cell,
+				cell
+			)
 		end
 	end
+end
 
+local function draw_hand_panel(strip_top, window_w, ui_height)
+	local panel_x = BADGE_MARGIN
+	local panel_w = window_w - BADGE_MARGIN * 2
+	local panel_y = strip_top + 10
+	local panel_h = ui_height - 20
+	local radius = 8
+
+	set_color(DECK_BG.panel_edge)
+	love.graphics.rectangle('fill', panel_x, panel_y, panel_w, panel_h, radius, radius)
+
+	set_color(DECK_BG.panel)
+	love.graphics.rectangle('fill', panel_x + 2, panel_y + 2, panel_w - 4, panel_h - 4, radius - 2, radius - 2)
+
+	set_color(DECK_BG.highlight)
+	love.graphics.rectangle('line', panel_x + 1.5, panel_y + 1.5, panel_w - 3, panel_h - 3, radius - 1, radius - 1)
+end
+
+local function draw_top_accent(strip_top, window_w)
+	set_color(DECK_BG.accent_shadow)
+	love.graphics.rectangle('fill', 0, strip_top + 2, window_w, 3)
+
+	set_color(DECK_BG.accent)
+	love.graphics.rectangle('fill', 0, strip_top, window_w, 2)
+
+	set_color(DECK_BG.highlight)
+	love.graphics.rectangle('fill', 0, strip_top + 5, window_w, 1)
+end
+
+function Deck:draw_background()
+	local window_w = love.graphics.getWidth()
+	local strip_top = self:get_strip_top()
+	local ui_height = self.ui_height
+
+	love.graphics.setScissor(0, strip_top, window_w, ui_height)
+
+	-- Opaque base (covers map bleed when this runs after the map pass).
+	set_color(DECK_BG.base)
+	love.graphics.rectangle('fill', 0, strip_top, window_w, ui_height)
+
+	draw_vertical_gradient(0, strip_top, window_w, ui_height, DECK_BG.top, DECK_BG.bottom)
+	draw_texture_overlay(strip_top, window_w, ui_height)
+	draw_subtle_grid(strip_top, window_w, ui_height)
+	draw_hand_panel(strip_top, window_w, ui_height)
+	draw_top_accent(strip_top, window_w)
+
+	love.graphics.setColor(1, 1, 1, 1)
 	love.graphics.setScissor()
 end
 
 function Deck:draw()
-	-- self:draw_background()
 
 	if self.card_selected then
 		self:highlight_selected_card(self.card_selected)
@@ -141,29 +252,40 @@ function Deck:draw()
 end
 
 function Deck:define_positions()
-	-- TODO: remove magical numbers
-	local position = Layout:down_right(196, 56)
-
-	-- assign default positions
+	local window_w = love.graphics.getWidth()
+	local strip_top = self:get_strip_top()
+	local s = self.default_scale
 	local step = self.hand_slot_spacing
+
+	local first_card = self.deck_selected[1]
+	if first_card == nil then return end
+
+	local card_w = first_card.img_card:getWidth() * s
+	local card_h = first_card.img_card:getHeight() * s
+	local hand_count = math.min(self.selectable_cards, #self.deck_selected)
+	local total_width = (hand_count - 1) * step + card_w
+	local start_x = (window_w - total_width) / 2
+	local card_y = strip_top + (self.ui_height - card_h) / 2
+
 	for i = 1, self.selectable_cards do
 		local card = self.deck_selected[i]
-
-		-- for cases when the deck has less than 4 cards
 		if card == nil then return end
 
-		card.x = position.width - (i * step)
-		card.y = position.height - 50 -- padding
+		card.x = start_x + (i - 1) * step
+		card.y = card_y
 	end
 
-	-- default position for preview card
-	-- if more than 4 cards, should show the preview card
-	if #self.deck_selected > 4 then
-		-- get preview card
-		self.queue_next_cards[1].x = position.width
-		self.queue_next_cards[1].y = position.height + 35
+	if #self.deck_selected > self.selectable_cards and self.queue_next_cards[1] then
+		local preview = self.queue_next_cards[1]
+		local ps = s * PREVIEW_QUEUE_SCALE
+		local preview_w = preview.img_card:getWidth() * ps
+		local preview_h = preview.img_card:getHeight() * ps
+		local hand_end_x = start_x + (hand_count - 1) * step + card_w
+		local max_preview_x = window_w - BADGE_MARGIN - preview_w
 
-		self.queue_next_cards[1].preview_card = true
+		preview.x = math.min(hand_end_x + 12, max_preview_x)
+		preview.y = strip_top + (self.ui_height - preview_h) / 2
+		preview.preview_card = true
 	end
 end
 
@@ -342,12 +464,11 @@ function Deck:mousepressed(x, y, button)
 
 	if not self.card_selected then return end
 
-	local hand_top_y = self.deck_selected[1] and self.deck_selected[1].y
-	if hand_top_y and y >= hand_top_y then return end
+	if self:is_in_strip(y) then return end
 
 	local card = self.card_selected
 	card.char_x = Map:clamp_player_x(x)
-	card.char_y = y
+	card.char_y = math.min(y, self:get_play_area_bottom())
 
 	card.is_card_loading = true
 	card:reset_cooldown()

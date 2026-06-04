@@ -30,8 +30,8 @@ local Game = {
 	last_match_tick = 0,
 	match_winner_id = nil,
 
-	me_status = PlayerStatus:new('2d618372-1220-49b3-b22e-00f6ca0c12a5'),
-	enemy_status = PlayerStatus:new('2d618372-1220-49b3-b22e-00f6ca0c12a5')
+	me_status = nil,
+	enemy_status = nil
 }
 
 function Game:load()
@@ -41,6 +41,9 @@ function Game:load()
 	love.mouse.setCursor(cursor)
 
 	Map:load()
+	self.me_status = PlayerStatus:new(Constants.USER_ID)
+	self.enemy_status = PlayerStatus:new(Constants.ENEMY_ID)
+
 	socket.on_match_data(Constants.SOCKET_CONNECTION, function(data)
 		self:handle_received_data(data)
 	end)
@@ -55,6 +58,7 @@ function Game:load()
 	self.match_winner_id = nil
 
 	self:load_towers()
+	self:layout_towers()
 
 	coroutine.resume(coroutine.create(function()
 		local objects = {
@@ -122,14 +126,18 @@ function Game:update(dt)
 end
 
 function Game:draw()
-	Map:draw()
+	local w = Map:get_play_width()
+	local play_h = Map:get_play_height()
 
+	Deck:draw_background()
+	Map:draw()
+	-- Repaint deck strip over any map scale bleed (STI cannot be scissor-clipped safely).
+	Deck:draw_background()
+
+	love.graphics.setScissor(0, 0, w, play_h)
 	if Deck.card_selected then
 		Map:block_left_side()
 	end
-
-	Deck:draw()
-	self:draw_player_status()
 
 	love.graphics.setColor(1, 1, 1, 1)
 	for entity_id, card in pairs(self.cards[Constants.USER_ID]) do
@@ -145,14 +153,20 @@ function Game:draw()
 		end
 	end
 
+	self:draw_towers()
+
 	if Deck.card_selected then
 		local mx, my = love.mouse.getPosition()
 		love.graphics.setColor(1, 1, 1, 1)
-		Deck.card_selected:preview(Map:clamp_player_x(mx), my)
+		Deck.card_selected:preview(Map:clamp_player_x(mx), math.min(my, Deck:get_play_area_bottom()))
 	end
 
-	love.graphics.setColor(1, 1, 1, 1)
-	self:draw_towers()
+	love.graphics.setScissor()
+
+	love.graphics.setScissor(0, play_h, w, math.floor(love.graphics.getHeight()) - play_h)
+	self:draw_player_status()
+	Deck:draw()
+	love.graphics.setScissor()
 
 	-- self:draw_timer()
 end
@@ -189,6 +203,16 @@ function Game:load_towers()
 	table.insert(self.cards[Constants.USER_ID], Tower:load('right', 'bottom', Constants.USER_ID .. '_tower_bottom'))
 	table.insert(self.cards[Constants.ENEMY_ID], Tower:load('left', 'top', Constants.ENEMY_ID .. '_tower_top'))
 	table.insert(self.cards[Constants.ENEMY_ID], Tower:load('left', 'bottom', Constants.ENEMY_ID .. '_tower_bottom'))
+end
+
+function Game:layout_towers()
+	for _, bucket_id in ipairs({ Constants.USER_ID, Constants.ENEMY_ID }) do
+		for _, entity in pairs(self.cards[bucket_id] or {}) do
+			if type(entity) == 'table' and entity.type == 'tower' then
+				Tower:reposition(entity)
+			end
+		end
+	end
 end
 
 function Game:draw_towers()
@@ -702,14 +726,21 @@ end
 -- TODO: UI player status in game
 function Game:update_player_status() end
 
-function Game:draw_player_status() end
+function Game:draw_player_status()
+	if not self.me_status or not self.enemy_status then return end
+
+	local strip_top = Deck:get_strip_top()
+	self.enemy_status:draw_badge('bottom_left', strip_top)
+	self.me_status:draw_badge('bottom_right', strip_top)
+end
 
 function Game:mousepressed(x, y, button)
 	Deck:mousepressed(x, y, button)
 end
 
 function Game:resize()
-	Map:refresh_bounds()
+	Map:refresh_bounds(true)
+	self:layout_towers()
 end
 
 return Game
